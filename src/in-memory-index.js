@@ -44,9 +44,7 @@ class InMemoryIndex {
     }
 
     getMany(values) {
-        let data = values.map((m) => {
-            return this.index.get(m);
-        });
+        let data = values.map(m => this.index.get(m));
         return [].concat.apply([], data);
     }
 

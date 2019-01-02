@@ -26,14 +26,14 @@ class InMemoryStore {
 
     populate(items) {
         items = items || [];
-        this.indexes.forEach((index) => {
-            index.populate(items);
-        });
-        const data = items.map((item) => {
-            return [this.keyFn(item), item];
-        });
+        this.indexes.forEach(index => index.populate(items));
+        const data = items.map(item => [this.keyFn(item), item]);
         this.items = new Map(data);
     }
+	
+	get(key) {
+		return this.items.get(key);
+	}
 
     get(indexName, value) {
         const data = this.indexes.has(indexName) ? 
@@ -56,15 +56,13 @@ class InMemoryStore {
         return this.extract(this.items, data);
     }
 
-    buildIndex(indexName, keyGetter, valueGetter) {
-        const newIndex = InMemoryIndex.build(indexName, keyGetter, valueGetter, this.items);
+    buildIndex(indexName, valueGetter) {
+        const newIndex = InMemoryIndex.build(indexName, this.keyFn, valueGetter, this.items);
         this.indexes.set(indexName, newIndex);
     }
 
     remove(item) {
-        this.indexes.forEach((index) => {
-            index.remove(item);
-        });
+        this.indexes.forEach(index => index.remove(item));
         return this.items.delete(this.keyFn(item));
     }
 
@@ -84,9 +82,7 @@ class InMemoryStore {
         if (this.items.has(key)) {
             old = this.items.get(key);
         }
-        this.indexes.forEach((index) => {
-            index.update(item, old);
-        });
+        this.indexes.forEach(index => index.update(item, old));
         return this.items.set(key, item);
     }
 
