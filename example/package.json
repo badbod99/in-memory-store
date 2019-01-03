@@ -4,9 +4,33 @@
   "description": "Example project showing usage of in-memory-store",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "browserify index.js -o dist/bundle.js",
+    "watch": "watchify index.js -o dist/bundle.js -v",
+    "serve": "http-server"
+  },
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "@babel/preset-env"
+          ]
+        }
+      ]
+    ]
   },
   "author": "Simon Lerpiniere",
   "license": "Apache-2.0",
-  "dependencies": {}
+  "dependencies": {
+    "browserify": "^16.2.3",
+    "reading-time": "^1.1.3",
+    "watchify": "^3.11.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "babelify": "^10.0.0",
+    "http-server": "^0.11.1"
+  }
 }
