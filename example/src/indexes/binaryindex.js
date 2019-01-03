@@ -16,6 +16,10 @@ class BinaryIndex {
         return new BinaryIndex(name, keyGetter, valueGetter, items);
     }
 
+    get values() {
+        return this.index.map(m => m.key);
+    }
+
     keyComparer(item1, item2) {
         const a = item1.key;
         const b = item2.key;

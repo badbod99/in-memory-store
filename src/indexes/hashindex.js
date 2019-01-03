@@ -14,6 +14,10 @@ class HashIndex {
         return new HashIndex(name, keyGetter, valueGetter, items);
     }
 
+    get values() {
+        return Array.from(this.index.keys());
+    }
+
     populate(items) {
         items.forEach((item) => {
             const val = this.valFn(item);

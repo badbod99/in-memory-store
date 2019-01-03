@@ -12,6 +12,10 @@ class InMemoryStore {
         return this.items.size === 0;
     }
 
+    getValues(indexName) {
+        return this.indexes.get(indexName).values;
+    }
+
     populate(items) {
         items = items || [];
         this.indexes.forEach(index => index.populate(items));
@@ -29,11 +33,7 @@ class InMemoryStore {
         this.populate(items);
     }
 	
-	get(key) {
-		return this.items.get(key);
-	}
-
-    get(indexName, values) {
+	get(indexName, values) {
         const data = this.indexes.has(indexName) ? 
             this.indexes.get(indexName).get(values) : [];
         return this.extract(this.items, data);
@@ -49,6 +49,7 @@ class InMemoryStore {
     }
 
     buildIndex(indexName, valueGetter) {
+        console.log(`building index ${indexName}`);
         const newIndex = HashIndex.build(indexName, this.keyFn, valueGetter, this.items);
         this.indexes.set(indexName, newIndex);
     }
