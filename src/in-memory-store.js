@@ -1,16 +1,4 @@
-// -------------------------------------------------------
-// Indexing system based on exact match only
-// Will hold a map of the key and the matching itemument ids
-// to allow you to return all related itemument ids
-// from a passed key or keys.
-// This allows very fast lookups of itemuments 
-// by grade/spec/client/location/etc...
-// Note: Do not cache or persist these maps forever,
-// they will become stale as data changes or is deleted.
-// You should rebuild the index infrequently to ensure
-// optimal storage.
-// -------------------------------------------------------
-import InMemoryIndex from './in-memory-index';
+import HashIndex from './indexes/hashindex';
 
 class InMemoryStore {
     constructor(keyFn, items) {
@@ -30,34 +18,38 @@ class InMemoryStore {
         const data = items.map(item => [this.keyFn(item), item]);
         this.items = new Map(data);
     }
+
+    destroy() {
+        this.indexes = new Map([]);
+        this.items = new Map([]);
+    }
+
+    rebuild(items) {
+        this.destroy();
+        this.populate(items);
+    }
 	
 	get(key) {
 		return this.items.get(key);
 	}
 
-    get(indexName, value) {
+    get(indexName, values) {
         const data = this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).get(value) : [];
-        return this.extract(this.items, data);
-    }
-
-    getMany(indexName, values) {
-        const data = this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).getMany(values) : [];
+            this.indexes.get(indexName).get(values) : [];
         return this.extract(this.items, data);
     }
 
     // Takes array of [indexName, [exactMatch, exactMatch]]
     getFromSet(valueSet) {
         const dataSets = valueSet.map((q) => {
-            return this.indexes.get(q[0]).getMany(q[1]);
+            return this.getMany(q[0], q[1]);
         });
         const data = this.intersect(dataSets);
         return this.extract(this.items, data);
     }
 
     buildIndex(indexName, valueGetter) {
-        const newIndex = InMemoryIndex.build(indexName, this.keyFn, valueGetter, this.items);
+        const newIndex = HashIndex.build(indexName, this.keyFn, valueGetter, this.items);
         this.indexes.set(indexName, newIndex);
     }
 
@@ -84,6 +76,10 @@ class InMemoryStore {
         }
         this.indexes.forEach(index => index.update(item, old));
         return this.items.set(key, item);
+    }
+
+    updateMany(items) {
+        items.forEach(item => update(item));
     }
 
     // -------------------------------

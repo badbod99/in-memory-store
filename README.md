@@ -29,8 +29,6 @@ store.populate(items);
 You can create an index on the store like so:
 
 ```
-// function to get the value you want to index on
-const valueFn = kitten => kitten.breed;
 // builds the index, where 'breed' is the index name
 store.buildIndex('breed', kitten => kitten.breed);
 ```
