@@ -1,4 +1,5 @@
 import HashIndex from './indexes/hashindex';
+import BinaryIndex from './indexes/binaryindex';
 
 class InMemoryStore {
     constructor(keyFn, items) {
@@ -49,9 +50,19 @@ class InMemoryStore {
     }
 
     buildIndex(indexName, valueGetter) {
-        console.log(`building index ${indexName}`);
+        return this.buildHashIndex(indexName, valueGetter);
+    }
+
+    buildHashIndex(indexName, valueGetter) {
         const newIndex = HashIndex.build(indexName, this.keyFn, valueGetter, this.items);
         this.indexes.set(indexName, newIndex);
+        return newIndex;
+    }
+
+    buildBinaryIndex(indexName, valueGetter) {
+        const newIndex = BinaryIndex.build(indexName, this.keyFn, valueGetter, this.items);
+        this.indexes.set(indexName, newIndex);
+        return newIndex;
     }
 
     remove(item) {

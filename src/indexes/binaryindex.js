@@ -27,8 +27,8 @@ class BinaryIndex {
     }
 
     search(key) {
-        const i = _searchIndex(key);
-        if (i) {
+        const i = this._searchExact(key);
+        if (i !== undefined) {
             return this.index[i].values;
         } else {
             return undefined;
@@ -45,6 +45,11 @@ class BinaryIndex {
         return low;
     }
 
+    _searchExact(key) {
+        const i = this._searchIndex(key);
+        return this.index[i] && this.index[i].key === key ? i : undefined;
+    }
+
     populate(items) {
         items.forEach((item) => {
             const val = this.valFn(item);
@@ -53,12 +58,13 @@ class BinaryIndex {
             if (!col) {
                 this.index.push({key: val, values: [key]});
                 this.dirty = true;
+                this._sortIfDirty();
             } else {
-                col.values.push(key);
+                col.push(key);
             }
         });
 
-        _sortIfDirty();
+        this._sortIfDirty();
     }
 
     get(values) {
@@ -93,7 +99,7 @@ class BinaryIndex {
         const col = this.search(val);
         if (!col) {
             this.index.push({key: val, values: [key]});
-            _sortIfDirty();
+            this._sortIfDirty();
         } else {
             col.values.push(key);
         }
@@ -112,4 +118,4 @@ class BinaryIndex {
     }
 }
 
-export default HashIndex;
+export default BinaryIndex;

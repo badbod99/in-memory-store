@@ -1,15 +1,14 @@
 import InMemoryStore from './src/in-memory-store';
 import { data } from './dummydata/people';
 
-let store = new InMemoryStore(item => item._id);
+let store = new InMemoryStore(item => item.id);
 
 store.populate(data);
-store.buildIndex("firstLetter", r => r.name.first.substring(0,1));
+store.buildBinaryIndex("firstLetter", r => r.name.first.substring(0,1));
 
 let letters = store.getValues("firstLetter");
 
-renderButtons(letters);
-console.log(letters);
+renderButtons(letters.sort());
 renderCat(letters[0]);
 
 function renderCat(firstLetter) {
@@ -55,7 +54,7 @@ function createItem(item) {
     div.appendChild(address);    
 
     var li = d.createElement('li');
-    li.id = 'li_' + item._id;
+    li.id = 'li_' + item.id;
     li.appendChild(div);
     return li;
 }
