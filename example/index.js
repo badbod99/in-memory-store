@@ -1,4 +1,4 @@
-import InMemoryStore from './src/in-memory-store';
+import InMemoryStore from '../src/in-memory-store';
 import { data } from './dummydata/people';
 
 let store = new InMemoryStore(item => item.id);

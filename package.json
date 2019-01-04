@@ -1,12 +1,12 @@
 {
-  "name": "example",
+  "name": "in-memory-store",
   "version": "1.0.0",
-  "description": "Example project showing usage of in-memory-store",
+  "description": "JavaScript memory store for key/value with indexed lookups based on hash and binary search.",
   "main": "index.js",
   "scripts": {
-    "build": "browserify index.js -o dist/bundle.js",
-    "watch": "watchify index.js -o dist/bundle.js -v",
-    "serve": "http-server"
+    "build": "browserify example/index.js -o example/dist/example.js",
+    "watch": "watchify example/index.js -o example/dist/example.js -v",
+    "serve": "http-server example"
   },
   "browserify": {
     "transform": [
@@ -22,11 +22,9 @@
   },
   "author": "Simon Lerpiniere",
   "license": "Apache-2.0",
-  "dependencies": {
-    "browserify": "^16.2.3",
-    "watchify": "^3.11.0"
-  },
   "devDependencies": {
+    "browserify": "^16.2.3",
+    "watchify": "^3.11.0",
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.3",
     "babelify": "^10.0.0",
