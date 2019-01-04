@@ -14,7 +14,7 @@ class InMemoryStore {
         return this.entries.size === 0;
     }
 
-    getKeys(indexName) {
+    getIndexKeys(indexName) {
         return this.indexes.get(indexName).keys;
     }
 
@@ -26,13 +26,15 @@ class InMemoryStore {
     }
 
     rebuild(items) {
-        this.destroy();
+        this.entries = new Map([]);
+        this.indexes.forEach(index => index.clear());
         this.populate(items);
     }
 
     destroy() {
         this.indexes = new Map([]);
         this.entries = new Map([]);
+        this.keyFn = undefined;
     }
 	
 	get(indexName, values) {

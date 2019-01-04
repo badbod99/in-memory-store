@@ -7,7 +7,7 @@ let catFn = r => r.name.first.substring(0,1);
 store.populate(data);
 store.buildBinaryIndex("firstLetter", catFn);
 
-let letters = store.getKeys("firstLetter");
+let letters = store.getIndexKeys("firstLetter");
 
 renderButtons(letters);
 renderCategory(letters[0]);

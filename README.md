@@ -19,13 +19,39 @@ let store = new InMemoryStore(obj => obj.key, items);
 let store = new InMemoryStore(obj => obj.key);
 // and populate it later
 store.populate(items);
+// Note: Populate does not check for existing index entries,
+// it's designed for initial population and this is omitted for performance
+// if you know your entries have never been added before, it's safe to call
+// multiple times.  Otherwise use .add(items).
+
+// or add individual items one by one (slower than populate)
+store.add(item);
+// or add multiple items later (slower than populate)
+let items = [item1, item2, item3];
+store.add(items);
+
+// remove an item from store
+store.remove(item);
+// remove by item key
+store.removeKey("my_item_key");
+// remove many items
+let items = [item1, item2, item3];
+store.remove(items);
+
+// update an item
+store.update(item);
+// update many items
+let items = [item1, item2, item3];
+store.update(items);
 
 // Build an index (default index type is a HashIndex)
 store.buildIndex('breed', kitten => kitten.breed);
-// Build a binary index
+// Build a binary index (binary indexes are sorted at all times)
 store.buildBinaryIndex('breed', kitten => kitten.breed);
 // Keys are case senstive, so normalise if needed
 store.buildBinaryIndex('breed', kitten => kitten.breed.toLowerCase());
+// Note: You only need to build an index once, update/add/remove all update index automatically
+
 
 // Get all entries with specified breeds
 let britishShorthair = store.get('breed', 'British Shorthair');
@@ -37,4 +63,10 @@ let oldMixed = store.getFromSet([['breed', ['British Shorthair','Moggy'], ['age'
 let mixed = store.get('breed', ['British Shorthair','Moggy']);
 let old = store.get('age', [5,6,7]);
 let oldOrMixed = [...old, ...mixed];
+
+// Rebuild the store with new items keeping the same indexes and keyFn
+store.rebuild(items);
+
+// Destroy the store completely (removes all indexes and keyFn)
+store.destroy();
 ```

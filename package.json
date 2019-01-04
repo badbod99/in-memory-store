@@ -1,12 +1,17 @@
 {
   "name": "in-memory-store",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "JavaScript memory store for key/value with indexed lookups based on hash and binary search.",
   "main": "index.js",
   "scripts": {
     "build": "browserify example/index.js -o example/dist/example.js",
     "watch": "watchify example/index.js -o example/dist/example.js -v",
     "serve": "http-server example"
+  },
+  "bugs": "https://github.com/badbod99/in-memory-store/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/badbod99/in-memory-store"
   },
   "browserify": {
     "transform": [
@@ -20,6 +25,12 @@
       ]
     ]
   },
+  "keywords": [
+    "index",
+    "btree",
+    "datastore",
+    "cache"
+  ],
   "author": "Simon Lerpiniere",
   "license": "Apache-2.0",
   "devDependencies": {

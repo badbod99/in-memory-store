@@ -17,6 +17,10 @@ class HashIndex {
         return Array.from(this.index.keys());
     }
 
+    clear() {
+        this.index = new Map([]);
+    }
+
     get(keys) {
         keys = mem.oneOrMany(keys);
         let data = keys.map(m => this.index.get(m));
