@@ -1,6 +1,6 @@
 {
   "name": "in-memory-store",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "JavaScript memory store for key/value with indexed lookups based on hash and binary search.",
   "main": "index.js",
   "scripts": {
