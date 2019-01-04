@@ -17,6 +17,10 @@ class BinaryIndex {
         return this.index.map(m => m.key);
     }
 
+    clear() {
+        this.index = [];
+    }
+
     _positionOf(key) {
         let low = 0, high = this.index.length, mid;
         while (low < high) {
