@@ -1,7 +1,7 @@
 # JavaScript In Memory Store
 JavaScript memory store for key/value with indexed lookups based on hash.  No dependencies on any other library.  Designed for ES6, so if you must support ES5 you will need babel or similar.
 
-# Install
+# Install 
 ```
 npm install in-memory-store
 ```
@@ -76,7 +76,7 @@ store.destroy();
 # Running the example project
 The example project is a very simple address book.  It shows building an index
 of people by first letter of their last name and using the index to filter.
-```
+```Shell
 git clone https://github.com/badbod99/in-memory-store
 cd in-memory-store
 npm install
@@ -84,3 +84,35 @@ npm run build
 npm run serve
 ```
 Then open a web browser to http://localhost:8080
+
+
+# Use with node.js
+Since node.js still consideres [ES6 modules experimental](https://nodejs.org/api/esm.html), I
+recommend using [Babel](https://babeljs.io/) with [Babel Register](https://babeljs.io/docs/en/babel-register).
+
+1. Install Babel and Babel Register
+```Shell
+npm install --save-dev @babel/core @babel/cli @babel/register @babel/preset-env
+```
+2. Create a `.babelrc` file specifying the preset-env preset
+```Shell
+echo {\"presets\": [\"@babel/preset-env\"]} | tee .babelrc
+```
+3. Create a Babel entry point script for your node.js application, say `entry.js`:
+```javascript
+// Transpile all code following this line with babel and use 'env' (aka ES6) preset.
+require('@babel/register')({
+    presets: [ '@babel/preset-env' ],
+    ignore: []
+})
+
+// Import the rest of our application.
+module.exports = require('./youractualentrypoint.js')
+```
+4. Start your application from the new entry point
+```Shell
+node entry.js
+```
+
+You should now be able to use everything from the [babel-preset-env](https://www.npmjs.com/package/babel-preset-env) preset.
+
