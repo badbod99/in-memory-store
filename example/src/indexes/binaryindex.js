@@ -1,41 +1,23 @@
+import * as mem from '../common';
+
 class BinaryIndex {
-    constructor (name, keyGetter, valueGetter, items) {
+    constructor (name, itemFn, keyFn, items) {
         this.index = [];
         this.name = name;
-        this.keyFn = keyGetter;
-        this.valFn = valueGetter;
-        this.dirty = false;
-        this.comparer = this.keyComparer;
-
-        if (items) {
-            this.populate(items);
-        }
+        this.itemFn = itemFn;
+        this.keyFn = keyFn;
+        this.add(items);
     }
     
-    static build(name, keyGetter, valueGetter, items) {
-        return new BinaryIndex(name, keyGetter, valueGetter, items);
+    static build(name, itemFn, keyFn, items) {
+        return new BinaryIndex(name, itemFn, keyFn, items);
     }
 
-    get values() {
+    get keys() {
         return this.index.map(m => m.key);
     }
 
-    keyComparer(item1, item2) {
-        const a = item1.key;
-        const b = item2.key;
-        return a === b ? 0 : a > b ? 1 : -1
-    }
-
-    search(key) {
-        const i = this._searchExact(key);
-        if (i !== undefined) {
-            return this.index[i].values;
-        } else {
-            return undefined;
-        }
-    }
-
-    _searchIndex(key) {
+    _positionOf(key) {
         let low = 0, high = this.index.length, mid;
         while (low < high) {
             // faster version of Math.floor((low + high) / 2)
@@ -45,44 +27,29 @@ class BinaryIndex {
         return low;
     }
 
-    _searchExact(key) {
-        const i = this._searchIndex(key);
-        return this.index[i] && this.index[i].key === key ? i : undefined;
-    }
-
-    populate(items) {
-        items.forEach((item) => {
-            const val = this.valFn(item);
-            const key = this.keyFn(item);
-            const col = this.search(val);
-            if (!col) {
-                this.index.push({key: val, values: [key]});
-                this.dirty = true;
-                this._sortIfDirty();
-            } else {
-                col.push(key);
-            }
-        });
-
-        this._sortIfDirty();
-    }
-
-    get(values) {
-        if (Array.isArray(values)) {
-            let data = values.map(m => this.search(m));
-            return [].concat.apply([], data);
+    _get(key) {
+        const i = this._positionOf(key);
+        const entry = this.index[i];
+        if (entry && entry.key === key) {
+            return entry.values;
         }
-        return this.search(values);
+    }
+    
+    get(keys) {
+        keys = mem.oneOrMany(keys);
+        let data = keys.map(m => this._get(m));
+        return [].concat.apply([], data);
     }
 
-    remove(item) {
-        if (item) {
-            const val = this.valFn(item);
+    remove(items) {
+        items = mem.oneOrMany(items);
+        items.forEach(item => {
             const key = this.keyFn(item);
-            const ix = _searchIndex(val);
+            const it = this.itemFn(item);
+            const ix = this._positionOf(key);
             if (ix) {
                 const col = this.index[ix].values;
-                const i = col.indexOf(key);
+                const i = col.indexOf(it);
                 if (i > -1) {
                     col.splice(i, 1);
                 }
@@ -90,31 +57,28 @@ class BinaryIndex {
                     this.index.splice(ix, 1);
                 }
             }
-        }
+        });
     }
 
-    add(item) {
-        const val = this.valFn(item);
-        const key = this.keyFn(item);
-        const col = this.search(val);
-        if (!col) {
-            this.index.push({key: val, values: [key]});
-            this._sortIfDirty();
-        } else {
-            col.values.push(key);
-        }
+    add(items) {
+        items = mem.oneOrMany(items);
+        items.forEach(item => {
+            const key = this.keyFn(item);
+            const it = this.itemFn(item);
+            const ix = this._positionOf(key);
+            const entry = this.index[ix];
+            
+            if (entry && entry.key === key) {
+                entry.values.push(it);
+            } else {
+                this.index.splice(ix, 0, {key: key, values: [it]});
+            }
+        });
     }
 
     update(item, olditem) {
         this.remove(olditem);
         this.add(item);
-    }
-
-    _sortIfDirty() {
-        if (this.dirty) {
-            this.index.sort(this.comparer);
-            this.dirty = false;
-        }
     }
 }
 

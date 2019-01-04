@@ -1,71 +1,59 @@
+import * as mem from '../common';
+
 class HashIndex {
-    constructor (name, keyGetter, valueGetter, items) {
+    constructor (name, itemFn, keyFn, items) {
         this.index = new Map([]);
         this.name = name;
-        this.keyFn = keyGetter;
-        this.valFn = valueGetter;
-
-        if (items) {
-            this.populate(items);
-        }
+        this.itemFn = itemFn;
+        this.keyFn = keyFn;
+        this.add(items);
     }
     
-    static build(name, keyGetter, valueGetter, items) {
-        return new HashIndex(name, keyGetter, valueGetter, items);
+    static build(name, itemFn, keyFn, items) {
+        return new HashIndex(name, itemFn, keyFn, items);
     }
 
-    get values() {
+    get keys() {
         return Array.from(this.index.keys());
     }
 
-    populate(items) {
-        items.forEach((item) => {
-            const val = this.valFn(item);
-            const col = this.index.get(val);
-            const key = this.keyFn(item);
-            if (!col) {
-                this.index.set(val, [key]);
-            } else {
-                col.push(key);
-            }
-        });
+    get(keys) {
+        keys = mem.oneOrMany(keys);
+        let data = keys.map(m => this.index.get(m));
+        return [].concat.apply([], data);
     }
 
-    get(values) {
-        if (Array.isArray(values)) {
-            let data = values.map(m => this.index.get(m));
-            return [].concat.apply([], data);
-        }
-        return this.index.get(values);
-    }
-
-    remove(item) {
-        if (item) {
-            const val = this.valFn(item);
+    remove(items) {
+        items = mem.oneOrMany(items);
+        items.forEach(item => {
             const key = this.keyFn(item);
-            if (this.index.has(val)) {
-                const col = this.index.get(val);
-                const i = col.indexOf(key);
+            const it = this.itemFn(item);
+            if (this.index.has(key)) {
+                const col = this.index.get(key);
+                const i = col.indexOf(it);
                 if (i > -1) {
                     col.splice(i, 1);
                 }
                 if (col.length === 0) {
-                    this.index.delete(val);
+                    this.index.delete(key);
                 }
             }
-        }
+        });
     }
 
-    add(item) {
-        const value = this.valFn(item);
-        const key = this.keyFn(item);
-        if (key && value) {
-            if (this.index.has(value)) {
-                this.index.get(value).push(key);
-            } else {
-                this.index.set(value, [key]);
+    add(items) {
+        items = mem.oneOrMany(items);
+        items.forEach(item => {
+            const key = this.keyFn(item);
+            const it = this.itemFn(item);
+            if (it && key) {
+                if (this.index.has(key)) {
+                    this.index.get(key).push(it);
+                } else {
+                    this.index.set(key, [it]);
+                }
             }
-        }
+        });
     }
 
     update(item, olditem) {

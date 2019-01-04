@@ -10020,43 +10020,58 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var store = new _inMemoryStore.default(function (item) {
   return item.id;
 });
-store.populate(_people.data);
-store.buildBinaryIndex("firstLetter", function (r) {
-  return r.name.first.substring(0, 1);
-});
-var letters = store.getValues("firstLetter");
-renderButtons(letters.sort());
-renderCat(letters[0]);
 
-function renderCat(firstLetter) {
+var catFn = function catFn(r) {
+  return r.name.first.substring(0, 1);
+};
+
+store.populate(_people.data);
+store.buildBinaryIndex("firstLetter", catFn);
+var letters = store.getKeys("firstLetter");
+renderButtons(letters);
+renderCategory(letters[0]);
+
+function removeEntry(item) {
+  var cat = store.remove(item);
+  renderCategory(catFn(item));
+}
+
+function renderCategory(firstLetter) {
   var cat = store.get("firstLetter", firstLetter);
   var ul = document.getElementById('people-list');
   ul.innerHTML = '';
   cat.forEach(function (f) {
-    ul.appendChild(createItem(f));
+    return ul.appendChild(createItem(f));
   });
 }
 
 function renderButtons(values) {
   var btnGroup = document.getElementById('firstLetter-list');
   values.forEach(function (value) {
-    var b = document.createElement('button');
-    b.type = "button";
-    b.value = value;
-
-    b.onclick = function () {
-      return renderCat(value);
-    };
-
-    b.appendChild(document.createTextNode("".concat(value)));
+    var b = createButton(function () {
+      return renderCategory(value);
+    }, value);
     btnGroup.appendChild(b);
   });
 }
 
+function createButton(onclick, value) {
+  var b = document.createElement('button');
+  b.type = "button";
+  b.value = value;
+  b.onclick = onclick;
+  b.appendChild(document.createTextNode("".concat(value)));
+  return b;
+}
+
 function createItem(item) {
   var d = document;
+  var remove = createButton(function () {
+    return removeEntry(item);
+  }, "X");
   var name = d.createElement('label');
-  name.appendChild(d.createTextNode("".concat(item.name.first, " ").concat(item.name.last)));
+  name.appendChild(d.createTextNode("".concat(item.name.first, " ").concat(item.name.last, " ")));
+  name.appendChild(remove);
   var address = d.createElement('p');
   address.appendChild(d.createTextNode("".concat(item.address)));
   var email = d.createElement('p');
@@ -10075,7 +10090,67 @@ function createItem(item) {
   return li;
 }
 
-},{"./dummydata/people":1,"./src/in-memory-store":3}],3:[function(require,module,exports){
+},{"./dummydata/people":1,"./src/in-memory-store":4}],3:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.oneOrMany = oneOrMany;
+exports.intersect = intersect;
+exports.extract = extract;
+
+function oneOrMany(items) {
+  if (!items) {
+    return [];
+  } else if (items instanceof Map) {
+    return Array.from(items.values());
+  } else if (!Array.isArray(items)) {
+    return [items];
+  } else {
+    return items;
+  }
+}
+
+function intersect(arrays) {
+  var ordered = arrays.length === 1 ? arrays : arrays.sort(function (a1, a2) {
+    return a1.length - a2.length;
+  });
+  var shortest = ordered[0],
+      set = new Set(),
+      result = [];
+
+  for (var i = 0; i < shortest.length; i++) {
+    var item = shortest[i];
+    var every = true; // don't use ordered.every ... it is slow
+
+    for (var j = 1; j < ordered.length; j++) {
+      if (ordered[j].includes(item)) continue;
+      every = false;
+      break;
+    } // ignore if not in every other array, or if already captured
+
+
+    if (!every || set.has(item)) continue; // otherwise, add to bookeeping set and the result
+
+    set.add(item);
+    result[result.length] = item;
+  }
+
+  return result;
+}
+
+function extract(map, keys) {
+  var r = [];
+  keys.forEach(function (key) {
+    if (map.has(key)) {
+      r.push(map.get(key));
+    }
+  });
+  return r;
+}
+
+},{}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -10086,6 +10161,10 @@ exports.default = void 0;
 var _hashindex = _interopRequireDefault(require("./indexes/hashindex"));
 
 var _binaryindex = _interopRequireDefault(require("./indexes/binaryindex"));
+
+var mem = _interopRequireWildcard(require("./common"));
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -10102,35 +10181,29 @@ function () {
     _classCallCheck(this, InMemoryStore);
 
     this.indexes = new Map([]);
-    this.items = new Map([]);
+    this.entries = new Map([]);
     this.keyFn = keyFn;
     this.populate(items);
   }
 
   _createClass(InMemoryStore, [{
-    key: "getValues",
-    value: function getValues(indexName) {
-      return this.indexes.get(indexName).values;
+    key: "getKeys",
+    value: function getKeys(indexName) {
+      return this.indexes.get(indexName).keys;
     }
   }, {
     key: "populate",
     value: function populate(items) {
       var _this = this;
 
-      items = items || [];
+      items = mem.oneOrMany(items);
       this.indexes.forEach(function (index) {
-        return index.populate(items);
+        return index.add(items);
       });
       var data = items.map(function (item) {
         return [_this.keyFn(item), item];
       });
-      this.items = new Map(data);
-    }
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      this.indexes = new Map([]);
-      this.items = new Map([]);
+      this.entries = new Map(data);
     }
   }, {
     key: "rebuild",
@@ -10139,10 +10212,16 @@ function () {
       this.populate(items);
     }
   }, {
+    key: "destroy",
+    value: function destroy() {
+      this.indexes = new Map([]);
+      this.entries = new Map([]);
+    }
+  }, {
     key: "get",
     value: function get(indexName, values) {
       var data = this.indexes.has(indexName) ? this.indexes.get(indexName).get(values) : [];
-      return this.extract(this.items, data);
+      return mem.extract(this.entries, data);
     } // Takes array of [indexName, [exactMatch, exactMatch]]
 
   }, {
@@ -10151,121 +10230,89 @@ function () {
       var _this2 = this;
 
       var dataSets = valueSet.map(function (q) {
-        return _this2.getMany(q[0], q[1]);
+        return _this2.get(q[0], q[1]);
       });
-      var data = this.intersect(dataSets);
-      return this.extract(this.items, data);
+      var data = mem.intersect(dataSets);
+      return mem.extract(this.entries, data);
     }
   }, {
     key: "buildIndex",
-    value: function buildIndex(indexName, valueGetter) {
-      return this.buildHashIndex(indexName, valueGetter);
+    value: function buildIndex(indexName, ixFn) {
+      return this.buildBinaryIndex(indexName, ixFn);
     }
   }, {
     key: "buildHashIndex",
-    value: function buildHashIndex(indexName, valueGetter) {
-      var newIndex = _hashindex.default.build(indexName, this.keyFn, valueGetter, this.items);
+    value: function buildHashIndex(indexName, ixFn) {
+      var newIndex = _hashindex.default.build(indexName, this.keyFn, ixFn, this.entries);
 
       this.indexes.set(indexName, newIndex);
       return newIndex;
     }
   }, {
     key: "buildBinaryIndex",
-    value: function buildBinaryIndex(indexName, valueGetter) {
-      var newIndex = _binaryindex.default.build(indexName, this.keyFn, valueGetter, this.items);
+    value: function buildBinaryIndex(indexName, ixFn) {
+      var newIndex = _binaryindex.default.build(indexName, this.keyFn, ixFn, this.entries);
 
       this.indexes.set(indexName, newIndex);
       return newIndex;
     }
   }, {
     key: "remove",
-    value: function remove(item) {
-      this.indexes.forEach(function (index) {
-        return index.remove(item);
+    value: function remove(items) {
+      var _this3 = this;
+
+      items = mem.oneOrMany(items);
+      items.forEach(function (item) {
+        _this3.indexes.forEach(function (index) {
+          return index.remove(item);
+        });
+
+        return _this3.entries.delete(_this3.keyFn(item));
       });
-      return this.items.delete(this.keyFn(item));
     }
   }, {
     key: "removeKey",
     value: function removeKey(key) {
-      var item = this.items.get(item);
+      var item = this.entries.get(key);
       this.remove(item);
     }
   }, {
     key: "add",
-    value: function add(item) {
-      this.update(item);
-      return this.items.set(this.keyFn(item), item);
+    value: function add(items) {
+      var _this4 = this;
+
+      items = mem.oneOrMany(items);
+      this.update(items);
+      items.forEach(function (item) {
+        return _this4.entries.set(_this4.keyFn(item), item);
+      });
     }
   }, {
     key: "update",
-    value: function update(item) {
-      var old;
-      var key = this.keyFn(item);
+    value: function update(items) {
+      var _this5 = this;
 
-      if (this.items.has(key)) {
-        old = this.items.get(key);
-      }
-
-      this.indexes.forEach(function (index) {
-        return index.update(item, old);
-      });
-      return this.items.set(key, item);
-    }
-  }, {
-    key: "updateMany",
-    value: function updateMany(items) {
+      items = mem.oneOrMany(items);
       items.forEach(function (item) {
-        return update(item);
-      });
-    } // -------------------------------
-    // Helper JS functions for map/array
-    // -------------------------------
+        var old;
 
-  }, {
-    key: "intersect",
-    value: function intersect(arrays) {
-      var ordered = arrays.length === 1 ? arrays : arrays.sort(function (a1, a2) {
-        return a1.length - a2.length;
-      });
-      var shortest = ordered[0],
-          set = new Set(),
-          result = [];
+        var key = _this5.keyFn(item);
 
-      for (var i = 0; i < shortest.length; i++) {
-        var item = shortest[i];
-        var every = true; // don't use ordered.every ... it is slow
-
-        for (var j = 1; j < ordered.length; j++) {
-          if (ordered[j].includes(item)) continue;
-          every = false;
-          break;
-        } // ignore if not in every other array, or if already captured
-
-
-        if (!every || set.has(item)) continue; // otherwise, add to bookeeping set and the result
-
-        set.add(item);
-        result[result.length] = item;
-      }
-
-      return result;
-    }
-  }, {
-    key: "extract",
-    value: function extract(map, keys) {
-      var r = [];
-      keys.forEach(function (key) {
-        if (map.has(key)) {
-          r.push(map.get(key));
+        if (_this5.entries.has(key)) {
+          old = _this5.entries.get(key);
         }
+
+        _this5.indexes.forEach(function (index) {
+          return index.update(item, old);
+        });
+
+        _this5.entries.set(key, item);
       });
-      return r;
     }
   }, {
     key: "isEmpty",
     get: function get() {
-      return this.items.size === 0;
+      return this.entries.size === 0;
     }
   }]);
 
@@ -10275,13 +10322,17 @@ function () {
 var _default = InMemoryStore;
 exports.default = _default;
 
-},{"./indexes/binaryindex":4,"./indexes/hashindex":5}],4:[function(require,module,exports){
+},{"./common":3,"./indexes/binaryindex":5,"./indexes/hashindex":6}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
+var mem = _interopRequireWildcard(require("../common"));
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -10292,42 +10343,19 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var BinaryIndex =
 /*#__PURE__*/
 function () {
-  function BinaryIndex(name, keyGetter, valueGetter, items) {
+  function BinaryIndex(name, itemFn, keyFn, items) {
     _classCallCheck(this, BinaryIndex);
 
     this.index = [];
     this.name = name;
-    this.keyFn = keyGetter;
-    this.valFn = valueGetter;
-    this.dirty = false;
-    this.comparer = this.keyComparer;
-
-    if (items) {
-      this.populate(items);
-    }
+    this.itemFn = itemFn;
+    this.keyFn = keyFn;
+    this.add(items);
   }
 
   _createClass(BinaryIndex, [{
-    key: "keyComparer",
-    value: function keyComparer(item1, item2) {
-      var a = item1.key;
-      var b = item2.key;
-      return a === b ? 0 : a > b ? 1 : -1;
-    }
-  }, {
-    key: "search",
-    value: function search(key) {
-      var i = this._searchExact(key);
-
-      if (i !== undefined) {
-        return this.index[i].values;
-      } else {
-        return undefined;
-      }
-    }
-  }, {
-    key: "_searchIndex",
-    value: function _searchIndex(key) {
+    key: "_positionOf",
+    value: function _positionOf(key) {
       var low = 0,
           high = this.index.length,
           mid;
@@ -10341,94 +10369,78 @@ function () {
       return low;
     }
   }, {
-    key: "_searchExact",
-    value: function _searchExact(key) {
-      var i = this._searchIndex(key);
+    key: "_get",
+    value: function _get(key) {
+      var i = this._positionOf(key);
 
-      return this.index[i] && this.index[i].key === key ? i : undefined;
-    }
-  }, {
-    key: "populate",
-    value: function populate(items) {
-      var _this = this;
+      var entry = this.index[i];
 
-      items.forEach(function (item) {
-        var val = _this.valFn(item);
-
-        var key = _this.keyFn(item);
-
-        var col = _this.search(val);
-
-        if (!col) {
-          _this.index.push({
-            key: val,
-            values: [key]
-          });
-
-          _this.dirty = true;
-
-          _this._sortIfDirty();
-        } else {
-          col.push(key);
-        }
-      });
-
-      this._sortIfDirty();
+      if (entry && entry.key === key) {
+        return entry.values;
+      }
     }
   }, {
     key: "get",
-    value: function get(values) {
-      var _this2 = this;
+    value: function get(keys) {
+      var _this = this;
 
-      if (Array.isArray(values)) {
-        var data = values.map(function (m) {
-          return _this2.search(m);
-        });
-        return [].concat.apply([], data);
-      }
-
-      return this.search(values);
+      keys = mem.oneOrMany(keys);
+      var data = keys.map(function (m) {
+        return _this._get(m);
+      });
+      return [].concat.apply([], data);
     }
   }, {
     key: "remove",
-    value: function remove(item) {
-      if (item) {
-        var val = this.valFn(item);
-        var key = this.keyFn(item);
+    value: function remove(items) {
+      var _this2 = this;
 
-        var ix = _searchIndex(val);
+      items = mem.oneOrMany(items);
+      items.forEach(function (item) {
+        var key = _this2.keyFn(item);
+
+        var it = _this2.itemFn(item);
+
+        var ix = _this2._positionOf(key);
 
         if (ix) {
-          var col = this.index[ix].values;
-          var i = col.indexOf(key);
+          var col = _this2.index[ix].values;
+          var i = col.indexOf(it);
 
           if (i > -1) {
             col.splice(i, 1);
           }
 
           if (col.length === 0) {
-            this.index.splice(ix, 1);
+            _this2.index.splice(ix, 1);
           }
         }
-      }
+      });
     }
   }, {
     key: "add",
-    value: function add(item) {
-      var val = this.valFn(item);
-      var key = this.keyFn(item);
-      var col = this.search(val);
+    value: function add(items) {
+      var _this3 = this;
 
-      if (!col) {
-        this.index.push({
-          key: val,
-          values: [key]
-        });
+      items = mem.oneOrMany(items);
+      items.forEach(function (item) {
+        var key = _this3.keyFn(item);
 
-        this._sortIfDirty();
-      } else {
-        col.values.push(key);
-      }
+        var it = _this3.itemFn(item);
+
+        var ix = _this3._positionOf(key);
+
+        var entry = _this3.index[ix];
+
+        if (entry && entry.key === key) {
+          entry.values.push(it);
+        } else {
+          _this3.index.splice(ix, 0, {
+            key: key,
+            values: [it]
+          });
+        }
+      });
     }
   }, {
     key: "update",
@@ -10437,15 +10449,7 @@ function () {
       this.add(item);
     }
   }, {
-    key: "_sortIfDirty",
-    value: function _sortIfDirty() {
-      if (this.dirty) {
-        this.index.sort(this.comparer);
-        this.dirty = false;
-      }
-    }
-  }, {
-    key: "values",
+    key: "keys",
     get: function get() {
       return this.index.map(function (m) {
         return m.key;
@@ -10453,8 +10457,8 @@ function () {
     }
   }], [{
     key: "build",
-    value: function build(name, keyGetter, valueGetter, items) {
-      return new BinaryIndex(name, keyGetter, valueGetter, items);
+    value: function build(name, itemFn, keyFn, items) {
+      return new BinaryIndex(name, itemFn, keyFn, items);
     }
   }]);
 
@@ -10464,13 +10468,17 @@ function () {
 var _default = BinaryIndex;
 exports.default = _default;
 
-},{}],5:[function(require,module,exports){
+},{"../common":3}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+
+var mem = _interopRequireWildcard(require("../common"));
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -10481,86 +10489,72 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var HashIndex =
 /*#__PURE__*/
 function () {
-  function HashIndex(name, keyGetter, valueGetter, items) {
+  function HashIndex(name, itemFn, keyFn, items) {
     _classCallCheck(this, HashIndex);
 
     this.index = new Map([]);
     this.name = name;
-    this.keyFn = keyGetter;
-    this.valFn = valueGetter;
-
-    if (items) {
-      this.populate(items);
-    }
+    this.itemFn = itemFn;
+    this.keyFn = keyFn;
+    this.add(items);
   }
 
   _createClass(HashIndex, [{
-    key: "populate",
-    value: function populate(items) {
+    key: "get",
+    value: function get(keys) {
       var _this = this;
 
-      items.forEach(function (item) {
-        var val = _this.valFn(item);
-
-        var col = _this.index.get(val);
-
-        var key = _this.keyFn(item);
-
-        if (!col) {
-          _this.index.set(val, [key]);
-        } else {
-          col.push(key);
-        }
+      keys = mem.oneOrMany(keys);
+      var data = keys.map(function (m) {
+        return _this.index.get(m);
       });
-    }
-  }, {
-    key: "get",
-    value: function get(values) {
-      var _this2 = this;
-
-      if (Array.isArray(values)) {
-        var data = values.map(function (m) {
-          return _this2.index.get(m);
-        });
-        return [].concat.apply([], data);
-      }
-
-      return this.index.get(values);
+      return [].concat.apply([], data);
     }
   }, {
     key: "remove",
-    value: function remove(item) {
-      if (item) {
-        var val = this.valFn(item);
-        var key = this.keyFn(item);
+    value: function remove(items) {
+      var _this2 = this;
 
-        if (this.index.has(val)) {
-          var col = this.index.get(val);
-          var i = col.indexOf(key);
+      items = mem.oneOrMany(items);
+      items.forEach(function (item) {
+        var key = _this2.keyFn(item);
+
+        var it = _this2.itemFn(item);
+
+        if (_this2.index.has(key)) {
+          var col = _this2.index.get(key);
+
+          var i = col.indexOf(it);
 
           if (i > -1) {
             col.splice(i, 1);
           }
 
           if (col.length === 0) {
-            this.index.delete(val);
+            _this2.index.delete(key);
           }
         }
-      }
+      });
     }
   }, {
     key: "add",
-    value: function add(item) {
-      var value = this.valFn(item);
-      var key = this.keyFn(item);
+    value: function add(items) {
+      var _this3 = this;
 
-      if (key && value) {
-        if (this.index.has(value)) {
-          this.index.get(value).push(key);
-        } else {
-          this.index.set(value, [key]);
+      items = mem.oneOrMany(items);
+      items.forEach(function (item) {
+        var key = _this3.keyFn(item);
+
+        var it = _this3.itemFn(item);
+
+        if (it && key) {
+          if (_this3.index.has(key)) {
+            _this3.index.get(key).push(it);
+          } else {
+            _this3.index.set(key, [it]);
+          }
         }
-      }
+      });
     }
   }, {
     key: "update",
@@ -10569,14 +10563,14 @@ function () {
       this.add(item);
     }
   }, {
-    key: "values",
+    key: "keys",
     get: function get() {
       return Array.from(this.index.keys());
     }
   }], [{
     key: "build",
-    value: function build(name, keyGetter, valueGetter, items) {
-      return new HashIndex(name, keyGetter, valueGetter, items);
+    value: function build(name, itemFn, keyFn, items) {
+      return new HashIndex(name, itemFn, keyFn, items);
     }
   }]);
 
@@ -10586,4 +10580,4 @@ function () {
 var _default = HashIndex;
 exports.default = _default;
 
-},{}]},{},[2]);
+},{"../common":3}]},{},[2]);
