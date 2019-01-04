@@ -3,7 +3,7 @@ import { data } from './dummydata/people';
 
 let store = new InMemoryStore(item => item.id);
 
-let catFn = r => r.name.first.substring(0,1);
+let catFn = r => r.name.last.substring(0,1).toUpperCase();
 store.populate(data);
 store.buildBinaryIndex("firstLetter", catFn);
 

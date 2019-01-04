@@ -70,3 +70,15 @@ store.rebuild(items);
 // Destroy the store completely (removes all indexes and keyFn)
 store.destroy();
 ```
+
+# Running the example project
+The example project is a very simple address book.  It shows building an index
+of people by first letter of their last name and using the index to filter.
+```
+git clone https://github.com/badbod99/in-memory-store
+cd in-memory-store
+npm install
+npm run build
+npm run serve
+```
+Then open a web browser to http://localhost:8080
