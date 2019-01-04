@@ -1,5 +1,5 @@
 # JavaScript In Memory Store
-JavaScript memory store for key/value with indexed lookups based on hash.  No dependencies on any other library.  Designed for ES6, so if you must support ES5 you will need ES5 shim.
+JavaScript memory store for key/value with indexed lookups based on hash.  No dependencies on any other library.  Designed for ES6, so if you must support ES5 you will need babel or similar.
 
 # Install
 Copy the files in the src folder to your local project.  Nothing else is needed.
