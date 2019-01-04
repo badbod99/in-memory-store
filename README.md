@@ -2,7 +2,7 @@
 JavaScript memory store for key/value with indexed lookups based on hash.  No dependencies on any other library.  Designed for ES6, so if you must support ES5 you will need ES5 shim.
 
 # Install
-Copy the 2 files in the src folder to your local project.  Nothing else is needed.
+Copy the files in the src folder to your local project.  Nothing else is needed.
 
 # Usage
 InMemoryStore constructor takes 2 parameters `keyFn[, items]`. 
