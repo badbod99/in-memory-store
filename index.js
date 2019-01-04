@@ -1,1 +1,2 @@
-module.exports.InMemoryStore = require('./src/in-memory-store');
+import InMemoryStore from './src/in-memory-store';
+export default InMemoryStore;
