@@ -7,40 +7,34 @@ Copy the 2 files in the src folder to your local project.  Nothing else is neede
 # Usage
 InMemoryStore constructor takes 2 parameters `keyFn[, items]`. 
 
-`keyFn`: function applied to each object added to the store to get it's key for indexing purposes.  
+`keyFn`: each item in the store requires a unique key, specific the function to get it from the item.
 `items`: array of objects to populate the store.
 
-Create a store as:
-`let store = new InMemoryStore(obj => obj.key);`
+Example usage...
+```javascript
+// Populate on creating with items array
+let store = new InMemoryStore(obj => obj.key, items);
 
-Populate on creation:
-
-`let store = new InMemoryStore(obj => obj.key, items);`
-
-A more complex example, populating the items later would be:
-
-```
+// Create an empty store
 let store = new InMemoryStore(obj => obj.key);
-...
-// populate the store with your items when you like
+// and populate it later
 store.populate(items);
-```
 
-You can create an index on the store like so:
-
-```
-// builds the index, where 'breed' is the index name
+// Build an index (default index type is a HashIndex)
 store.buildIndex('breed', kitten => kitten.breed);
-```
+// Build a binary index
+store.buildBinaryIndex('breed', kitten => kitten.breed);
+// Keys are case senstive, so normalise if needed
+store.buildBinaryIndex('breed', kitten => kitten.breed.toLowerCase());
 
-Indexes are case sensitive, so normalise your values if you expect variation.  You can build as many indexes as you like.  Each is stored as a JavaScript Map object.  You can get items from the store by Index.
-```
-// Get one breed
+// Get all entries with specified breeds
 let britishShorthair = store.get('breed', 'British Shorthair');
-
 // Get based on array of breeds
-let allSorts = store.getMany('breed', ['British Shorthair','Moggy']);
-
+let allSorts = store.get('breed', ['British Shorthair','Moggy']);
 // Get intersection of 2 indexes
 let oldMixed = store.getFromSet([['breed', ['British Shorthair','Moggy'], ['age',[5,6,7]]);
+// Get join of 2 indexes
+let mixed = store.get('breed', ['British Shorthair','Moggy']);
+let old = store.get('age', [5,6,7]);
+let oldOrMixed = [...old, ...mixed];
 ```
