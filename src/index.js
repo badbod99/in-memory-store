@@ -43,6 +43,12 @@ class InMemoryStore {
         return mem.extract(this.entries, data);
     }
 
+    getOne(indexName, value) {
+        const data = this.indexes.has(indexName) ? 
+            this.indexes.get(indexName).getOne(value) : [];
+        return mem.extract(this.entries, data);
+    }
+
     // Takes array of [indexName, [exactMatch, exactMatch]]
     getFromSet(valueSet) {
         const dataSets = valueSet.map((q) => {
@@ -53,17 +59,17 @@ class InMemoryStore {
     }
 
     buildIndex(indexName, ixFn) {
-        return this.buildBinaryIndex(indexName, ixFn);
+        return this.buildBinaryIndex(indexName, ixFn, mem.defaultComparer);
     }
 
-    buildHashIndex(indexName, ixFn) {
-        const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries);
+    buildHashIndex(indexName, ixFn, comparer) {
+        const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     }
 
-    buildBinaryIndex(indexName, ixFn) {
-        const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries);
+    buildBinaryIndex(indexName, ixFn, comparer) {
+        const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     }
@@ -71,35 +77,46 @@ class InMemoryStore {
     remove(items) {
         items = mem.oneOrMany(items);
         items.forEach(item => {
-            this.indexes.forEach(index => index.remove(item));
-            return this.entries.delete(this.keyFn(item));
+            this.removeOne(item);
         });
+    }
+
+    removeOne(item) {
+        this.indexes.forEach(index => index.remove(item));
+        return this.entries.delete(this.keyFn(item));
     }
 
     removeKey(key) {
         const item = this.entries.get(key);
-        this.remove(item);
+        this.removeOne(item);
     }
 
     add(items) {
         items = mem.oneOrMany(items);
-        this.update(items);
         items.forEach(item => {
-            return this.entries.set(this.keyFn(item), item);
+            this.updateOne(item);
         });
+    }
+
+    addOne(item) {
+        this.updateOne(item);
     }
 
     update(items) {
         items = mem.oneOrMany(items);
         items.forEach(item => {
-            let old;
-            const key = this.keyFn(item);
-            if (this.entries.has(key)) {
-                old = this.entries.get(key);
-            }
-            this.indexes.forEach(index => index.update(item, old));
-            this.entries.set(key, item);
+            this.updateOne(item);
         });
+    }
+
+    updateOne(item) {
+        let old;
+        const key = this.keyFn(item);
+        if (this.entries.has(key)) {
+            old = this.entries.get(key);
+        }
+        this.indexes.forEach(index => index.update(item, old));
+        this.entries.set(key, item);
     }
 }
 

@@ -4,9 +4,11 @@
   "description": "JavaScript memory store for key/value with indexed lookups based on hash and binary search.",
   "main": "index.js",
   "scripts": {
-    "build": "browserify example/index.js -o example/dist/example.js",
-    "watch": "watchify example/index.js -o example/dist/example.js -v",
-    "serve": "http-server example"
+    "build-example": "browserify example/index.js -o example/dist/example.js",
+    "watch-example": "watchify example/index.js -o example/dist/example.js -v",
+    "serve-example": "http-server example",
+    "build": "rollup -c",
+    "benchmark": "node bench/benchmark.js"
   },
   "bugs": "https://github.com/badbod99/in-memory-store/issues",
   "repository": {
@@ -34,11 +36,17 @@
   "author": "Simon Lerpiniere",
   "license": "Apache-2.0",
   "devDependencies": {
+    "benchmark": "^2.1.4",
+    "bintrees": "^1.0.1",
+    "avl": "^1.4.4",
     "browserify": "^16.2.3",
     "watchify": "^3.11.0",
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.3",
     "babelify": "^10.0.0",
-    "http-server": "^0.11.1"
+    "http-server": "^0.11.1",
+    "rollup": "^0.65.2",
+    "rollup-plugin-buble": "^0.19.2",
+    "typescript": "^3.0.3"
   }
 }

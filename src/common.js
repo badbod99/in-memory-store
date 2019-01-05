@@ -10,6 +10,22 @@ export function oneOrMany(items) {
     }
 }
 
+export function lt(comparer, a, b) {
+    return comparer(a, b) === -1;
+}
+
+export function gt(comparer, a, b) {
+    return comparer(a, b) === 1;
+}
+
+export function eq(comparer, a, b) {
+    return comparer(a, b) === 0;
+}
+
+export function defaultComparer() {
+    return (a, b) => a > b ? 1 : a < b ? -1 : 0;
+}
+
 export function intersect(arrays) {
     const ordered = (arrays.length===1
         ? arrays : 

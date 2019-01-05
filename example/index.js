@@ -1,11 +1,11 @@
-import InMemoryStore from '../src/in-memory-store';
+import InMemoryStore from '../src/index';
 import { data } from './dummydata/people';
 
 let store = new InMemoryStore(item => item.id);
 
 let catFn = r => r.name.last.substring(0,1).toUpperCase();
 store.populate(data);
-store.buildBinaryIndex("firstLetter", catFn);
+store.buildHashIndex("firstLetter", catFn);
 
 let letters = store.getIndexKeys("firstLetter");
 
@@ -13,12 +13,12 @@ renderButtons(letters);
 renderCategory(letters[0]);
 
 function removeEntry(item) {
-    let cat = store.remove(item);
+    let cat = store.removeOne(item);
     renderCategory(catFn(item));
 }
 
 function renderCategory(firstLetter) {
-    let cat = store.get("firstLetter", firstLetter);
+    let cat = store.getOne("firstLetter", firstLetter);
     let ul = document.getElementById('people-list');
     ul.innerHTML = '';
     cat.forEach(f => ul.appendChild(createItem(f)));
