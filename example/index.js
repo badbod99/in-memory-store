@@ -33,7 +33,6 @@ function renderButtons(values) {
     }));
 }
 
-
 function createButton(onclick, value) {
     let b = document.createElement('button');
     b.type = "button";

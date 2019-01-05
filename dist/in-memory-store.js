@@ -1,5 +1,5 @@
 /**
- * in-memory-store v1.0.3
+ * in-memory-store v1.0.4
  * JavaScript memory store for key/value with indexed lookups based on hash and binary search.
  *
  * @author Simon Lerpiniere
@@ -114,7 +114,7 @@
 
         items = oneOrMany(items);
         items.forEach(function (item) {
-            this$1.removeOne();
+            this$1.removeOne(item);
         });
     };
 
@@ -269,11 +269,11 @@
 
     Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$1 );
 
-    var InMemoryStore = function InMemoryStore(keyFn, items) {
+    var InMemoryStore = function InMemoryStore(keyFn, comparer) {
         this.indexes = new Map([]);
         this.entries = new Map([]);
         this.keyFn = keyFn;
-        this.populate(items);
+        this.comparer = comparer || defaultComparer;
     };
 
     var prototypeAccessors$2 = { isEmpty: { configurable: true } };
@@ -331,17 +331,17 @@
     };
 
     InMemoryStore.prototype.buildIndex = function buildIndex (indexName, ixFn) {
-        return this.buildBinaryIndex(indexName, ixFn, defaultComparer);
+        return this.buildBinaryIndex(indexName, ixFn, this.comparer);
     };
 
-    InMemoryStore.prototype.buildHashIndex = function buildHashIndex (indexName, ixFn, comparer) {
-        var newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
+    InMemoryStore.prototype.buildHashIndex = function buildHashIndex (indexName, ixFn) {
+        var newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     };
 
-    InMemoryStore.prototype.buildBinaryIndex = function buildBinaryIndex (indexName, ixFn, comparer) {
-        var newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
+    InMemoryStore.prototype.buildBinaryIndex = function buildBinaryIndex (indexName, ixFn) {
+        var newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     };
@@ -356,13 +356,18 @@
     };
 
     InMemoryStore.prototype.removeOne = function removeOne (item) {
-        this.indexes.forEach(function (index) { return index.remove(item); });
+        if (this.indexes.size > 0) {
+            this.indexes.forEach(function (index) { return index.remove(item); });
+        }
         return this.entries.delete(this.keyFn(item));
     };
 
     InMemoryStore.prototype.removeKey = function removeKey (key) {
         var item = this.entries.get(key);
-        this.remove(item);
+        if (this.indexes.size > 0) {
+            this.indexes.forEach(function (index) { return index.remove(item); });
+        }
+        return this.entries.delete(key);
     };
 
     InMemoryStore.prototype.add = function add (items) {
@@ -393,7 +398,9 @@
         if (this.entries.has(key)) {
             old = this.entries.get(key);
         }
-        this.indexes.forEach(function (index) { return index.update(item, old); });
+        if (this.indexes.size > 0) {
+            this.indexes.forEach(function (index) { return index.update(item, old); });
+        }
         this.entries.set(key, item);
     };
 

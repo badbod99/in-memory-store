@@ -1,5 +1,5 @@
 /**
- * in-memory-store v1.0.3
+ * in-memory-store v1.0.4
  * JavaScript memory store for key/value with indexed lookups based on hash and binary search.
  *
  * @author Simon Lerpiniere
@@ -111,7 +111,7 @@
         remove(items) {
             items = oneOrMany(items);
             items.forEach(item => {
-                this.removeOne();
+                this.removeOne(item);
             });
         }
 
@@ -256,11 +256,11 @@
     }
 
     class InMemoryStore {
-        constructor(keyFn, items) {
+        constructor(keyFn, comparer) {
             this.indexes = new Map([]);
             this.entries = new Map([]);
             this.keyFn = keyFn;
-            this.populate(items);
+            this.comparer = comparer || defaultComparer;
         }
 
         get isEmpty() {
@@ -312,17 +312,17 @@
         }
 
         buildIndex(indexName, ixFn) {
-            return this.buildBinaryIndex(indexName, ixFn, defaultComparer);
+            return this.buildBinaryIndex(indexName, ixFn, this.comparer);
         }
 
-        buildHashIndex(indexName, ixFn, comparer) {
-            const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
+        buildHashIndex(indexName, ixFn) {
+            const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
             this.indexes.set(indexName, newIndex);
             return newIndex;
         }
 
-        buildBinaryIndex(indexName, ixFn, comparer) {
-            const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
+        buildBinaryIndex(indexName, ixFn) {
+            const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
             this.indexes.set(indexName, newIndex);
             return newIndex;
         }
@@ -335,13 +335,18 @@
         }
 
         removeOne(item) {
-            this.indexes.forEach(index => index.remove(item));
+            if (this.indexes.size > 0) {
+                this.indexes.forEach(index => index.remove(item));
+            }
             return this.entries.delete(this.keyFn(item));
         }
 
         removeKey(key) {
             const item = this.entries.get(key);
-            this.remove(item);
+            if (this.indexes.size > 0) {
+                this.indexes.forEach(index => index.remove(item));
+            }
+            return this.entries.delete(key);
         }
 
         add(items) {
@@ -368,7 +373,9 @@
             if (this.entries.has(key)) {
                 old = this.entries.get(key);
             }
-            this.indexes.forEach(index => index.update(item, old));
+            if (this.indexes.size > 0) {
+                this.indexes.forEach(index => index.update(item, old));
+            }
             this.entries.set(key, item);
         }
     }

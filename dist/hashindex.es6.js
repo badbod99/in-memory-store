@@ -1,5 +1,5 @@
 /**
- * in-memory-store v1.0.3
+ * in-memory-store v1.0.4
  * JavaScript memory store for key/value with indexed lookups based on hash and binary search.
  *
  * @author Simon Lerpiniere
@@ -68,7 +68,7 @@
         remove(items) {
             items = oneOrMany(items);
             items.forEach(item => {
-                this.removeOne();
+                this.removeOne(item);
             });
         }
 

@@ -3,11 +3,11 @@ import BinaryIndex from './indexes/binaryindex';
 import * as mem from './common';
 
 class InMemoryStore {
-    constructor(keyFn, items) {
+    constructor(keyFn, comparer) {
         this.indexes = new Map([]);
         this.entries = new Map([]);
         this.keyFn = keyFn;
-        this.populate(items);
+        this.comparer = comparer || mem.defaultComparer;
     }
 
     get isEmpty() {
@@ -59,17 +59,17 @@ class InMemoryStore {
     }
 
     buildIndex(indexName, ixFn) {
-        return this.buildBinaryIndex(indexName, ixFn, mem.defaultComparer);
+        return this.buildBinaryIndex(indexName, ixFn, this.comparer);
     }
 
-    buildHashIndex(indexName, ixFn, comparer) {
-        const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
+    buildHashIndex(indexName, ixFn) {
+        const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     }
 
-    buildBinaryIndex(indexName, ixFn, comparer) {
-        const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
+    buildBinaryIndex(indexName, ixFn) {
+        const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     }
@@ -82,13 +82,18 @@ class InMemoryStore {
     }
 
     removeOne(item) {
-        this.indexes.forEach(index => index.remove(item));
+        if (this.indexes.size > 0) {
+            this.indexes.forEach(index => index.remove(item));
+        }
         return this.entries.delete(this.keyFn(item));
     }
 
     removeKey(key) {
         const item = this.entries.get(key);
-        this.removeOne(item);
+        if (this.indexes.size > 0) {
+            this.indexes.forEach(index => index.remove(item));
+        }
+        return this.entries.delete(key);
     }
 
     add(items) {
@@ -115,7 +120,9 @@ class InMemoryStore {
         if (this.entries.has(key)) {
             old = this.entries.get(key);
         }
-        this.indexes.forEach(index => index.update(item, old));
+        if (this.indexes.size > 0) {
+            this.indexes.forEach(index => index.update(item, old));
+        }
         this.entries.set(key, item);
     }
 }

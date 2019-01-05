@@ -82,4 +82,14 @@ export default [{
     name, banner,
     sourcemap: true,
   }
+},
+{
+  input: 'example/index.js',
+  output: {
+    format: 'umd',
+    file: 'example/dist/example.js',
+    name, banner,
+    sourcemap: true,
+  },
+  plugins: [ buble() ]
 }];

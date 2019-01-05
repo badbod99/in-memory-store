@@ -39,7 +39,7 @@ class HashIndex {
     remove(items) {
         items = mem.oneOrMany(items);
         items.forEach(item => {
-            this.removeOne();
+            this.removeOne(item);
         });
     }
 
