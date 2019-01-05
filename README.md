@@ -109,26 +109,26 @@ The InMemoryStore test itself is without any index setup.
 
 ```shell
 Insert (x10000)
-Bintrees x 442 ops/sec ±0.79% (92 runs sampled)
-InMemoryStore BinaryIndex x 102 ops/sec ±5.92% (73 runs sampled)
-InMemoryStore HashIndex x 1,401 ops/sec ±0.39% (96 runs sampled)
-InMemoryStore x 1,559 ops/sec ±0.67% (95 runs sampled)
-AVL x 544 ops/sec ±0.84% (89 runs sampled)
+Bintrees x 405 ops/sec ±1.06% (88 runs sampled)
+InMemoryStore BinaryIndex x 89.83 ops/sec ±5.46% (75 runs sampled)
+InMemoryStore HashIndex x 1,007 ops/sec ±4.69% (78 runs sampled)
+InMemoryStore x 1,385 ops/sec ±3.25% (77 runs sampled)
+AVL x 466 ops/sec ±4.60% (75 runs sampled)
 - Fastest is InMemoryStore
 
 Random read (x10000)
-Bintrees x 1,413 ops/sec ±0.44% (97 runs sampled)
-InMemoryStore BinaryIndex x 5,260 ops/sec ±0.41% (98 runs sampled)
-InMemoryStore HashIndex x 201,308 ops/sec ±0.48% (96 runs sampled)
-InMemoryStore x 24,030 ops/sec ±0.40% (98 runs sampled)
-AVL x 1,132 ops/sec ±0.44% (97 runs sampled)
+Bintrees x 1,224 ops/sec ±1.78% (89 runs sampled)
+InMemoryStore BinaryIndex x 5,034 ops/sec ±3.17% (87 runs sampled)
+InMemoryStore HashIndex x 161,850 ops/sec ±2.42% (81 runs sampled)
+InMemoryStore x 16,178 ops/sec ±4.76% (78 runs sampled)
+AVL x 975 ops/sec ±3.16% (87 runs sampled)
 - Fastest is InMemoryStore HashIndex
 
 Remove (x10000)
-Bintrees x 26,641 ops/sec ±0.32% (96 runs sampled)
-InMemoryStore BinaryIndex x 6,123 ops/sec ±0.35% (96 runs sampled)
-InMemoryStore HashIndex x 22,697 ops/sec ±0.37% (98 runs sampled)
-InMemoryStore x 5,298 ops/sec ±0.81% (97 runs sampled)
-AVL x 24,120 ops/sec ±0.38% (97 runs sampled)
+Bintrees x 23,962 ops/sec ±1.16% (90 runs sampled)
+InMemoryStore BinaryIndex x 5,361 ops/sec ±0.85% (94 runs sampled)
+InMemoryStore HashIndex x 20,083 ops/sec ±0.81% (91 runs sampled)
+InMemoryStore x 14,818 ops/sec ±1.28% (94 runs sampled)
+AVL x 21,165 ops/sec ±1.09% (92 runs sampled)
 - Fastest is Bintrees
 ```
