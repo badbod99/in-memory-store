@@ -96,15 +96,16 @@ Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 Currently a very simple test of each Index type and the overall store.
 Comparison is against [AVL](https://github.com/w8r/avl) and [bintrees](https://github.com/vadimg/js_bintrees).
 
-in-memory-store currently ships with 2 indexes.  BinaryIndex and HashIndex.
-
-* HashIndex - Backed by a javascript Map object. Insert/Read/Remove is all 
-very fast.  
+* HashIndex - Backed by a javascript Map object. Insert and Read is  
+very fast.
 * BinaryIndex is an array backed binary search index.  Performance is not
 far off that of the Tree structures, but it allows simple, fast range
 results to be returned as sorted arrays.
-
-The InMemoryStore test itself is without any index setup.
+* BinaryArray is the base implementation used by BinaryIndex. This gives a
+closer comparison to AVL and BinTrees as both HashIndex and BinaryIndex
+do grouping of data into the index.
+* The InMemoryStore test itself is without any index setup.  This is basically
+just a HashIndex without the grouping, again, useful for comparison.
 
 ```shell
 Insert (x10000)
