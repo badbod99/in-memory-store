@@ -33,8 +33,8 @@
         return comparer(a, b) === 0;
     }
 
-    function defaultComparer() {
-        return function (a, b) { return a > b ? 1 : a < b ? -1 : 0; };
+    function defaultComparer(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
     }
 
     var BinaryArray = function BinaryArray (items, comparer) {
@@ -42,12 +42,25 @@
         this.add(items);
         this.comparer = comparer || defaultComparer;
     };
+
+    var prototypeAccessors = { items: { configurable: true } };
         
     BinaryArray.prototype.clear = function clear () {
         this.arr = [];
     };
 
-    BinaryArray.prototype._positionOf = function _positionOf (item) {
+    prototypeAccessors.items.get = function () {
+        return this.arr;
+    };
+
+    BinaryArray.prototype.indexOf = function indexOf (item) {
+        var i = this.insertPos(item);
+        if (this.arr[i] && eq(this.comparer, this.arr[i], item)) {
+            return i;
+        }
+    };
+
+    BinaryArray.prototype.insertPos = function insertPos (item) {
         var low = 0, high = this.arr.length, mid;
         while (low < high) {
             // faster version of Math.floor((low + high) / 2)
@@ -69,10 +82,9 @@
     };
 
     BinaryArray.prototype.getOne = function getOne (item) {
-        var i = this._positionOf(item);
-        var entry = this.arr[i];
-        if (eq(this.comparer, entry, item)) {
-            return entry;
+        var i = this.indexOf(item);
+        if (i !== undefined) {
+            return this.arr[i];
         }
     };
 
@@ -86,10 +98,9 @@
     };
 
     BinaryArray.prototype.removeOne = function removeOne (item) {
-        var ix = this._positionOf(item);
-        var entry = this.arr[ix];
-        if (eq(this.comparer, entry, item)) {
-            this.arr.splice(ix, 1);
+        var i = this.indexOf(item);
+        if (i !== undefined) {
+            this.arr.splice(i, 1);
         }
     };
 
@@ -103,19 +114,18 @@
     };
 
     BinaryArray.prototype.addOne = function addOne (item) {
-        var ix = this._positionOf(item);
-        var entry = this.arr[ix];
-        if (eq(this.comparer, entry, item)) {
-            this.arr[ix] = item;
-        } else {
-            this.arr.splice(ix, 0, item);
+        var ix = this.insertPos(item);
+        this.arr.splice(ix, 0, item);
+    };
+
+    BinaryArray.prototype.update = function update (item) {
+        this.indexOf(item);
+        if (i !== undefined) {
+            this.arr[i] = item;
         }
     };
 
-    BinaryArray.prototype.update = function update (item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
-    };
+    Object.defineProperties( BinaryArray.prototype, prototypeAccessors );
 
     return BinaryArray;
 

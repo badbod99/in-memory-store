@@ -33,8 +33,8 @@
         return comparer(a, b) === 0;
     }
 
-    function defaultComparer() {
-        return (a, b) => a > b ? 1 : a < b ? -1 : 0;
+    function defaultComparer(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
     }
 
     function intersect(arrays) {
@@ -178,7 +178,15 @@
             this.index = [];
         }
 
-        _positionOf(key) {
+        indexOf(key) {
+            const i = this.insertPos(key);
+            const entry = this.index[i];
+            if (entry && eq(this.comparer, entry.key, key)) {
+                return i;
+            }
+        }
+
+        insertPos(key) {
             let low = 0, high = this.index.length, mid;
             while (low < high) {
                 // faster version of Math.floor((low + high) / 2)
@@ -198,10 +206,9 @@
         }
 
         getOne(key) {
-            const i = this._positionOf(key);
-            const entry = this.index[i];
-            if (eq(this.comparer, entry.key, key)) {
-                return entry.values;
+            const i = this.indexOf(key);
+            if (i !== undefined) {
+                return this.index[i].values;
             }
         }
 
@@ -214,10 +221,10 @@
 
         removeOne(item) {
             const key = this.keyFn(item);
-            const ix = this._positionOf(key);
-            const entry = this.index[ix];
+            const ix = this.indexOf(key);
             
-            if (entry && eq(this.comparer, entry.key, key)) {
+            if (ix !== undefined) {
+                const entry = this.index[ix];
                 const it = this.itemFn(item);
                 const i = entry.values.indexOf(it);
                 if (i > -1) {
@@ -239,13 +246,13 @@
         addOne(item) {
             const key = this.keyFn(item);
             const it = this.itemFn(item);
-            const ix = this._positionOf(key);
-            const entry = this.index[ix];
+            const pos = this.insertPos(key);
+            const entry = this.index[pos];
             
             if (entry && eq(this.comparer, entry.key, key)) {
                 entry.values.push(it);
             } else {
-                this.index.splice(ix, 0, {key: key, values: [it]});
+                this.index.splice(pos, 0, {key: key, values: [it]});
             }
         }
 

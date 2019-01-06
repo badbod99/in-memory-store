@@ -22,8 +22,8 @@ export function eq(comparer, a, b) {
     return comparer(a, b) === 0;
 }
 
-export function defaultComparer() {
-    return (a, b) => a > b ? 1 : a < b ? -1 : 0;
+export function defaultComparer(a, b) {
+    return a > b ? 1 : a < b ? -1 : 0;
 }
 
 export function intersect(arrays) {

@@ -25,8 +25,8 @@
         }
     }
 
-    function defaultComparer() {
-        return (a, b) => a > b ? 1 : a < b ? -1 : 0;
+    function defaultComparer(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
     }
 
     class HashIndex {

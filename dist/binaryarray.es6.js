@@ -33,8 +33,8 @@
         return comparer(a, b) === 0;
     }
 
-    function defaultComparer() {
-        return (a, b) => a > b ? 1 : a < b ? -1 : 0;
+    function defaultComparer(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
     }
 
     class BinaryArray {
@@ -48,7 +48,18 @@
             this.arr = [];
         }
 
-        _positionOf(item) {
+        get items() {
+            return this.arr;
+        }
+
+        indexOf(item) {
+            let i = this.insertPos(item);
+            if (this.arr[i] && eq(this.comparer, this.arr[i], item)) {
+                return i;
+            }
+        }
+
+        insertPos(item) {
             let low = 0, high = this.arr.length, mid;
             while (low < high) {
                 // faster version of Math.floor((low + high) / 2)
@@ -68,10 +79,9 @@
         }
 
         getOne(item) {
-            const i = this._positionOf(item);
-            const entry = this.arr[i];
-            if (eq(this.comparer, entry, item)) {
-                return entry;
+            const i = this.indexOf(item);
+            if (i !== undefined) {
+                return this.arr[i];
             }
         }
 
@@ -83,10 +93,9 @@
         }
 
         removeOne(item) {
-            const ix = this._positionOf(item);
-            const entry = this.arr[ix];
-            if (eq(this.comparer, entry, item)) {
-                this.arr.splice(ix, 1);
+            const i = this.indexOf(item);
+            if (i !== undefined) {
+                this.arr.splice(i, 1);
             }
         }
 
@@ -98,18 +107,15 @@
         }
 
         addOne(item) {
-            const ix = this._positionOf(item);
-            const entry = this.arr[ix];
-            if (eq(this.comparer, entry, item)) {
-                this.arr[ix] = item;
-            } else {
-                this.arr.splice(ix, 0, item);
-            }
+            const ix = this.insertPos(item);
+            this.arr.splice(ix, 0, item);
         }
 
-        update(item, olditem) {
-            this.removeOne(olditem);
-            this.addOne(item);
+        update(item) {
+            this.indexOf(item);
+            if (i !== undefined) {
+                this.arr[i] = item;
+            }
         }
     }
 

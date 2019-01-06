@@ -25,8 +25,8 @@
         }
     }
 
-    function defaultComparer() {
-        return function (a, b) { return a > b ? 1 : a < b ? -1 : 0; };
+    function defaultComparer(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
     }
 
     var HashIndex = function HashIndex (name, itemFn, keyFn, comparer) {

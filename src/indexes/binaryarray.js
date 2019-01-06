@@ -11,7 +11,18 @@ class BinaryArray {
         this.arr = [];
     }
 
-    _positionOf(item) {
+    get items() {
+        return this.arr;
+    }
+
+    indexOf(item) {
+        let i = this.insertPos(item);
+        if (this.arr[i] && mem.eq(this.comparer, this.arr[i], item)) {
+            return i;
+        }
+    }
+
+    insertPos(item) {
         let low = 0, high = this.arr.length, mid;
         while (low < high) {
             // faster version of Math.floor((low + high) / 2)
@@ -31,10 +42,9 @@ class BinaryArray {
     }
 
     getOne(item) {
-        const i = this._positionOf(item);
-        const entry = this.arr[i];
-        if (mem.eq(this.comparer, entry, item)) {
-            return entry;
+        const i = this.indexOf(item);
+        if (i !== undefined) {
+            return this.arr[i];
         }
     }
 
@@ -46,10 +56,9 @@ class BinaryArray {
     }
 
     removeOne(item) {
-        const ix = this._positionOf(item);
-        const entry = this.arr[ix];
-        if (mem.eq(this.comparer, entry, item)) {
-            this.arr.splice(ix, 1);
+        const i = this.indexOf(item);
+        if (i !== undefined) {
+            this.arr.splice(i, 1);
         }
     }
 
@@ -61,18 +70,15 @@ class BinaryArray {
     }
 
     addOne(item) {
-        const ix = this._positionOf(item);
-        const entry = this.arr[ix];
-        if (mem.eq(this.comparer, entry, item)) {
-            this.arr[ix] = item;
-        } else {
-            this.arr.splice(ix, 0, item);
-        }
+        const ix = this.insertPos(item);
+        this.arr.splice(ix, 0, item);
     }
 
-    update(item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
+    update(item) {
+        this.indexOf(item);
+        if (i !== undefined) {
+            this.arr[i] = item;
+        }
     }
 }
 

@@ -33,8 +33,8 @@
         return comparer(a, b) === 0;
     }
 
-    function defaultComparer() {
-        return function (a, b) { return a > b ? 1 : a < b ? -1 : 0; };
+    function defaultComparer(a, b) {
+        return a > b ? 1 : a < b ? -1 : 0;
     }
 
     function intersect(arrays) {
@@ -185,7 +185,15 @@
         this.index = [];
     };
 
-    BinaryIndex.prototype._positionOf = function _positionOf (key) {
+    BinaryIndex.prototype.indexOf = function indexOf (key) {
+        var i = this.insertPos(key);
+        var entry = this.index[i];
+        if (entry && eq(this.comparer, entry.key, key)) {
+            return i;
+        }
+    };
+
+    BinaryIndex.prototype.insertPos = function insertPos (key) {
         var low = 0, high = this.index.length, mid;
         while (low < high) {
             // faster version of Math.floor((low + high) / 2)
@@ -207,10 +215,9 @@
     };
 
     BinaryIndex.prototype.getOne = function getOne (key) {
-        var i = this._positionOf(key);
-        var entry = this.index[i];
-        if (eq(this.comparer, entry.key, key)) {
-            return entry.values;
+        var i = this.indexOf(key);
+        if (i !== undefined) {
+            return this.index[i].values;
         }
     };
 
@@ -225,10 +232,10 @@
 
     BinaryIndex.prototype.removeOne = function removeOne (item) {
         var key = this.keyFn(item);
-        var ix = this._positionOf(key);
-        var entry = this.index[ix];
+        var ix = this.indexOf(key);
             
-        if (entry && eq(this.comparer, entry.key, key)) {
+        if (ix !== undefined) {
+            var entry = this.index[ix];
             var it = this.itemFn(item);
             var i = entry.values.indexOf(it);
             if (i > -1) {
@@ -252,13 +259,13 @@
     BinaryIndex.prototype.addOne = function addOne (item) {
         var key = this.keyFn(item);
         var it = this.itemFn(item);
-        var ix = this._positionOf(key);
-        var entry = this.index[ix];
+        var pos = this.insertPos(key);
+        var entry = this.index[pos];
             
         if (entry && eq(this.comparer, entry.key, key)) {
             entry.values.push(it);
         } else {
-            this.index.splice(ix, 0, {key: key, values: [it]});
+            this.index.splice(pos, 0, {key: key, values: [it]});
         }
     };
 
