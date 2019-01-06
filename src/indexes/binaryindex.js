@@ -1,4 +1,5 @@
 import * as mem from '../common';
+import HashIndex from './hashindex';
 
 class BinaryIndex {
     constructor (name, itemFn, keyFn, comparer) {
@@ -10,9 +11,9 @@ class BinaryIndex {
     }
     
     static build(name, itemFn, keyFn, items, comparer) {
-        let hash = new BinaryIndex(name, itemFn, keyFn, comparer);
-        hash.add(items);
-        return hash;
+        let bin = new BinaryIndex(name, itemFn, keyFn, comparer);
+        bin.add(items);
+        return bin;
     }
 
     get keys() {
