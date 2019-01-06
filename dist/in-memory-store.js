@@ -172,9 +172,9 @@
     var prototypeAccessors$1 = { keys: { configurable: true } };
         
     BinaryIndex.build = function build (name, itemFn, keyFn, items, comparer) {
-        var hash = new BinaryIndex(name, itemFn, keyFn, comparer);
-        hash.add(items);
-        return hash;
+        var bin = new BinaryIndex(name, itemFn, keyFn, comparer);
+        bin.add(items);
+        return bin;
     };
 
     prototypeAccessors$1.keys.get = function () {

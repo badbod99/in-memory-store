@@ -165,9 +165,9 @@
         }
         
         static build(name, itemFn, keyFn, items, comparer) {
-            let hash = new BinaryIndex(name, itemFn, keyFn, comparer);
-            hash.add(items);
-            return hash;
+            let bin = new BinaryIndex(name, itemFn, keyFn, comparer);
+            bin.add(items);
+            return bin;
         }
 
         get keys() {

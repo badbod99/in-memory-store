@@ -5,6 +5,7 @@ const BinaryArray = require('../dist/binaryarray');
 const HashIndex = require('../dist/hashindex');
 const InMemoryStore = require('../dist/in-memory-store');
 const RBTree    = require('bintrees').RBTree;
+const BinTree    = require('bintrees').BinTree;
 
 const N = 10000;
 const rvalues = new Array(N).fill(0).map((n, i) => Math.floor(Math.random() * N));
@@ -13,6 +14,8 @@ const prefilledAVL = new Tree();
 rvalues.forEach((v) => prefilledAVL.insert(v));
 const prefilledRB = new RBTree((a, b) => a - b);
 rvalues.forEach((v) => prefilledRB.insert(v));
+const prefilledBin = new BinTree((a, b) => a - b);
+rvalues.forEach((v) => prefilledBin.insert(v));
 const prefilledMemBin = new BinaryIndex('test', r => r, r => r);
 rvalues.forEach((v) => prefilledMemBin.add(v));
 const prefilledMemHash = new HashIndex('test', r => r, r => r);
@@ -32,9 +35,13 @@ const options = {
 };
 
 new Benchmark.Suite(`Insert (x${N})`, options)
-  .add('Bintrees', () => {
+  .add('Bintrees RBTree', () => {
     let rb = new RBTree((a, b) => a - b);
     for (let i = 0; i < N; i++) rb.insert(rvalues[i]);
+  })
+  .add('Bintrees BinTree', () => {
+    let bn = new BinTree((a, b) => a - b);
+    for (let i = 0; i < N; i++) bn.insert(rvalues[i]);
   })
   .add('InMemoryStore BinaryIndex', () => {
     let mem = new BinaryIndex('test', r => r, r => r);
@@ -59,8 +66,11 @@ new Benchmark.Suite(`Insert (x${N})`, options)
   .run();
 
 new Benchmark.Suite(`Random read (x${N})`, options)
-  .add('Bintrees', () => {
+  .add('Bintrees RBTree', () => {
     for (let i = N - 1; i; i--) prefilledRB.find(rvalues[i]);
+  })
+  .add('Bintrees BinTree', () => {
+    for (let i = N - 1; i; i--) prefilledBin.find(rvalues[i]);
   })
   .add('InMemoryStore BinaryIndex', () => {
     for (let i = N - 1; i; i--) prefilledMemBin.getOne(rvalues[i]);
@@ -80,8 +90,11 @@ new Benchmark.Suite(`Random read (x${N})`, options)
   .run();
 
 new Benchmark.Suite(`Remove (x${N})`, options)
-  .add('Bintrees', () => {
+  .add('Bintrees RBTree', () => {
     for (let i = 0; i < N; i++) prefilledRB.remove(rvalues[i]);
+  })
+  .add('Bintrees BinTree', () => {
+    for (let i = 0; i < N; i++) prefilledBin.remove(rvalues[i]);
   })
   .add('InMemoryStore BinaryIndex', () => {
     for (let i = N - 1; i; i--) prefilledMemBin.removeOne(rvalues[i]);
