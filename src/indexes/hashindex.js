@@ -11,7 +11,7 @@ class HashIndex {
     
     static build(name, itemFn, keyFn, items, comparer) {
         let bin = new HashIndex(name, itemFn, keyFn, comparer);
-        bin.add(items);
+        bin.populate(items);
         return bin;
     }
 
@@ -23,27 +23,17 @@ class HashIndex {
         this.index = new Map([]);
     }
 
-    getOne(key) {
-        return this.index.get(key);
-    }
-
-    get(keys) {
+    findMany(keys) {
         keys = mem.oneOrMany(keys);
-        if (keys.length === 1) {
-            return this.getOne(keys[0]);
-        }
-        let data = keys.map(m => getOne(m));
+        let data = keys.map(m => this.getOne(m));
         return [].concat.apply([], data);
     }
 
-    remove(items) {
-        items = mem.oneOrMany(items);
-        items.forEach(item => {
-            this.removeOne(item);
-        });
+    find(key) {
+        return this.index.get(key);
     }
 
-    removeOne(item) {
+    remove(item) {
         const key = this.keyFn(item);
         if (this.index.has(key)) {
             const col = this.index.get(key);
@@ -58,14 +48,12 @@ class HashIndex {
         }
     }
 
-    add(items) {
+    populate(items) {
         items = mem.oneOrMany(items);
-        items.forEach(item => {
-            this.addOne(item);
-        });
+        items.forEach(item => this.insert(item));
     }
 
-    addOne(item) {
+    insert(item) {
         const key = this.keyFn(item);
         const it = this.itemFn(item);
         if (it && key) {

@@ -17,11 +17,9 @@ rvalues.forEach((v) => prefilledRB.insert(v));
 const prefilledBin = new BinTree((a, b) => a - b);
 rvalues.forEach((v) => prefilledBin.insert(v));
 const prefilledMemBin = new BinaryIndex('test', r => r, r => r);
-rvalues.forEach((v) => prefilledMemBin.add(v));
+rvalues.forEach((v) => prefilledMemBin.insert(v));
 const prefilledMemHash = new HashIndex('test', r => r, r => r);
-rvalues.forEach((v) => prefilledMemHash.add(v));
-const prefilledMemArr = new BinaryArray();
-rvalues.forEach((v) => prefilledMemArr.add(v));
+rvalues.forEach((v) => prefilledMemHash.insert(v));
 const prefilledMemStore = new InMemoryStore(r => r);
 rvalues.forEach((v) => prefilledMemStore.add(v));
 
@@ -34,6 +32,7 @@ const options = {
   }
 };
 
+/*
 new Benchmark.Suite(`Insert (x${N})`, options)
   .add('Bintrees RBTree', () => {
     let rb = new RBTree((a, b) => a - b);
@@ -45,15 +44,11 @@ new Benchmark.Suite(`Insert (x${N})`, options)
   })
   .add('InMemoryStore BinaryIndex', () => {
     let mem = new BinaryIndex('test', r => r, r => r);
-    for (let i = 0; i < N; i++) frb = mem.addOne(rvalues[i]);
+    for (let i = 0; i < N; i++) frb = mem.insert(rvalues[i]);
   })
   .add('InMemoryStore HashIndex', () => {
     let mem = new HashIndex('test', r => r, r => r);
-    for (let i = 0; i < N; i++) frb = mem.addOne(rvalues[i]);
-  })
-  .add('InMemoryStore BinaryArray', () => {
-    let mem = new BinaryArray();
-    for (let i = 0; i < N; i++) frb = mem.addOne(rvalues[i]);
+    for (let i = 0; i < N; i++) frb = mem.insert(rvalues[i]);
   })
   .add('InMemoryStore', () => {
     let mem = new InMemoryStore(r => r);
@@ -64,7 +59,16 @@ new Benchmark.Suite(`Insert (x${N})`, options)
     for (let i = 0; i < N; i++) tree.insert(rvalues[i]);
   })
   .run();
+*/
 
+
+new Benchmark.Suite(`Random read (x${N})`, options)
+ .add('InMemoryStore BinaryIndex', () => {
+    for (let i = N - 1; i; i--) prefilledMemBin.find(rvalues[i]);
+  })
+  .run();
+
+  /*
 new Benchmark.Suite(`Random read (x${N})`, options)
   .add('Bintrees RBTree', () => {
     for (let i = N - 1; i; i--) prefilledRB.find(rvalues[i]);
@@ -73,13 +77,10 @@ new Benchmark.Suite(`Random read (x${N})`, options)
     for (let i = N - 1; i; i--) prefilledBin.find(rvalues[i]);
   })
   .add('InMemoryStore BinaryIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemBin.getOne(rvalues[i]);
+    for (let i = N - 1; i; i--) prefilledMemBin.find(rvalues[i]);
   })
   .add('InMemoryStore HashIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemHash.getOne(rvalues[i]);
-  })
-  .add('InMemoryStore BinaryArray', () => {
-    for (let i = 0; i < N; i++) prefilledMemArr.getOne(rvalues[i]);
+    for (let i = N - 1; i; i--) prefilledMemHash.find(rvalues[i]);
   })
   .add('InMemoryStore', () => {
     for (let i = 0; i < N; i++) prefilledMemStore.getOne(rvalues[i]);
@@ -88,7 +89,9 @@ new Benchmark.Suite(`Random read (x${N})`, options)
     for (let i = N - 1; i; i--) prefilledAVL.find(rvalues[i]);
   })
   .run();
+  */
 
+  /*
 new Benchmark.Suite(`Remove (x${N})`, options)
   .add('Bintrees RBTree', () => {
     for (let i = 0; i < N; i++) prefilledRB.remove(rvalues[i]);
@@ -97,13 +100,10 @@ new Benchmark.Suite(`Remove (x${N})`, options)
     for (let i = 0; i < N; i++) prefilledBin.remove(rvalues[i]);
   })
   .add('InMemoryStore BinaryIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemBin.removeOne(rvalues[i]);
+    for (let i = N - 1; i; i--) prefilledMemBin.remove(rvalues[i]);
   })
   .add('InMemoryStore HashIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemHash.removeOne(rvalues[i]);
-  })
-  .add('InMemoryStore BinaryArray', () => {
-    for (let i = N - 1; i; i--) prefilledMemArr.removeOne(rvalues[i]);
+    for (let i = N - 1; i; i--) prefilledMemHash.remove(rvalues[i]);
   })
   .add('InMemoryStore', () => {
     for (let i = 0; i < N; i++) prefilledMemStore.removeOne(rvalues[i]);
@@ -112,6 +112,7 @@ new Benchmark.Suite(`Remove (x${N})`, options)
     for (let i = N - 1; i; i--) prefilledAVL.remove(rvalues[i]);
   })
   .run();
+  */
 
   /*
 const M = 10000;

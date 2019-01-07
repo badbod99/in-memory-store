@@ -84,7 +84,7 @@
         
     HashIndex.build = function build (name, itemFn, keyFn, items, comparer) {
         var bin = new HashIndex(name, itemFn, keyFn, comparer);
-        bin.add(items);
+        bin.populate(items);
         return bin;
     };
 
@@ -96,29 +96,19 @@
         this.index = new Map([]);
     };
 
-    HashIndex.prototype.getOne = function getOne (key) {
-        return this.index.get(key);
-    };
+    HashIndex.prototype.findMany = function findMany (keys) {
+            var this$1 = this;
 
-    HashIndex.prototype.get = function get (keys) {
         keys = oneOrMany(keys);
-        if (keys.length === 1) {
-            return this.getOne(keys[0]);
-        }
-        var data = keys.map(function (m) { return getOne(m); });
+        var data = keys.map(function (m) { return this$1.getOne(m); });
         return [].concat.apply([], data);
     };
 
-    HashIndex.prototype.remove = function remove (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.removeOne(item);
-        });
+    HashIndex.prototype.find = function find (key) {
+        return this.index.get(key);
     };
 
-    HashIndex.prototype.removeOne = function removeOne (item) {
+    HashIndex.prototype.remove = function remove (item) {
         var key = this.keyFn(item);
         if (this.index.has(key)) {
             var col = this.index.get(key);
@@ -133,16 +123,14 @@
         }
     };
 
-    HashIndex.prototype.add = function add (items) {
+    HashIndex.prototype.populate = function populate (items) {
             var this$1 = this;
 
         items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.addOne(item);
-        });
+        items.forEach(function (item) { return this$1.insert(item); });
     };
 
-    HashIndex.prototype.addOne = function addOne (item) {
+    HashIndex.prototype.insert = function insert (item) {
         var key = this.keyFn(item);
         var it = this.itemFn(item);
         if (it && key) {
@@ -161,111 +149,151 @@
 
     Object.defineProperties( HashIndex.prototype, prototypeAccessors );
 
+    var BinaryArray = function BinaryArray (comparer) {
+        this.arr = [];
+        this.comparer = comparer || defaultComparer;
+    };
+
+    var prototypeAccessors$1 = { keys: { configurable: true } };
+        
+    BinaryArray.prototype.clear = function clear () {
+        this.arr = [];
+    };
+
+    prototypeAccessors$1.keys.get = function () {
+        return this.arr.map(function (m) { return m.key; });
+    };
+
+    BinaryArray.prototype.indexOf = function indexOf (key) {
+        var i = this.insertPos(key);
+        if (this.arr[i] && eq(this.comparer, this.arr[i].key, key)) {
+            return i;
+        } else {
+            return -1;
+        }
+    };
+
+    BinaryArray.prototype.insertPos = function insertPos (key) {
+        var low = 0, high = this.arr.length, mid;
+        while (low < high) {
+            // faster version of Math.floor((low + high) / 2)
+            mid = (low + high) >>> 1; 
+            lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid;
+        }
+        return low;
+    };
+
+    BinaryArray.prototype.get = function get (key) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            return this.arr[i].value;
+        }
+    };
+
+    BinaryArray.prototype.remove = function remove (key) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            this.removeAt(i);
+        }
+    };
+
+    BinaryArray.prototype.add = function add (key, value) {
+        var ix = this.insertPos(key);
+        this.addAt(ix, key, value);
+    };
+
+    BinaryArray.prototype.addAt = function addAt (pos, key, value) {
+        var item = { key: key, value: value };
+        this.arr.splice(pos, 0, item);
+    };
+
+    BinaryArray.prototype.removeAt = function removeAt (pos) {
+        this.arr.splice(pos, 1);
+    };
+
+    BinaryArray.prototype.getAt = function getAt (pos) {
+        return this.arr[pos];
+    };
+
+    BinaryArray.prototype.update = function update (item) {
+        this.indexOf(item.key);
+        if (i !== undefined) {
+            this.arr[i].value = item;
+        }
+    };
+
+    Object.defineProperties( BinaryArray.prototype, prototypeAccessors$1 );
+
     var BinaryIndex = function BinaryIndex (name, itemFn, keyFn, comparer) {
-        this.index = [];
+        this.index = new BinaryArray(comparer);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors$1 = { keys: { configurable: true } };
+    var prototypeAccessors$2 = { keys: { configurable: true } };
         
     BinaryIndex.build = function build (name, itemFn, keyFn, items, comparer) {
         var bin = new BinaryIndex(name, itemFn, keyFn, comparer);
-        bin.add(items);
+        bin.populate(items);
         return bin;
     };
 
-    prototypeAccessors$1.keys.get = function () {
-        return this.index.map(function (m) { return m.key; });
+    prototypeAccessors$2.keys.get = function () {
+        return this.index.keys;
     };
 
     BinaryIndex.prototype.clear = function clear () {
         this.index = [];
     };
 
-    BinaryIndex.prototype.indexOf = function indexOf (key) {
-        var i = this.insertPos(key);
-        var entry = this.index[i];
-        if (entry && eq(this.comparer, entry.key, key)) {
-            return i;
-        }
-    };
-
-    BinaryIndex.prototype.insertPos = function insertPos (key) {
-        var low = 0, high = this.index.length, mid;
-        while (low < high) {
-            // faster version of Math.floor((low + high) / 2)
-            mid = (low + high) >>> 1; 
-            lt(this.comparer, this.index[mid].key, key) ? low = mid + 1 : high = mid;
-        }
-        return low;
-    };
-
-    BinaryIndex.prototype.get = function get (keys) {
+    BinaryIndex.prototype.findMany = function findMany (keys) {
             var this$1 = this;
 
         keys = oneOrMany(keys);
-        if (keys.length === 1) {
-            return this.getOne(keys[0]);
-        }
         var data = keys.map(function (m) { return this$1.getOne(m); });
         return [].concat.apply([], data);
     };
 
-    BinaryIndex.prototype.getOne = function getOne (key) {
-        var i = this.indexOf(key);
-        if (i !== undefined) {
-            return this.index[i].values;
-        }
+    BinaryIndex.prototype.find = function find (key) {
+        return this.index.get(key);
     };
 
-    BinaryIndex.prototype.remove = function remove (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.removeOne(item);
-        });
-    };
-
-    BinaryIndex.prototype.removeOne = function removeOne (item) {
+    BinaryIndex.prototype.remove = function remove (item) {
         var key = this.keyFn(item);
-        var ix = this.indexOf(key);
+        var pos = this.index.indexOf(key);
             
-        if (ix !== undefined) {
-            var entry = this.index[ix];
+        if (pos > -1) {
+            var entry = this.index.getAt(pos);
             var it = this.itemFn(item);
-            var i = entry.values.indexOf(it);
+            var i = entry.value.indexOf(it);
             if (i > -1) {
-                entry.values.splice(i, 1);
+                entry.value.splice(i, 1);
             }
-            if (entry.values.length === 0) {
-                this.index.splice(ix, 1);
+            if (entry.value.length === 0) {
+                this.index.removeAt(pos);
             }
         }
     };
 
-    BinaryIndex.prototype.add = function add (items) {
+    BinaryIndex.prototype.populate = function populate (items) {
             var this$1 = this;
 
         items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.addOne(item);
-        });
+        items.forEach(function (item) { return this$1.insert(item); });
     };
         
-    BinaryIndex.prototype.addOne = function addOne (item) {
+    BinaryIndex.prototype.insert = function insert (item) {
         var key = this.keyFn(item);
         var it = this.itemFn(item);
-        var pos = this.insertPos(key);
-        var entry = this.index[pos];
+        var pos = this.index.insertPos(key);
+        var entry = this.index.getAt(pos);
             
         if (entry && eq(this.comparer, entry.key, key)) {
-            entry.values.push(it);
+            entry.value.push(it);
         } else {
-            this.index.splice(pos, 0, {key: key, values: [it]});
+            this.index.addAt(pos, key, [it]); 
         }
     };
 
@@ -274,7 +302,7 @@
         this.addOne(item);
     };
 
-    Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$1 );
+    Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$2 );
 
     var InMemoryStore = function InMemoryStore(keyFn, comparer) {
         this.indexes = new Map([]);
@@ -283,9 +311,9 @@
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors$2 = { isEmpty: { configurable: true } };
+    var prototypeAccessors$3 = { isEmpty: { configurable: true } };
 
-    prototypeAccessors$2.isEmpty.get = function () {
+    prototypeAccessors$3.isEmpty.get = function () {
         return this.entries.size === 0;
     };
 
@@ -297,7 +325,7 @@
             var this$1 = this;
 
         items = oneOrMany(items);
-        this.indexes.forEach(function (index) { return index.add(items); });
+        this.indexes.forEach(function (index) { return index.populate(items); });
         var data = items.map(function (item) { return [this$1.keyFn(item), item]; });
         this.entries = new Map(data);
     };
@@ -316,13 +344,13 @@
     	
     	InMemoryStore.prototype.get = function get (indexName, values) {
         var data = this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).get(values) : [];
+            this.indexes.get(indexName).findMany(values) : [];
         return extract(this.entries, data);
     };
 
     InMemoryStore.prototype.getOne = function getOne (indexName, value) {
         var data = this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).getOne(value) : [];
+            this.indexes.get(indexName).find(value) : [];
         return extract(this.entries, data);
     };
 
@@ -411,7 +439,7 @@
         this.entries.set(key, item);
     };
 
-    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$2 );
+    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$3 );
 
     return InMemoryStore;
 

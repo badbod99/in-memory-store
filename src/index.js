@@ -20,7 +20,7 @@ class InMemoryStore {
 
     populate(items) {
         items = mem.oneOrMany(items);
-        this.indexes.forEach(index => index.add(items));
+        this.indexes.forEach(index => index.populate(items));
         const data = items.map(item => [this.keyFn(item), item]);
         this.entries = new Map(data);
     }
@@ -39,13 +39,13 @@ class InMemoryStore {
 	
 	get(indexName, values) {
         const data = this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).get(values) : [];
+            this.indexes.get(indexName).findMany(values) : [];
         return mem.extract(this.entries, data);
     }
 
     getOne(indexName, value) {
         const data = this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).getOne(value) : [];
+            this.indexes.get(indexName).find(value) : [];
         return mem.extract(this.entries, data);
     }
 

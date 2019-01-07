@@ -4,6 +4,7 @@
   "description": "JavaScript memory store for key/value with indexed lookups based on hash and binary search.",
   "main": "dist/in-memory-store.js",
   "scripts": {
+    "preexample": "npm run build",
     "example": "http-server example",
     "build": "rollup -c",
     "prebenchmark": "npm run build",

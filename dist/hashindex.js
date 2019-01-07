@@ -41,7 +41,7 @@
         
     HashIndex.build = function build (name, itemFn, keyFn, items, comparer) {
         var bin = new HashIndex(name, itemFn, keyFn, comparer);
-        bin.add(items);
+        bin.populate(items);
         return bin;
     };
 
@@ -53,29 +53,19 @@
         this.index = new Map([]);
     };
 
-    HashIndex.prototype.getOne = function getOne (key) {
-        return this.index.get(key);
-    };
+    HashIndex.prototype.findMany = function findMany (keys) {
+            var this$1 = this;
 
-    HashIndex.prototype.get = function get (keys) {
         keys = oneOrMany(keys);
-        if (keys.length === 1) {
-            return this.getOne(keys[0]);
-        }
-        var data = keys.map(function (m) { return getOne(m); });
+        var data = keys.map(function (m) { return this$1.getOne(m); });
         return [].concat.apply([], data);
     };
 
-    HashIndex.prototype.remove = function remove (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.removeOne(item);
-        });
+    HashIndex.prototype.find = function find (key) {
+        return this.index.get(key);
     };
 
-    HashIndex.prototype.removeOne = function removeOne (item) {
+    HashIndex.prototype.remove = function remove (item) {
         var key = this.keyFn(item);
         if (this.index.has(key)) {
             var col = this.index.get(key);
@@ -90,16 +80,14 @@
         }
     };
 
-    HashIndex.prototype.add = function add (items) {
+    HashIndex.prototype.populate = function populate (items) {
             var this$1 = this;
 
         items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.addOne(item);
-        });
+        items.forEach(function (item) { return this$1.insert(item); });
     };
 
-    HashIndex.prototype.addOne = function addOne (item) {
+    HashIndex.prototype.insert = function insert (item) {
         var key = this.keyFn(item);
         var it = this.itemFn(item);
         if (it && key) {

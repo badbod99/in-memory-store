@@ -83,7 +83,7 @@
         
         static build(name, itemFn, keyFn, items, comparer) {
             let bin = new HashIndex(name, itemFn, keyFn, comparer);
-            bin.add(items);
+            bin.populate(items);
             return bin;
         }
 
@@ -95,27 +95,17 @@
             this.index = new Map([]);
         }
 
-        getOne(key) {
-            return this.index.get(key);
-        }
-
-        get(keys) {
+        findMany(keys) {
             keys = oneOrMany(keys);
-            if (keys.length === 1) {
-                return this.getOne(keys[0]);
-            }
-            let data = keys.map(m => getOne(m));
+            let data = keys.map(m => this.getOne(m));
             return [].concat.apply([], data);
         }
 
-        remove(items) {
-            items = oneOrMany(items);
-            items.forEach(item => {
-                this.removeOne(item);
-            });
+        find(key) {
+            return this.index.get(key);
         }
 
-        removeOne(item) {
+        remove(item) {
             const key = this.keyFn(item);
             if (this.index.has(key)) {
                 const col = this.index.get(key);
@@ -130,14 +120,12 @@
             }
         }
 
-        add(items) {
+        populate(items) {
             items = oneOrMany(items);
-            items.forEach(item => {
-                this.addOne(item);
-            });
+            items.forEach(item => this.insert(item));
         }
 
-        addOne(item) {
+        insert(item) {
             const key = this.keyFn(item);
             const it = this.itemFn(item);
             if (it && key) {
@@ -155,9 +143,82 @@
         }
     }
 
+    class BinaryArray {
+        constructor (comparer) {
+            this.arr = [];
+            this.comparer = comparer || defaultComparer;
+        }
+        
+        clear() {
+            this.arr = [];
+        }
+
+        get keys() {
+            return this.arr.map(m => m.key);
+        }
+
+        indexOf(key) {
+            let i = this.insertPos(key);
+            if (this.arr[i] && eq(this.comparer, this.arr[i].key, key)) {
+                return i;
+            } else {
+                return -1;
+            }
+        }
+
+        insertPos(key) {
+            let low = 0, high = this.arr.length, mid;
+            while (low < high) {
+                // faster version of Math.floor((low + high) / 2)
+                mid = (low + high) >>> 1; 
+                lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid;
+            }
+            return low;
+        }
+
+        get(key) {
+            const i = this.indexOf(key);
+            if (i > -1) {
+                return this.arr[i].value;
+            }
+        }
+
+        remove(key) {
+            const i = this.indexOf(key);
+            if (i > -1) {
+                this.removeAt(i);
+            }
+        }
+
+        add(key, value) {
+            const ix = this.insertPos(key);
+            this.addAt(ix, key, value);
+        }
+
+        addAt(pos, key, value) {
+            let item = { key: key, value: value };
+            this.arr.splice(pos, 0, item);
+        }
+
+        removeAt(pos) {
+            this.arr.splice(pos, 1);
+        }
+
+        getAt(pos) {
+            return this.arr[pos];
+        }
+
+        update(item) {
+            this.indexOf(item.key);
+            if (i !== undefined) {
+                this.arr[i].value = item;
+            }
+        }
+    }
+
     class BinaryIndex {
         constructor (name, itemFn, keyFn, comparer) {
-            this.index = [];
+            this.index = new BinaryArray(comparer);
             this.name = name;
             this.itemFn = itemFn;
             this.keyFn = keyFn;
@@ -166,93 +227,60 @@
         
         static build(name, itemFn, keyFn, items, comparer) {
             let bin = new BinaryIndex(name, itemFn, keyFn, comparer);
-            bin.add(items);
+            bin.populate(items);
             return bin;
         }
 
         get keys() {
-            return this.index.map(m => m.key);
+            return this.index.keys;
         }
 
         clear() {
             this.index = [];
         }
 
-        indexOf(key) {
-            const i = this.insertPos(key);
-            const entry = this.index[i];
-            if (entry && eq(this.comparer, entry.key, key)) {
-                return i;
-            }
-        }
-
-        insertPos(key) {
-            let low = 0, high = this.index.length, mid;
-            while (low < high) {
-                // faster version of Math.floor((low + high) / 2)
-                mid = (low + high) >>> 1; 
-                lt(this.comparer, this.index[mid].key, key) ? low = mid + 1 : high = mid;
-            }
-            return low;
-        }
-
-        get(keys) {
+        findMany(keys) {
             keys = oneOrMany(keys);
-            if (keys.length === 1) {
-                return this.getOne(keys[0]);
-            }
             let data = keys.map(m => this.getOne(m));
             return [].concat.apply([], data);
         }
 
-        getOne(key) {
-            const i = this.indexOf(key);
-            if (i !== undefined) {
-                return this.index[i].values;
-            }
+        find(key) {
+            return this.index.get(key);
         }
 
-        remove(items) {
-            items = oneOrMany(items);
-            items.forEach(item => {
-                this.removeOne(item);
-            });
-        }
-
-        removeOne(item) {
+        remove(item) {
             const key = this.keyFn(item);
-            const ix = this.indexOf(key);
+            const pos = this.index.indexOf(key);
             
-            if (ix !== undefined) {
-                const entry = this.index[ix];
+            if (pos > -1) {
+                const entry = this.index.getAt(pos);
                 const it = this.itemFn(item);
-                const i = entry.values.indexOf(it);
+                const i = entry.value.indexOf(it);
                 if (i > -1) {
-                    entry.values.splice(i, 1);
+                    entry.value.splice(i, 1);
                 }
-                if (entry.values.length === 0) {
-                    this.index.splice(ix, 1);
+                if (entry.value.length === 0) {
+                    this.index.removeAt(pos);
                 }
             }
         }
 
-        add(items) {
+        populate(items) {
             items = oneOrMany(items);
-            items.forEach(item => {
-                this.addOne(item);
-            });
+            items.forEach(item => this.insert(item));
         }
         
-        addOne(item) {
+        insert(item) {
             const key = this.keyFn(item);
             const it = this.itemFn(item);
-            const pos = this.insertPos(key);
-            const entry = this.index[pos];
+            const pos = this.index.insertPos(key);
+            const entry = this.index.getAt(pos);
             
             if (entry && eq(this.comparer, entry.key, key)) {
-                entry.values.push(it);
+                entry.value.push(it);
             } else {
-                this.index.splice(pos, 0, {key: key, values: [it]});
+                this.index.addAt(pos, key, [it]); 
             }
         }
 
@@ -280,7 +308,7 @@
 
         populate(items) {
             items = oneOrMany(items);
-            this.indexes.forEach(index => index.add(items));
+            this.indexes.forEach(index => index.populate(items));
             const data = items.map(item => [this.keyFn(item), item]);
             this.entries = new Map(data);
         }
@@ -299,13 +327,13 @@
     	
     	get(indexName, values) {
             const data = this.indexes.has(indexName) ? 
-                this.indexes.get(indexName).get(values) : [];
+                this.indexes.get(indexName).findMany(values) : [];
             return extract(this.entries, data);
         }
 
         getOne(indexName, value) {
             const data = this.indexes.has(indexName) ? 
-                this.indexes.get(indexName).getOne(value) : [];
+                this.indexes.get(indexName).find(value) : [];
             return extract(this.entries, data);
         }
 

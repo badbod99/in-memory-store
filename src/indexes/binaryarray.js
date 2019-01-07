@@ -1,9 +1,8 @@
 import * as mem from '../common';
 
 class BinaryArray {
-    constructor (items, comparer) {
+    constructor (comparer) {
         this.arr = [];
-        this.add(items);
         this.comparer = comparer || mem.defaultComparer;
     }
     
@@ -11,73 +10,66 @@ class BinaryArray {
         this.arr = [];
     }
 
-    get items() {
-        return this.arr;
+    get keys() {
+        return this.arr.map(m => m.key);
     }
 
-    indexOf(item) {
-        let i = this.insertPos(item);
-        if (this.arr[i] && mem.eq(this.comparer, this.arr[i], item)) {
+    indexOf(key) {
+        let i = this.insertPos(key);
+        if (this.arr[i] && mem.eq(this.comparer, this.arr[i].key, key)) {
             return i;
+        } else {
+            return -1;
         }
     }
 
-    insertPos(item) {
+    insertPos(key) {
         let low = 0, high = this.arr.length, mid;
         while (low < high) {
             // faster version of Math.floor((low + high) / 2)
             mid = (low + high) >>> 1; 
-            mem.lt(this.comparer, this.arr[mid], item) ? low = mid + 1 : high = mid
+            mem.lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid
         }
         return low;
     }
 
-    get(items) {
-        items = mem.oneOrMany(items);
-        if (items.length === 1) {
-            return this.getOne(items[0]);
-        }
-        let data = items.map(m => this.getOne(m));
-        return [].concat.apply([], data);
-    }
-
-    getOne(item) {
-        const i = this.indexOf(item);
-        if (i !== undefined) {
-            return this.arr[i];
+    get(key) {
+        const i = this.indexOf(key);
+        if (i > -1) {
+            return this.arr[i].value;
         }
     }
 
-    remove(items) {
-        items = mem.oneOrMany(items);
-        items.forEach(item => {
-            this.removeOne(item);
-        });
-    }
-
-    removeOne(item) {
-        const i = this.indexOf(item);
-        if (i !== undefined) {
-            this.arr.splice(i, 1);
+    remove(key) {
+        const i = this.indexOf(key);
+        if (i > -1) {
+            this.removeAt(i);
         }
     }
 
-    add(items) {
-        items = mem.oneOrMany(items);
-        items.forEach(item => {
-            this.addOne(item);
-        });
+    add(key, value) {
+        const ix = this.insertPos(key);
+        let item = { key: key, value: value };
+        this.addAt(ix, key, value);
     }
 
-    addOne(item) {
-        const ix = this.insertPos(item);
-        this.arr.splice(ix, 0, item);
+    addAt(pos, key, value) {
+        let item = { key: key, value: value };
+        this.arr.splice(pos, 0, item);
+    }
+
+    removeAt(pos) {
+        this.arr.splice(pos, 1);
+    }
+
+    getAt(pos) {
+        return this.arr[pos];
     }
 
     update(item) {
-        this.indexOf(item);
+        this.indexOf(item.key);
         if (i !== undefined) {
-            this.arr[i] = item;
+            this.arr[i].value = item;
         }
     }
 }

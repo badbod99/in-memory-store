@@ -13,18 +13,6 @@
     (global['in-memory-store'] = factory());
 }(this, (function () { 'use strict';
 
-    function oneOrMany(items) {
-        if (!items) {
-            return [];
-        } else if (items instanceof Map) {
-            return Array.from(items.values());
-        } else if (!Array.isArray(items)) {
-            return [items];
-        } else {
-            return items;
-        }
-    }
-
     function lt(comparer, a, b) {
         return comparer(a, b) === -1;
     }
@@ -37,91 +25,76 @@
         return a > b ? 1 : a < b ? -1 : 0;
     }
 
-    var BinaryArray = function BinaryArray (items, comparer) {
+    var BinaryArray = function BinaryArray (comparer) {
         this.arr = [];
-        this.add(items);
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors = { items: { configurable: true } };
+    var prototypeAccessors = { keys: { configurable: true } };
         
     BinaryArray.prototype.clear = function clear () {
         this.arr = [];
     };
 
-    prototypeAccessors.items.get = function () {
-        return this.arr;
+    prototypeAccessors.keys.get = function () {
+        return this.arr.map(function (m) { return m.key; });
     };
 
-    BinaryArray.prototype.indexOf = function indexOf (item) {
-        var i = this.insertPos(item);
-        if (this.arr[i] && eq(this.comparer, this.arr[i], item)) {
+    BinaryArray.prototype.indexOf = function indexOf (key) {
+        var i = this.insertPos(key);
+        if (this.arr[i] && eq(this.comparer, this.arr[i].key, key)) {
             return i;
+        } else {
+            return -1;
         }
     };
 
-    BinaryArray.prototype.insertPos = function insertPos (item) {
+    BinaryArray.prototype.insertPos = function insertPos (key) {
         var low = 0, high = this.arr.length, mid;
         while (low < high) {
             // faster version of Math.floor((low + high) / 2)
             mid = (low + high) >>> 1; 
-            lt(this.comparer, this.arr[mid], item) ? low = mid + 1 : high = mid;
+            lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid;
         }
         return low;
     };
 
-    BinaryArray.prototype.get = function get (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        if (items.length === 1) {
-            return this.getOne(items[0]);
-        }
-        var data = items.map(function (m) { return this$1.getOne(m); });
-        return [].concat.apply([], data);
-    };
-
-    BinaryArray.prototype.getOne = function getOne (item) {
-        var i = this.indexOf(item);
-        if (i !== undefined) {
-            return this.arr[i];
+    BinaryArray.prototype.get = function get (key) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            return this.arr[i].value;
         }
     };
 
-    BinaryArray.prototype.remove = function remove (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.removeOne(item);
-        });
-    };
-
-    BinaryArray.prototype.removeOne = function removeOne (item) {
-        var i = this.indexOf(item);
-        if (i !== undefined) {
-            this.arr.splice(i, 1);
+    BinaryArray.prototype.remove = function remove (key) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            this.removeAt(i);
         }
     };
 
-    BinaryArray.prototype.add = function add (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) {
-            this$1.addOne(item);
-        });
+    BinaryArray.prototype.add = function add (key, value) {
+        var ix = this.insertPos(key);
+        this.addAt(ix, key, value);
     };
 
-    BinaryArray.prototype.addOne = function addOne (item) {
-        var ix = this.insertPos(item);
-        this.arr.splice(ix, 0, item);
+    BinaryArray.prototype.addAt = function addAt (pos, key, value) {
+        var item = { key: key, value: value };
+        this.arr.splice(pos, 0, item);
+    };
+
+    BinaryArray.prototype.removeAt = function removeAt (pos) {
+        this.arr.splice(pos, 1);
+    };
+
+    BinaryArray.prototype.getAt = function getAt (pos) {
+        return this.arr[pos];
     };
 
     BinaryArray.prototype.update = function update (item) {
-        this.indexOf(item);
+        this.indexOf(item.key);
         if (i !== undefined) {
-            this.arr[i] = item;
+            this.arr[i].value = item;
         }
     };
 
