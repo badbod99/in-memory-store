@@ -1,7 +1,7 @@
 import * as mem from '../common';
-import BinaryArray from './binaryarray';
+import { BinaryArray } from './binaryarray';
 
-class BinaryIndex {
+export class BinaryIndex {
     constructor (name, itemFn, keyFn, comparer) {
         this.comparer = comparer || mem.defaultComparer;
         this.index = new BinaryArray(this.comparer);
@@ -74,5 +74,3 @@ class BinaryIndex {
         this.insert(item);
     }
 }
-
-export default BinaryIndex;

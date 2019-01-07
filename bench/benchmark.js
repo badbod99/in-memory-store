@@ -1,19 +1,26 @@
+// Benchmark script runs in node.js, hense the ES5 systax
 const Benchmark = require('benchmark');
-const AVLIndex      = require('../dist/avlindex')
-const BinaryIndex = require('../dist/binaryindex');
-const HashIndex = require('../dist/hashindex');
-const RBIndex    = require('../dist/rbindex');
+const { AVLIndex, BinaryIndex, HashIndex, RBIndex } = require('../dist/benchmark');
 
+const A = 500;
 const N = 10000;
-const rvalues = new Array(N).fill(0).map((n, i) => Math.floor(Math.random() * N));
+const rvalues = new Array(N).fill(0).map((n, i) => {
+  return {
+    id: Math.floor(Math.random() * N),
+    rnd1: Math.floor(Math.random() * A),
+    rnd2: Math.floor(Math.random() * A)
+  }
+});
 
-const prefilledAVL = new AVLIndex('test', r => r, r => r);
+const avalues = new Array(N).fill(0).map((n, i) => Math.floor(Math.random() * A));
+
+const prefilledAVL = new AVLIndex('test', r => r.id, r => r.rnd1);
 rvalues.forEach((v) => prefilledAVL.insert(v));
-const prefilledRB = new RBIndex('test', r => r, r => r);
+const prefilledRB = new RBIndex('test', r => r.id, r => r.rnd1);
 rvalues.forEach((v) => prefilledRB.insert(v));
-const prefilledMemBin = new BinaryIndex('test', r => r, r => r);
+const prefilledMemBin = new BinaryIndex('test', r => r.id, r => r.rnd1);
 rvalues.forEach((v) => prefilledMemBin.insert(v));
-const prefilledMemHash = new HashIndex('test', r => r, r => r);
+const prefilledMemHash = new HashIndex('test', r => r.id, r => r.rnd1);
 rvalues.forEach((v) => prefilledMemHash.insert(v));
 
 const options = {
@@ -25,36 +32,55 @@ const options = {
   }
 };
 
+console.clear();
+console.log('--------------------- CORRECTNESS CHECK -----------------');
+for (var i = 0; i < 10; i++) {
+  console.log(`${prefilledAVL.find(avalues[i]).length} [${avalues[i]}] values found in AVLIndex`);
+  console.log(`${prefilledRB.find(avalues[i]).length} [${avalues[i]}] values found in prefilledRB`);
+  console.log(`${prefilledMemBin.find(avalues[i]).length} [${avalues[i]}] values found in prefilledMemBin`);
+  console.log(`${prefilledMemHash.find(avalues[i]).length} [${avalues[i]}] values found in prefilledMemHash`);
+}
+console.log('---------------------------------------------------------');
+
 new Benchmark.Suite(`Insert (x${N})`, options)
   .add('RBIndex', () => {
-    let rb = new RBIndex('test', r => r, r => r);
+    let rb = new RBIndex('test', r => r.id, r => r.rnd1);
     for (let i = 0; i < N; i++) rb.insert(rvalues[i]);
   })
   .add('AVLIndex', () => {
-    for (let i = N - 1; i; i--) prefilledAVL.find(rvalues[i]);
+    let avl = new AVLIndex('test', r => r.id, r => r.rnd1);
+    for (let i = N - 1; i; i--) avl.insert(rvalues[i]);
   })
   .add('BinaryIndex', () => {
-    let mem = new BinaryIndex('test', r => r, r => r);
+    let mem = new BinaryIndex('test', r => r.id, r => r.rnd1);
     for (let i = 0; i < N; i++) frb = mem.insert(rvalues[i]);
   })
   .add('HashIndex', () => {
-    let mem = new HashIndex('test', r => r, r => r);
+    let mem = new HashIndex('test', r => r.id, r => r.rnd1);
     for (let i = 0; i < N; i++) frb = mem.insert(rvalues[i]);
   })
   .run();
 
-new Benchmark.Suite(`Random read (x${N})`, options)
+new Benchmark.Suite(`Random read (${A} finds x ${N / A} times)`, options)
   .add('RBIndex', () => {
-    for (let i = N - 1; i; i--) prefilledRB.find(rvalues[i]);
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledRB.find(avalues[i]);
+    }
   })
   .add('AVLIndex', () => {
-    for (let i = N - 1; i; i--) prefilledAVL.find(rvalues[i]);
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledAVL.find(avalues[i]);
+    }
   })
   .add('BinaryIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemBin.find(rvalues[i]);
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledMemBin.find(avalues[i]);
+    }
   })
   .add('HashIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemHash.find(rvalues[i]);
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledMemHash.find(avalues[i]);
+    }
   })
   .run();
 

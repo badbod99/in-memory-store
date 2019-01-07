@@ -59,6 +59,9 @@ export function intersect(arrays) {
 
 export function extract(map, keys) {
     const r = [];
+    keys = oneOrMany(keys);
+    map = map || new Map([]);
+    
     keys.forEach((key) => {
         if (map.has(key)) {
             r.push(map.get(key));

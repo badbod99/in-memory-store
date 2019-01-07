@@ -8,11 +8,11 @@ npm install in-memory-store
 ```
 Then include in your project either with ES6 imports
 ```javascript
-import InMemoryTree from 'in-memory-tree';
+import { InMemoryStore } from 'in-memory-store';
 ```
 or require
 ```javascript
-const InMemoryStore = require('../dist/in-memory-store');
+const { InMemoryStore } = require('../dist/in-memory-store');
 ```
 or can also directly reference the compiled version from 'dist/in-memory-tree.js'.
 
@@ -91,9 +91,20 @@ npm run example
 ```
 Then open a web browser to http://localhost:8080
 
+## Using AVLIndex instead of BinaryIndex
+HashIndex, BinaryIndex and AVLIndex are packaged with in-memory-store. The [AVL](https://github.com/w8r/avl) 
+dependency is external. Include AVL globally with a CDN or using Webpack/Browserify/Rollup in your project
+to use.
+
+AVL provides similar read performance, but much faster insert performance for large datasets. It is however
+a more complex library and maintained seperately.
+
 # Performance
 Performance testing is included with [Benchmark](https://benchmarkjs.com/).
-Currently a very simple test of each Index type and the overall store.
+
+Test create 10,000 objects in format {id: X, rnd1: Y, rnd2: Z} where X=1 to 10,000, 
+Y=rnd(1 to 500) and Z=rnd(1 to 500). Index is created on Y (so items grouped by Y).
+We then find each grouped Y (all 500 of them), 20 times over.
 
 * HashIndex - Backed by a javascript Map object. Insert and Read is  
 very fast.
@@ -105,23 +116,23 @@ results to be returned as sorted arrays.
 
 ```shell
 Insert (x10000)
-RBIndex x 280 ops/sec ±1.98% (89 runs sampled)
-AVLIndex x 1,066 ops/sec ±0.34% (96 runs sampled)
-BinaryIndex x 285 ops/sec ±4.37% (89 runs sampled)
-HashIndex x 1,388 ops/sec ±0.61% (94 runs sampled)
+RBIndex x 788 ops/sec ±1.42% (92 runs sampled)
+AVLIndex x 1,363 ops/sec ±0.56% (96 runs sampled)
+BinaryIndex x 1,248 ops/sec ±0.25% (96 runs sampled)
+HashIndex x 2,470 ops/sec ±0.58% (96 runs sampled)
 - Fastest is HashIndex
 
-Random read (x10000)
-RBIndex x 621 ops/sec ±0.43% (95 runs sampled)
-AVLIndex x 1,061 ops/sec ±0.37% (95 runs sampled)
-BinaryIndex x 1,005 ops/sec ±0.34% (95 runs sampled)
-HashIndex x 199,560 ops/sec ±0.48% (92 runs sampled)
+Random read (500 finds x 20 times)
+RBIndex x 1,108 ops/sec ±0.87% (94 runs sampled)
+AVLIndex x 2,208 ops/sec ±0.97% (95 runs sampled)
+BinaryIndex x 2,171 ops/sec ±0.29% (95 runs sampled)
+HashIndex x 193,608 ops/sec ±0.38% (90 runs sampled)
 - Fastest is HashIndex
 
 Remove (x10000)
-RBIndex x 20,168 ops/sec ±0.33% (98 runs sampled)
-AVLIndex x 36,095 ops/sec ±0.68% (94 runs sampled)
-BinaryIndex x 28,463 ops/sec ±0.46% (94 runs sampled)
-HashIndex x 22,291 ops/sec ±0.40% (97 runs sampled)
-- Fastest is AVLIndex
+RBIndex x 19,515 ops/sec ±0.49% (95 runs sampled)
+AVLIndex x 15,754 ops/sec ±0.52% (96 runs sampled)
+BinaryIndex x 14,763 ops/sec ±0.42% (98 runs sampled)
+HashIndex x 10,850 ops/sec ±0.42% (95 runs sampled)
+- Fastest is RBIndex
 ```

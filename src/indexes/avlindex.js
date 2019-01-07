@@ -1,7 +1,7 @@
 import * as mem from '../common';
 import AVLTree from 'avl';
 
-class AVLIndex {
+export class AVLIndex {
     constructor (name, itemFn, keyFn, comparer) {
         this.comparer = comparer || mem.defaultComparer;
         this.index = new AVLTree(comparer);
@@ -78,5 +78,3 @@ class AVLIndex {
         this.insert(item);
     }
 }
-
-export default AVLIndex;

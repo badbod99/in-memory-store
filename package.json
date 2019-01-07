@@ -28,8 +28,7 @@
   "author": "Simon Lerpiniere",
   "license": "Apache-2.0",
   "dependencies": {
-    "avl": "^1.4.4",
-    "bintrees": "^1.0.2"
+    "avl": "^1.4.4"
   },
   "devDependencies": {
     "avl": "^1.4.4",

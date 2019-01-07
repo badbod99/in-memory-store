@@ -8,10 +8,12 @@
  */
 
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (global['in-memory-store'] = factory());
-}(this, (function () { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('avl')) :
+    typeof define === 'function' && define.amd ? define(['exports', 'avl'], factory) :
+    (factory((global['in-memory-store'] = {}),global.AVLTree));
+}(this, (function (exports,AVLTree) { 'use strict';
+
+    AVLTree = AVLTree && AVLTree.hasOwnProperty('default') ? AVLTree['default'] : AVLTree;
 
     function oneOrMany(items) {
         if (!items) {
@@ -64,6 +66,9 @@
 
     function extract(map, keys) {
         var r = [];
+        keys = oneOrMany(keys);
+        map = map || new Map([]);
+        
         keys.forEach(function (key) {
             if (map.has(key)) {
                 r.push(map.get(key));
@@ -304,6 +309,90 @@
 
     Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$2 );
 
+    var AVLIndex = function AVLIndex (name, itemFn, keyFn, comparer) {
+        this.comparer = comparer || defaultComparer;
+        this.index = new AVLTree(comparer);
+        this.name = name;
+        this.itemFn = itemFn;
+        this.keyFn = keyFn;
+    };
+
+    var prototypeAccessors$3 = { keys: { configurable: true } };
+        
+    AVLIndex.build = function build (name, itemFn, keyFn, items, comparer) {
+        var bin = new AVLIndex(name, itemFn, keyFn, comparer);
+        bin.populate(items);
+        return bin;
+    };
+
+    prototypeAccessors$3.keys.get = function () {
+        return this.index.keys();
+    };
+
+    AVLIndex.prototype.clear = function clear () {
+        this.index.clear();
+    };
+
+    AVLIndex.prototype.findMany = function findMany (keys) {
+            var this$1 = this;
+
+        keys = oneOrMany(keys);
+        var data = keys.map(function (m) { return this$1.find(m); });
+        return [].concat.apply([], data);
+    };
+
+    AVLIndex.prototype.find = function find (key) {
+        var found = this.index.find(key);
+        if (found) {
+            return found.data;
+        } else {
+            return [];
+        }
+    };
+
+    AVLIndex.prototype.remove = function remove (item) {
+        var key = this.keyFn(item);
+        var entry = this.index.find(key);
+
+        if (entry) {
+            var it = this.itemFn(item);
+            var arr = entry.data;
+            var i = arr.indexOf(it);
+            if (i > -1) {
+                arr.splice(i, 1);
+            }
+            if (arr.length === 0) {
+                this.index.remove(key);
+            }
+        }
+    };
+
+    AVLIndex.prototype.populate = function populate (items) {
+            var this$1 = this;
+
+        items = oneOrMany(items);
+        items.forEach(function (item) { return this$1.insert(item); });
+    };
+        
+    AVLIndex.prototype.insert = function insert (item) {
+        var key = this.keyFn(item);
+        var it = this.itemFn(item);
+        var entry = this.index.find(key);
+            
+        if (entry) {
+            entry.data.push(it);
+        } else {
+            this.index.insert(key, [it]);
+        }
+    };
+
+    AVLIndex.prototype.update = function update (item, olditem) {
+        this.remove(olditem);
+        this.insert(item);
+    };
+
+    Object.defineProperties( AVLIndex.prototype, prototypeAccessors$3 );
+
     var InMemoryStore = function InMemoryStore(keyFn, comparer) {
         this.indexes = new Map([]);
         this.entries = new Map([]);
@@ -311,9 +400,9 @@
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors$3 = { isEmpty: { configurable: true } };
+    var prototypeAccessors$4 = { isEmpty: { configurable: true } };
 
-    prototypeAccessors$3.isEmpty.get = function () {
+    prototypeAccessors$4.isEmpty.get = function () {
         return this.entries.size === 0;
     };
 
@@ -381,6 +470,12 @@
         return newIndex;
     };
 
+    InMemoryStore.prototype.buildAVLIndex = function buildAVLIndex (indexName, ixFn) {
+        var newIndex = AVLIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
+        this.indexes.set(indexName, newIndex);
+        return newIndex;
+    };
+
     InMemoryStore.prototype.remove = function remove (items) {
             var this$1 = this;
 
@@ -439,9 +534,14 @@
         this.entries.set(key, item);
     };
 
-    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$3 );
+    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$4 );
 
-    return InMemoryStore;
+    exports.InMemoryStore = InMemoryStore;
+    exports.HashIndex = HashIndex;
+    exports.BinaryIndex = BinaryIndex;
+    exports.AVLIndex = AVLIndex;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 //# sourceMappingURL=in-memory-store.js.map

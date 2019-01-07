@@ -1,6 +1,6 @@
 import * as mem from '../common';
 
-class BinaryArray {
+export class BinaryArray {
     constructor (comparer) {
         this.arr = [];
         this.comparer = comparer || mem.defaultComparer;
@@ -73,5 +73,3 @@ class BinaryArray {
         }
     }
 }
-
-export default BinaryArray;

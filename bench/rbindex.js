@@ -1,7 +1,12 @@
-import * as mem from '../common';
+// Not intended for production use.
+// RBTree does not provide key/value store and performs
+// poorly as implemented here with custom comparator and
+// key/value objects.
+
+import * as mem from '../src/common';
 import { RBTree } from 'bintrees';
 
-class RBIndex {
+export class RBIndex {
     constructor (name, itemFn, keyFn, comparer) {
         this.comparer = mem.keyWrapComparer(comparer || mem.defaultComparer);
         this.index = new RBTree(this.comparer);
@@ -80,5 +85,3 @@ class RBIndex {
         this.insert(item);
     }
 }
-
-export default RBIndex;

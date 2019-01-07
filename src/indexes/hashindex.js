@@ -1,6 +1,6 @@
 import * as mem from '../common';
 
-class HashIndex {
+export class HashIndex {
     constructor (name, itemFn, keyFn, comparer) {
         this.comparer = comparer || mem.defaultComparer;
         this.index = new Map([]);
@@ -70,5 +70,3 @@ class HashIndex {
         this.insert(item);
     }
 }
-
-export default HashIndex;
