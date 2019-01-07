@@ -24,11 +24,7 @@ export default [{
     name, banner,
     sourcemap: true,
   },
-  plugins: [ buble(), resolve(),
-    commonJS({
-      include: 'node_modules/**'
-    }) 
-  ]
+  plugins: [ buble() ]
 }, {
   input: 'src/index.js',
   output: {
@@ -123,11 +119,7 @@ export default [{
     name, banner,
     sourcemap: true,
   },
-  plugins: [ buble(), resolve(),
-    commonJS({
-      include: 'node_modules/**'
-    }) 
-  ]
+  plugins: [ buble(), resolve() ]
 } ,
 {
   input: 'example/index.js',
@@ -137,9 +129,5 @@ export default [{
     name, banner,
     sourcemap: true,
   },
-  plugins: [ buble(), resolve(),
-    commonJS({
-      include: 'node_modules/**'
-    }) 
-  ]
+  plugins: [ buble(), resolve() ] 
 }];
