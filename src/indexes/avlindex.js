@@ -1,27 +1,27 @@
 import * as mem from '../common';
-import BinaryArray from './binaryarray';
+import AVLTree from 'avl';
 
-class BinaryIndex {
+class AVLIndex {
     constructor (name, itemFn, keyFn, comparer) {
         this.comparer = comparer || mem.defaultComparer;
-        this.index = new BinaryArray(this.comparer);
+        this.index = new AVLTree(comparer);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
     }
     
     static build(name, itemFn, keyFn, items, comparer) {
-        let bin = new BinaryIndex(name, itemFn, keyFn, comparer);
+        let bin = new AVLIndex(name, itemFn, keyFn, comparer);
         bin.populate(items);
         return bin;
     }
 
     get keys() {
-        return this.index.keys;
+        return this.index.keys();
     }
 
     clear() {
-        this.index = new BinaryArray(this.comparer);
+        this.index.clear();
     }
 
     findMany(keys) {
@@ -31,22 +31,27 @@ class BinaryIndex {
     }
 
     find(key) {
-        return this.index.get(key);
+        let found = this.index.find(key);
+        if (found) {
+            return found.data;
+        } else {
+            return [];
+        }
     }
 
     remove(item) {
         const key = this.keyFn(item);
-        const pos = this.index.indexOf(key);
-        
-        if (pos > -1) {
-            const entry = this.index.getAt(pos);
+        const entry = this.index.find(key);
+
+        if (entry) {
             const it = this.itemFn(item);
-            const i = entry.value.indexOf(it);
+            const arr = entry.data;
+            const i = arr.indexOf(it);
             if (i > -1) {
-                entry.value.splice(i, 1);
+                arr.splice(i, 1);
             }
-            if (entry.value.length === 0) {
-                this.index.removeAt(pos);
+            if (arr.length === 0) {
+                this.index.remove(key);
             }
         }
     }
@@ -59,13 +64,12 @@ class BinaryIndex {
     insert(item) {
         const key = this.keyFn(item);
         const it = this.itemFn(item);
-        const pos = this.index.insertPos(key);
-        const entry = this.index.getAt(pos);
+        const entry = this.index.find(key);
         
-        if (entry && mem.eq(this.comparer, entry.key, key)) {
-            entry.value.push(it);
+        if (entry) {
+            entry.data.push(it);
         } else {
-            this.index.addAt(pos, key, [it]); 
+            this.index.insert(key, [it]);
         }
     }
 
@@ -75,4 +79,4 @@ class BinaryIndex {
     }
 }
 
-export default BinaryIndex;
+export default AVLIndex;

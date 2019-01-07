@@ -5,7 +5,7 @@ let store = new InMemoryStore(item => item.id);
 
 let catFn = r => r.name.last.substring(0,1).toUpperCase();
 store.populate(data);
-store.buildBinaryIndex("firstLetter", catFn);
+store.buildAVLIndex("firstLetter", catFn);
 
 let letters = store.getIndexKeys("firstLetter");
 

@@ -94,47 +94,34 @@ Then open a web browser to http://localhost:8080
 # Performance
 Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 Currently a very simple test of each Index type and the overall store.
-Comparison is against [AVL](https://github.com/w8r/avl) and [bintrees](https://github.com/vadimg/js_bintrees).
 
 * HashIndex - Backed by a javascript Map object. Insert and Read is  
 very fast.
 * BinaryIndex is an array backed binary search index.  Performance is not
 far off that of the Tree structures, but it allows simple, fast range
 results to be returned as sorted arrays.
-* BinaryArray is the base implementation used by BinaryIndex. This gives a
-closer comparison to AVL and BinTrees as both HashIndex and BinaryIndex
-do grouping of data into the index.
-* The InMemoryStore test itself is without any index setup.  This is basically
-just a HashIndex without the grouping, again, useful for comparison.
+* RBIndex - Index built on Red Black Tree from [bintrees](https://github.com/vadimg/js_bintrees).
+* AVLIndex - Index built on AVLIndex from [AVL](https://github.com/w8r/avl).
 
 ```shell
 Insert (x10000)
-Bintrees RBTree x 392 ops/sec ±1.14% (87 runs sampled)
-Bintrees BinTree x 388 ops/sec ±3.65% (84 runs sampled)
-InMemoryStore BinaryIndex x 227 ops/sec ±2.76% (78 runs sampled)
-InMemoryStore HashIndex x 1,154 ops/sec ±1.41% (90 runs sampled)
-InMemoryStore BinaryArray x 152 ops/sec ±2.62% (77 runs sampled)
-InMemoryStore x 1,580 ops/sec ±2.25% (90 runs sampled)
-AVL x 597 ops/sec ±0.48% (91 runs sampled)
-- Fastest is InMemoryStore
+RBIndex x 280 ops/sec ±1.98% (89 runs sampled)
+AVLIndex x 1,066 ops/sec ±0.34% (96 runs sampled)
+BinaryIndex x 285 ops/sec ±4.37% (89 runs sampled)
+HashIndex x 1,388 ops/sec ±0.61% (94 runs sampled)
+- Fastest is HashIndex
 
 Random read (x10000)
-Bintrees RBTree x 1,221 ops/sec ±1.27% (91 runs sampled)
-Bintrees BinTree x 563 ops/sec ±1.29% (88 runs sampled)
-InMemoryStore BinaryIndex x 934 ops/sec ±0.47% (93 runs sampled)
-InMemoryStore HashIndex x 175,522 ops/sec ±1.45% (92 runs sampled)
-InMemoryStore BinaryArray x 1,090 ops/sec ±1.51% (88 runs sampled)
-InMemoryStore x 18,861 ops/sec ±2.44% (89 runs sampled)
-AVL x 985 ops/sec ±0.45% (94 runs sampled)
-- Fastest is InMemoryStore HashIndex
+RBIndex x 621 ops/sec ±0.43% (95 runs sampled)
+AVLIndex x 1,061 ops/sec ±0.37% (95 runs sampled)
+BinaryIndex x 1,005 ops/sec ±0.34% (95 runs sampled)
+HashIndex x 199,560 ops/sec ±0.48% (92 runs sampled)
+- Fastest is HashIndex
 
 Remove (x10000)
-Bintrees RBTree x 24,147 ops/sec ±0.57% (94 runs sampled)
-Bintrees BinTree x 56,426 ops/sec ±2.08% (86 runs sampled)
-InMemoryStore BinaryIndex x 10,614 ops/sec ±1.34% (92 runs sampled)
-InMemoryStore HashIndex x 7,464 ops/sec ±1.37% (93 runs sampled)
-InMemoryStore BinaryArray x 10,625 ops/sec ±1.29% (91 runs sampled)
-InMemoryStore x 15,293 ops/sec ±0.47% (93 runs sampled)
-AVL x 9,930 ops/sec ±1.03% (93 runs sampled)
-- Fastest is Bintrees BinTree
+RBIndex x 20,168 ops/sec ±0.33% (98 runs sampled)
+AVLIndex x 36,095 ops/sec ±0.68% (94 runs sampled)
+BinaryIndex x 28,463 ops/sec ±0.46% (94 runs sampled)
+HashIndex x 22,291 ops/sec ±0.40% (97 runs sampled)
+- Fastest is AVLIndex
 ```

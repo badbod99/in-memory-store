@@ -1,27 +1,20 @@
 const Benchmark = require('benchmark');
-const Tree      = require('avl');
+const AVLIndex      = require('../dist/avlindex')
 const BinaryIndex = require('../dist/binaryindex');
-const BinaryArray = require('../dist/binaryarray');
 const HashIndex = require('../dist/hashindex');
-const InMemoryStore = require('../dist/in-memory-store');
-const RBTree    = require('bintrees').RBTree;
-const BinTree    = require('bintrees').BinTree;
+const RBIndex    = require('../dist/rbindex');
 
 const N = 10000;
 const rvalues = new Array(N).fill(0).map((n, i) => Math.floor(Math.random() * N));
 
-const prefilledAVL = new Tree();
+const prefilledAVL = new AVLIndex('test', r => r, r => r);
 rvalues.forEach((v) => prefilledAVL.insert(v));
-const prefilledRB = new RBTree((a, b) => a - b);
+const prefilledRB = new RBIndex('test', r => r, r => r);
 rvalues.forEach((v) => prefilledRB.insert(v));
-const prefilledBin = new BinTree((a, b) => a - b);
-rvalues.forEach((v) => prefilledBin.insert(v));
 const prefilledMemBin = new BinaryIndex('test', r => r, r => r);
 rvalues.forEach((v) => prefilledMemBin.insert(v));
 const prefilledMemHash = new HashIndex('test', r => r, r => r);
 rvalues.forEach((v) => prefilledMemHash.insert(v));
-const prefilledMemStore = new InMemoryStore(r => r);
-rvalues.forEach((v) => prefilledMemStore.add(v));
 
 const options = {
   onStart (event) { console.log(this.name); },
@@ -32,102 +25,50 @@ const options = {
   }
 };
 
-/*
 new Benchmark.Suite(`Insert (x${N})`, options)
-  .add('Bintrees RBTree', () => {
-    let rb = new RBTree((a, b) => a - b);
+  .add('RBIndex', () => {
+    let rb = new RBIndex('test', r => r, r => r);
     for (let i = 0; i < N; i++) rb.insert(rvalues[i]);
   })
-  .add('Bintrees BinTree', () => {
-    let bn = new BinTree((a, b) => a - b);
-    for (let i = 0; i < N; i++) bn.insert(rvalues[i]);
+  .add('AVLIndex', () => {
+    for (let i = N - 1; i; i--) prefilledAVL.find(rvalues[i]);
   })
-  .add('InMemoryStore BinaryIndex', () => {
+  .add('BinaryIndex', () => {
     let mem = new BinaryIndex('test', r => r, r => r);
     for (let i = 0; i < N; i++) frb = mem.insert(rvalues[i]);
   })
-  .add('InMemoryStore HashIndex', () => {
+  .add('HashIndex', () => {
     let mem = new HashIndex('test', r => r, r => r);
     for (let i = 0; i < N; i++) frb = mem.insert(rvalues[i]);
   })
-  .add('InMemoryStore', () => {
-    let mem = new InMemoryStore(r => r);
-    for (let i = 0; i < N; i++) frb = mem.addOne(rvalues[i]);
-  })
-  .add('AVL', () => {
-    const tree = new Tree();
-    for (let i = 0; i < N; i++) tree.insert(rvalues[i]);
-  })
-  .run();
-*/
-
-
-new Benchmark.Suite(`Random read (x${N})`, options)
- .add('InMemoryStore BinaryIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemBin.find(rvalues[i]);
-  })
   .run();
 
-  /*
 new Benchmark.Suite(`Random read (x${N})`, options)
-  .add('Bintrees RBTree', () => {
+  .add('RBIndex', () => {
     for (let i = N - 1; i; i--) prefilledRB.find(rvalues[i]);
   })
-  .add('Bintrees BinTree', () => {
-    for (let i = N - 1; i; i--) prefilledBin.find(rvalues[i]);
-  })
-  .add('InMemoryStore BinaryIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemBin.find(rvalues[i]);
-  })
-  .add('InMemoryStore HashIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemHash.find(rvalues[i]);
-  })
-  .add('InMemoryStore', () => {
-    for (let i = 0; i < N; i++) prefilledMemStore.getOne(rvalues[i]);
-  })
-  .add('AVL', () => {
+  .add('AVLIndex', () => {
     for (let i = N - 1; i; i--) prefilledAVL.find(rvalues[i]);
   })
+  .add('BinaryIndex', () => {
+    for (let i = N - 1; i; i--) prefilledMemBin.find(rvalues[i]);
+  })
+  .add('HashIndex', () => {
+    for (let i = N - 1; i; i--) prefilledMemHash.find(rvalues[i]);
+  })
   .run();
-  */
 
-  /*
 new Benchmark.Suite(`Remove (x${N})`, options)
-  .add('Bintrees RBTree', () => {
+  .add('RBIndex', () => {
     for (let i = 0; i < N; i++) prefilledRB.remove(rvalues[i]);
   })
-  .add('Bintrees BinTree', () => {
-    for (let i = 0; i < N; i++) prefilledBin.remove(rvalues[i]);
-  })
-  .add('InMemoryStore BinaryIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemBin.remove(rvalues[i]);
-  })
-  .add('InMemoryStore HashIndex', () => {
-    for (let i = N - 1; i; i--) prefilledMemHash.remove(rvalues[i]);
-  })
-  .add('InMemoryStore', () => {
-    for (let i = 0; i < N; i++) prefilledMemStore.removeOne(rvalues[i]);
-  })
-  .add('AVL', () => {
+  .add('AVLIndex', () => {
     for (let i = N - 1; i; i--) prefilledAVL.remove(rvalues[i]);
   })
-  .run();
-  */
-
-  /*
-const M = 10000;
-const arr = new Array(M).fill(0).map((i) => M * Math.random());
-arr.sort((a, b) => a - b);
-new Benchmark.Suite(`Bulk-load (x${M})`, options)
-  .add('1 by 1', () => {
-    const t = new Tree();
-    for (let i = 0; i < M; i++) t.insert(arr[i]);
+  .add('BinaryIndex', () => {
+    for (let i = N - 1; i; i--) prefilledMemBin.remove(rvalues[i]);
   })
-  .add('bulk load', () => {
-    const t = new Tree();
-    const data = arr.slice();
-
-    t.load(data, []);
+  .add('HashIndex', () => {
+    for (let i = N - 1; i; i--) prefilledMemHash.remove(rvalues[i]);
   })
   .run();
-  */

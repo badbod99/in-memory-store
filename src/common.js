@@ -26,6 +26,12 @@ export function defaultComparer(a, b) {
     return a > b ? 1 : a < b ? -1 : 0;
 }
 
+export function keyWrapComparer(comparer) {
+    return function(a, b) {
+        return comparer(a.key, b.key);
+    };
+}
+
 export function intersect(arrays) {
     const ordered = (arrays.length===1
         ? arrays : 

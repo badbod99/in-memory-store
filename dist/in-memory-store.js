@@ -37,6 +37,12 @@
         return a > b ? 1 : a < b ? -1 : 0;
     }
 
+    function keyWrapComparer(comparer) {
+        return function(a, b) {
+            return comparer(a.key, b.key);
+        };
+    }
+
     function intersect(arrays) {
         var ordered = (arrays.length===1
             ? arrays : 
@@ -73,11 +79,11 @@
     }
 
     var HashIndex = function HashIndex (name, itemFn, keyFn, comparer) {
+        this.comparer = comparer || defaultComparer;
         this.index = new Map([]);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this.comparer = comparer || defaultComparer;
     };
 
     var prototypeAccessors = { keys: { configurable: true } };
@@ -100,7 +106,7 @@
             var this$1 = this;
 
         keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.getOne(m); });
+        var data = keys.map(function (m) { return this$1.find(m); });
         return [].concat.apply([], data);
     };
 
@@ -143,8 +149,8 @@
     };
 
     HashIndex.prototype.update = function update (item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
+        this.remove(olditem);
+        this.insert(item);
     };
 
     Object.defineProperties( HashIndex.prototype, prototypeAccessors );
@@ -225,11 +231,11 @@
     Object.defineProperties( BinaryArray.prototype, prototypeAccessors$1 );
 
     var BinaryIndex = function BinaryIndex (name, itemFn, keyFn, comparer) {
-        this.index = new BinaryArray(comparer);
+        this.comparer = comparer || defaultComparer;
+        this.index = new BinaryArray(this.comparer);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this.comparer = comparer || defaultComparer;
     };
 
     var prototypeAccessors$2 = { keys: { configurable: true } };
@@ -245,14 +251,14 @@
     };
 
     BinaryIndex.prototype.clear = function clear () {
-        this.index = [];
+        this.index = new BinaryArray(this.comparer);
     };
 
     BinaryIndex.prototype.findMany = function findMany (keys) {
             var this$1 = this;
 
         keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.getOne(m); });
+        var data = keys.map(function (m) { return this$1.find(m); });
         return [].concat.apply([], data);
     };
 
@@ -298,11 +304,1548 @@
     };
 
     BinaryIndex.prototype.update = function update (item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
+        this.remove(olditem);
+        this.insert(item);
     };
 
     Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$2 );
+
+    function TreeBase() {}
+
+    // removes all nodes from the tree
+    TreeBase.prototype.clear = function() {
+        this._root = null;
+        this.size = 0;
+    };
+
+    // returns node data if found, null otherwise
+    TreeBase.prototype.find = function(data) {
+        var res = this._root;
+
+        while(res !== null) {
+            var c = this._comparator(data, res.data);
+            if(c === 0) {
+                return res.data;
+            }
+            else {
+                res = res.get_child(c > 0);
+            }
+        }
+
+        return null;
+    };
+
+    // returns iterator to node if found, null otherwise
+    TreeBase.prototype.findIter = function(data) {
+        var res = this._root;
+        var iter = this.iterator();
+
+        while(res !== null) {
+            var c = this._comparator(data, res.data);
+            if(c === 0) {
+                iter._cursor = res;
+                return iter;
+            }
+            else {
+                iter._ancestors.push(res);
+                res = res.get_child(c > 0);
+            }
+        }
+
+        return null;
+    };
+
+    // Returns an iterator to the tree node at or immediately after the item
+    TreeBase.prototype.lowerBound = function(item) {
+        var cur = this._root;
+        var iter = this.iterator();
+        var cmp = this._comparator;
+
+        while(cur !== null) {
+            var c = cmp(item, cur.data);
+            if(c === 0) {
+                iter._cursor = cur;
+                return iter;
+            }
+            iter._ancestors.push(cur);
+            cur = cur.get_child(c > 0);
+        }
+
+        for(var i=iter._ancestors.length - 1; i >= 0; --i) {
+            cur = iter._ancestors[i];
+            if(cmp(item, cur.data) < 0) {
+                iter._cursor = cur;
+                iter._ancestors.length = i;
+                return iter;
+            }
+        }
+
+        iter._ancestors.length = 0;
+        return iter;
+    };
+
+    // Returns an iterator to the tree node immediately after the item
+    TreeBase.prototype.upperBound = function(item) {
+        var iter = this.lowerBound(item);
+        var cmp = this._comparator;
+
+        while(iter.data() !== null && cmp(iter.data(), item) === 0) {
+            iter.next();
+        }
+
+        return iter;
+    };
+
+    // returns null if tree is empty
+    TreeBase.prototype.min = function() {
+        var res = this._root;
+        if(res === null) {
+            return null;
+        }
+
+        while(res.left !== null) {
+            res = res.left;
+        }
+
+        return res.data;
+    };
+
+    // returns null if tree is empty
+    TreeBase.prototype.max = function() {
+        var res = this._root;
+        if(res === null) {
+            return null;
+        }
+
+        while(res.right !== null) {
+            res = res.right;
+        }
+
+        return res.data;
+    };
+
+    // returns a null iterator
+    // call next() or prev() to point to an element
+    TreeBase.prototype.iterator = function() {
+        return new Iterator(this);
+    };
+
+    // calls cb on each node's data, in order
+    TreeBase.prototype.each = function(cb) {
+        var it=this.iterator(), data;
+        while((data = it.next()) !== null) {
+            if(cb(data) === false) {
+                return;
+            }
+        }
+    };
+
+    // calls cb on each node's data, in reverse order
+    TreeBase.prototype.reach = function(cb) {
+        var it=this.iterator(), data;
+        while((data = it.prev()) !== null) {
+            if(cb(data) === false) {
+                return;
+            }
+        }
+    };
+
+
+    function Iterator(tree) {
+        this._tree = tree;
+        this._ancestors = [];
+        this._cursor = null;
+    }
+
+    Iterator.prototype.data = function() {
+        return this._cursor !== null ? this._cursor.data : null;
+    };
+
+    // if null-iterator, returns first node
+    // otherwise, returns next node
+    Iterator.prototype.next = function() {
+        if(this._cursor === null) {
+            var root = this._tree._root;
+            if(root !== null) {
+                this._minNode(root);
+            }
+        }
+        else {
+            if(this._cursor.right === null) {
+                // no greater node in subtree, go up to parent
+                // if coming from a right child, continue up the stack
+                var save;
+                do {
+                    save = this._cursor;
+                    if(this._ancestors.length) {
+                        this._cursor = this._ancestors.pop();
+                    }
+                    else {
+                        this._cursor = null;
+                        break;
+                    }
+                } while(this._cursor.right === save);
+            }
+            else {
+                // get the next node from the subtree
+                this._ancestors.push(this._cursor);
+                this._minNode(this._cursor.right);
+            }
+        }
+        return this._cursor !== null ? this._cursor.data : null;
+    };
+
+    // if null-iterator, returns last node
+    // otherwise, returns previous node
+    Iterator.prototype.prev = function() {
+        if(this._cursor === null) {
+            var root = this._tree._root;
+            if(root !== null) {
+                this._maxNode(root);
+            }
+        }
+        else {
+            if(this._cursor.left === null) {
+                var save;
+                do {
+                    save = this._cursor;
+                    if(this._ancestors.length) {
+                        this._cursor = this._ancestors.pop();
+                    }
+                    else {
+                        this._cursor = null;
+                        break;
+                    }
+                } while(this._cursor.left === save);
+            }
+            else {
+                this._ancestors.push(this._cursor);
+                this._maxNode(this._cursor.left);
+            }
+        }
+        return this._cursor !== null ? this._cursor.data : null;
+    };
+
+    Iterator.prototype._minNode = function(start) {
+        while(start.left !== null) {
+            this._ancestors.push(start);
+            start = start.left;
+        }
+        this._cursor = start;
+    };
+
+    Iterator.prototype._maxNode = function(start) {
+        while(start.right !== null) {
+            this._ancestors.push(start);
+            start = start.right;
+        }
+        this._cursor = start;
+    };
+
+    var treebase = TreeBase;
+
+    function Node(data) {
+        this.data = data;
+        this.left = null;
+        this.right = null;
+        this.red = true;
+    }
+
+    Node.prototype.get_child = function(dir) {
+        return dir ? this.right : this.left;
+    };
+
+    Node.prototype.set_child = function(dir, val) {
+        if(dir) {
+            this.right = val;
+        }
+        else {
+            this.left = val;
+        }
+    };
+
+    function RBTree(comparator) {
+        this._root = null;
+        this._comparator = comparator;
+        this.size = 0;
+    }
+
+    RBTree.prototype = new treebase();
+
+    // returns true if inserted, false if duplicate
+    RBTree.prototype.insert = function(data) {
+        var ret = false;
+
+        if(this._root === null) {
+            // empty tree
+            this._root = new Node(data);
+            ret = true;
+            this.size++;
+        }
+        else {
+            var head = new Node(undefined); // fake tree root
+
+            var dir = 0;
+            var last = 0;
+
+            // setup
+            var gp = null; // grandparent
+            var ggp = head; // grand-grand-parent
+            var p = null; // parent
+            var node = this._root;
+            ggp.right = this._root;
+
+            // search down
+            while(true) {
+                if(node === null) {
+                    // insert new node at the bottom
+                    node = new Node(data);
+                    p.set_child(dir, node);
+                    ret = true;
+                    this.size++;
+                }
+                else if(is_red(node.left) && is_red(node.right)) {
+                    // color flip
+                    node.red = true;
+                    node.left.red = false;
+                    node.right.red = false;
+                }
+
+                // fix red violation
+                if(is_red(node) && is_red(p)) {
+                    var dir2 = ggp.right === gp;
+
+                    if(node === p.get_child(last)) {
+                        ggp.set_child(dir2, single_rotate(gp, !last));
+                    }
+                    else {
+                        ggp.set_child(dir2, double_rotate(gp, !last));
+                    }
+                }
+
+                var cmp = this._comparator(node.data, data);
+
+                // stop if found
+                if(cmp === 0) {
+                    break;
+                }
+
+                last = dir;
+                dir = cmp < 0;
+
+                // update helpers
+                if(gp !== null) {
+                    ggp = gp;
+                }
+                gp = p;
+                p = node;
+                node = node.get_child(dir);
+            }
+
+            // update root
+            this._root = head.right;
+        }
+
+        // make root black
+        this._root.red = false;
+
+        return ret;
+    };
+
+    // returns true if removed, false if not found
+    RBTree.prototype.remove = function(data) {
+        if(this._root === null) {
+            return false;
+        }
+
+        var head = new Node(undefined); // fake tree root
+        var node = head;
+        node.right = this._root;
+        var p = null; // parent
+        var gp = null; // grand parent
+        var found = null; // found item
+        var dir = 1;
+
+        while(node.get_child(dir) !== null) {
+            var last = dir;
+
+            // update helpers
+            gp = p;
+            p = node;
+            node = node.get_child(dir);
+
+            var cmp = this._comparator(data, node.data);
+
+            dir = cmp > 0;
+
+            // save found node
+            if(cmp === 0) {
+                found = node;
+            }
+
+            // push the red node down
+            if(!is_red(node) && !is_red(node.get_child(dir))) {
+                if(is_red(node.get_child(!dir))) {
+                    var sr = single_rotate(node, dir);
+                    p.set_child(last, sr);
+                    p = sr;
+                }
+                else if(!is_red(node.get_child(!dir))) {
+                    var sibling = p.get_child(!last);
+                    if(sibling !== null) {
+                        if(!is_red(sibling.get_child(!last)) && !is_red(sibling.get_child(last))) {
+                            // color flip
+                            p.red = false;
+                            sibling.red = true;
+                            node.red = true;
+                        }
+                        else {
+                            var dir2 = gp.right === p;
+
+                            if(is_red(sibling.get_child(last))) {
+                                gp.set_child(dir2, double_rotate(p, last));
+                            }
+                            else if(is_red(sibling.get_child(!last))) {
+                                gp.set_child(dir2, single_rotate(p, last));
+                            }
+
+                            // ensure correct coloring
+                            var gpc = gp.get_child(dir2);
+                            gpc.red = true;
+                            node.red = true;
+                            gpc.left.red = false;
+                            gpc.right.red = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        // replace and remove if found
+        if(found !== null) {
+            found.data = node.data;
+            p.set_child(p.right === node, node.get_child(node.left === null));
+            this.size--;
+        }
+
+        // update root and make it black
+        this._root = head.right;
+        if(this._root !== null) {
+            this._root.red = false;
+        }
+
+        return found !== null;
+    };
+
+    function is_red(node) {
+        return node !== null && node.red;
+    }
+
+    function single_rotate(root, dir) {
+        var save = root.get_child(!dir);
+
+        root.set_child(!dir, save.get_child(dir));
+        save.set_child(dir, root);
+
+        root.red = true;
+        save.red = false;
+
+        return save;
+    }
+
+    function double_rotate(root, dir) {
+        root.set_child(!dir, single_rotate(root.get_child(!dir), !dir));
+        return single_rotate(root, dir);
+    }
+
+    var rbtree = RBTree;
+
+    function Node$1(data) {
+        this.data = data;
+        this.left = null;
+        this.right = null;
+    }
+
+    Node$1.prototype.get_child = function(dir) {
+        return dir ? this.right : this.left;
+    };
+
+    Node$1.prototype.set_child = function(dir, val) {
+        if(dir) {
+            this.right = val;
+        }
+        else {
+            this.left = val;
+        }
+    };
+
+    function BinTree(comparator) {
+        this._root = null;
+        this._comparator = comparator;
+        this.size = 0;
+    }
+
+    BinTree.prototype = new treebase();
+
+    // returns true if inserted, false if duplicate
+    BinTree.prototype.insert = function(data) {
+        if(this._root === null) {
+            // empty tree
+            this._root = new Node$1(data);
+            this.size++;
+            return true;
+        }
+
+        var dir = 0;
+
+        // setup
+        var p = null; // parent
+        var node = this._root;
+
+        // search down
+        while(true) {
+            if(node === null) {
+                // insert new node at the bottom
+                node = new Node$1(data);
+                p.set_child(dir, node);
+                ret = true;
+                this.size++;
+                return true;
+            }
+
+            // stop if found
+            if(this._comparator(node.data, data) === 0) {
+                return false;
+            }
+
+            dir = this._comparator(node.data, data) < 0;
+
+            // update helpers
+            p = node;
+            node = node.get_child(dir);
+        }
+    };
+
+    // returns true if removed, false if not found
+    BinTree.prototype.remove = function(data) {
+        if(this._root === null) {
+            return false;
+        }
+
+        var head = new Node$1(undefined); // fake tree root
+        var node = head;
+        node.right = this._root;
+        var p = null; // parent
+        var found = null; // found item
+        var dir = 1;
+
+        while(node.get_child(dir) !== null) {
+            p = node;
+            node = node.get_child(dir);
+            var cmp = this._comparator(data, node.data);
+            dir = cmp > 0;
+
+            if(cmp === 0) {
+                found = node;
+            }
+        }
+
+        if(found !== null) {
+            found.data = node.data;
+            p.set_child(p.right === node, node.get_child(node.left === null));
+
+            this._root = head.right;
+            this.size--;
+            return true;
+        }
+        else {
+            return false;
+        }
+    };
+
+    var bintree = BinTree;
+
+    var bintrees = {
+        RBTree: rbtree,
+        BinTree: bintree
+    };
+    var bintrees_1 = bintrees.RBTree;
+
+    var RBIndex = function RBIndex (name, itemFn, keyFn, comparer) {
+        this.comparer = keyWrapComparer(comparer || defaultComparer);
+        this.index = new bintrees_1(this.comparer);
+        this.name = name;
+        this.itemFn = itemFn;
+        this.keyFn = keyFn;
+    };
+
+    var prototypeAccessors$3 = { keys: { configurable: true } };
+        
+    RBIndex.build = function build (name, itemFn, keyFn, items, comparer) {
+        var bin = new RBIndex(name, itemFn, keyFn, comparer);
+        bin.populate(items);
+        return bin;
+    };
+
+    prototypeAccessors$3.keys.get = function () {
+        var arr = [];
+        this.index.each(function (f) { return arr.push(f.key); });
+        return arr;
+    };
+
+    RBIndex.prototype.clear = function clear () {
+        this.index.clear();
+    };
+
+    RBIndex.prototype.findMany = function findMany (keys) {
+            var this$1 = this;
+
+        keys = oneOrMany(keys);
+        var data = keys.map(function (m) { return this$1.find(m); });
+        return [].concat.apply([], data);
+    };
+
+    RBIndex.prototype.find = function find (key) {
+        var found = this.index.find({ key: key });
+        if (found) {
+            return found.value;
+        } else {
+            return [];
+        }
+    };
+
+    RBIndex.prototype.remove = function remove (item) {
+        var key = this.keyFn(item);
+        var entry = this.index.find({ key: key });
+
+        if (entry) {
+            var it = this.itemFn(item);
+            var arr = entry.value;
+            var i = arr.indexOf(it);
+            if (i > -1) {
+                arr.splice(i, 1);
+            }
+            if (entry.value.length === 0) {
+                this.index.remove({ key: key });
+            }
+        }
+    };
+
+    RBIndex.prototype.populate = function populate (items) {
+            var this$1 = this;
+
+        items = oneOrMany(items);
+        items.forEach(function (item) { return this$1.insert(item); });
+    };
+        
+    RBIndex.prototype.insert = function insert (item) {
+        var key = this.keyFn(item);
+        var it = this.itemFn(item);
+        var entry = this.index.find({ key: key });
+            
+        if (entry) {
+            entry.value.push(it);
+        } else {
+            this.index.insert({key: key, value: [it]});
+        }
+    };
+
+    RBIndex.prototype.update = function update (item, olditem) {
+        this.remove(olditem);
+        this.insert(item);
+    };
+
+    Object.defineProperties( RBIndex.prototype, prototypeAccessors$3 );
+
+    /**
+     * Prints tree horizontally
+     * @param  {Node}                       root
+     * @param  {Function(node:Node):String} [printNode]
+     * @return {String}
+     */
+    function print (root, printNode) {
+      if ( printNode === void 0 ) printNode = function (n) { return n.key; };
+
+      var out = [];
+      row(root, '', true, function (v) { return out.push(v); }, printNode);
+      return out.join('');
+    }
+
+    /**
+     * Prints level of the tree
+     * @param  {Node}                        root
+     * @param  {String}                      prefix
+     * @param  {Boolean}                     isTail
+     * @param  {Function(in:string):void}    out
+     * @param  {Function(node:Node):String}  printNode
+     */
+    function row (root, prefix, isTail, out, printNode) {
+      if (root) {
+        out(("" + prefix + (isTail ? '└── ' : '├── ') + (printNode(root)) + "\n"));
+        var indent = prefix + (isTail ? '    ' : '│   ');
+        if (root.left)  { row(root.left,  indent, false, out, printNode); }
+        if (root.right) { row(root.right, indent, true,  out, printNode); }
+      }
+    }
+
+
+    /**
+     * Is the tree balanced (none of the subtrees differ in height by more than 1)
+     * @param  {Node}    root
+     * @return {Boolean}
+     */
+    function isBalanced(root) {
+      if (root === null) { return true; } // If node is empty then return true
+
+      // Get the height of left and right sub trees
+      var lh = height(root.left);
+      var rh = height(root.right);
+
+      if (Math.abs(lh - rh) <= 1 &&
+          isBalanced(root.left)  &&
+          isBalanced(root.right)) { return true; }
+
+      // If we reach here then tree is not height-balanced
+      return false;
+    }
+
+    /**
+     * The function Compute the 'height' of a tree.
+     * Height is the number of nodes along the longest path
+     * from the root node down to the farthest leaf node.
+     *
+     * @param  {Node} node
+     * @return {Number}
+     */
+    function height(node) {
+      return node ? (1 + Math.max(height(node.left), height(node.right))) : 0;
+    }
+
+
+    function loadRecursive (parent, keys, values, start, end) {
+      var size = end - start;
+      if (size > 0) {
+        var middle = start + Math.floor(size / 2);
+        var key    = keys[middle];
+        var data   = values[middle];
+        var node   = { key: key, data: data, parent: parent };
+        node.left    = loadRecursive(node, keys, values, start, middle);
+        node.right   = loadRecursive(node, keys, values, middle + 1, end);
+        return node;
+      }
+      return null;
+    }
+
+
+    function markBalance(node) {
+      if (node === null) { return 0; }
+      var lh = markBalance(node.left);
+      var rh = markBalance(node.right);
+
+      node.balanceFactor = lh - rh;
+      return Math.max(lh, rh) + 1;
+    }
+
+
+    function sort(keys, values, left, right, compare) {
+      if (left >= right) { return; }
+
+      // eslint-disable-next-line no-bitwise
+      var pivot = keys[(left + right) >> 1];
+      var i = left - 1;
+      var j = right + 1;
+
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        do { i++; } while (compare(keys[i], pivot) < 0);
+        do { j--; } while (compare(keys[j], pivot) > 0);
+        if (i >= j) { break; }
+
+        var tmp = keys[i];
+        keys[i] = keys[j];
+        keys[j] = tmp;
+
+        tmp = values[i];
+        values[i] = values[j];
+        values[j] = tmp;
+      }
+
+      sort(keys, values,  left,     j, compare);
+      sort(keys, values, j + 1, right, compare);
+    }
+
+    // function createNode (parent, left, right, height, key, data) {
+    //   return { parent, left, right, balanceFactor: height, key, data };
+    // }
+
+    /**
+     * @typedef {{
+     *   parent:        ?Node,
+     *   left:          ?Node,
+     *   right:         ?Node,
+     *   balanceFactor: number,
+     *   key:           Key,
+     *   data:          Value
+     * }} Node
+     */
+
+    /**
+     * @typedef {*} Key
+     */
+
+    /**
+     * @typedef {*} Value
+     */
+
+    /**
+     * Default comparison function
+     * @param {Key} a
+     * @param {Key} b
+     * @returns {number}
+     */
+    function DEFAULT_COMPARE (a, b) { return a > b ? 1 : a < b ? -1 : 0; }
+
+
+    /**
+     * Single left rotation
+     * @param  {Node} node
+     * @return {Node}
+     */
+    function rotateLeft (node) {
+      var rightNode = node.right;
+      node.right    = rightNode.left;
+
+      if (rightNode.left) { rightNode.left.parent = node; }
+
+      rightNode.parent = node.parent;
+      if (rightNode.parent) {
+        if (rightNode.parent.left === node) {
+          rightNode.parent.left = rightNode;
+        } else {
+          rightNode.parent.right = rightNode;
+        }
+      }
+
+      node.parent    = rightNode;
+      rightNode.left = node;
+
+      node.balanceFactor += 1;
+      if (rightNode.balanceFactor < 0) {
+        node.balanceFactor -= rightNode.balanceFactor;
+      }
+
+      rightNode.balanceFactor += 1;
+      if (node.balanceFactor > 0) {
+        rightNode.balanceFactor += node.balanceFactor;
+      }
+      return rightNode;
+    }
+
+
+    function rotateRight (node) {
+      var leftNode = node.left;
+      node.left = leftNode.right;
+      if (node.left) { node.left.parent = node; }
+
+      leftNode.parent = node.parent;
+      if (leftNode.parent) {
+        if (leftNode.parent.left === node) {
+          leftNode.parent.left = leftNode;
+        } else {
+          leftNode.parent.right = leftNode;
+        }
+      }
+
+      node.parent    = leftNode;
+      leftNode.right = node;
+
+      node.balanceFactor -= 1;
+      if (leftNode.balanceFactor > 0) {
+        node.balanceFactor -= leftNode.balanceFactor;
+      }
+
+      leftNode.balanceFactor -= 1;
+      if (node.balanceFactor < 0) {
+        leftNode.balanceFactor += node.balanceFactor;
+      }
+
+      return leftNode;
+    }
+
+
+    // function leftBalance (node) {
+    //   if (node.left.balanceFactor === -1) rotateLeft(node.left);
+    //   return rotateRight(node);
+    // }
+
+
+    // function rightBalance (node) {
+    //   if (node.right.balanceFactor === 1) rotateRight(node.right);
+    //   return rotateLeft(node);
+    // }
+
+
+    var AVLTree = function AVLTree (comparator, noDuplicates) {
+      if ( noDuplicates === void 0 ) noDuplicates = false;
+
+      this._comparator = comparator || DEFAULT_COMPARE;
+      this._root = null;
+      this._size = 0;
+      this._noDuplicates = !!noDuplicates;
+    };
+
+    var prototypeAccessors$4 = { size: { configurable: true } };
+
+
+    /**
+     * Clear the tree
+     * @return {AVLTree}
+     */
+    AVLTree.prototype.destroy = function destroy () {
+      return this.clear();
+    };
+
+
+    /**
+     * Clear the tree
+     * @return {AVLTree}
+     */
+    AVLTree.prototype.clear = function clear () {
+      this._root = null;
+      this._size = 0;
+      return this;
+    };
+
+    /**
+     * Number of nodes
+     * @return {number}
+     */
+    prototypeAccessors$4.size.get = function () {
+      return this._size;
+    };
+
+
+    /**
+     * Whether the tree contains a node with the given key
+     * @param{Key} key
+     * @return {boolean} true/false
+     */
+    AVLTree.prototype.contains = function contains (key) {
+      if (this._root){
+        var node     = this._root;
+        var comparator = this._comparator;
+        while (node){
+          var cmp = comparator(key, node.key);
+          if    (cmp === 0) { return true; }
+          else if (cmp < 0) { node = node.left; }
+          else              { node = node.right; }
+        }
+      }
+      return false;
+    };
+
+
+    /* eslint-disable class-methods-use-this */
+
+    /**
+     * Successor node
+     * @param{Node} node
+     * @return {?Node}
+     */
+    AVLTree.prototype.next = function next (node) {
+      var successor = node;
+      if (successor) {
+        if (successor.right) {
+          successor = successor.right;
+          while (successor.left) { successor = successor.left; }
+        } else {
+          successor = node.parent;
+          while (successor && successor.right === node) {
+            node = successor; successor = successor.parent;
+          }
+        }
+      }
+      return successor;
+    };
+
+
+    /**
+     * Predecessor node
+     * @param{Node} node
+     * @return {?Node}
+     */
+    AVLTree.prototype.prev = function prev (node) {
+      var predecessor = node;
+      if (predecessor) {
+        if (predecessor.left) {
+          predecessor = predecessor.left;
+          while (predecessor.right) { predecessor = predecessor.right; }
+        } else {
+          predecessor = node.parent;
+          while (predecessor && predecessor.left === node) {
+            node = predecessor;
+            predecessor = predecessor.parent;
+          }
+        }
+      }
+      return predecessor;
+    };
+    /* eslint-enable class-methods-use-this */
+
+
+    /**
+     * Callback for forEach
+     * @callback forEachCallback
+     * @param {Node} node
+     * @param {number} index
+     */
+
+    /**
+     * @param{forEachCallback} callback
+     * @return {AVLTree}
+     */
+    AVLTree.prototype.forEach = function forEach (callback) {
+      var current = this._root;
+      var s = [], done = false, i = 0;
+
+      while (!done) {
+        // Reach the left most Node of the current Node
+        if (current) {
+          // Place pointer to a tree node on the stack
+          // before traversing the node's left subtree
+          s.push(current);
+          current = current.left;
+        } else {
+          // BackTrack from the empty subtree and visit the Node
+          // at the top of the stack; however, if the stack is
+          // empty you are done
+          if (s.length > 0) {
+            current = s.pop();
+            callback(current, i++);
+
+            // We have visited the node and its left
+            // subtree. Now, it's right subtree's turn
+            current = current.right;
+          } else { done = true; }
+        }
+      }
+      return this;
+    };
+
+
+    /**
+     * Walk key range from `low` to `high`. Stops if `fn` returns a value.
+     * @param{Key}    low
+     * @param{Key}    high
+     * @param{Function} fn
+     * @param{*?}     ctx
+     * @return {SplayTree}
+     */
+    AVLTree.prototype.range = function range (low, high, fn, ctx) {
+      var Q = [];
+      var compare = this._comparator;
+      var node = this._root, cmp;
+
+      while (Q.length !== 0 || node) {
+        if (node) {
+          Q.push(node);
+          node = node.left;
+        } else {
+          node = Q.pop();
+          cmp = compare(node.key, high);
+          if (cmp > 0) {
+            break;
+          } else if (compare(node.key, low) >= 0) {
+            if (fn.call(ctx, node)) { return this; } // stop if smth is returned
+          }
+          node = node.right;
+        }
+      }
+      return this;
+    };
+
+
+    /**
+     * Returns all keys in order
+     * @return {Array<Key>}
+     */
+    AVLTree.prototype.keys = function keys () {
+      var current = this._root;
+      var s = [], r = [], done = false;
+
+      while (!done) {
+        if (current) {
+          s.push(current);
+          current = current.left;
+        } else {
+          if (s.length > 0) {
+            current = s.pop();
+            r.push(current.key);
+            current = current.right;
+          } else { done = true; }
+        }
+      }
+      return r;
+    };
+
+
+    /**
+     * Returns `data` fields of all nodes in order.
+     * @return {Array<Value>}
+     */
+    AVLTree.prototype.values = function values () {
+      var current = this._root;
+      var s = [], r = [], done = false;
+
+      while (!done) {
+        if (current) {
+          s.push(current);
+          current = current.left;
+        } else {
+          if (s.length > 0) {
+            current = s.pop();
+            r.push(current.data);
+            current = current.right;
+          } else { done = true; }
+        }
+      }
+      return r;
+    };
+
+
+    /**
+     * Returns node at given index
+     * @param{number} index
+     * @return {?Node}
+     */
+    AVLTree.prototype.at = function at (index) {
+      // removed after a consideration, more misleading than useful
+      // index = index % this.size;
+      // if (index < 0) index = this.size - index;
+
+      var current = this._root;
+      var s = [], done = false, i = 0;
+
+      while (!done) {
+        if (current) {
+          s.push(current);
+          current = current.left;
+        } else {
+          if (s.length > 0) {
+            current = s.pop();
+            if (i === index) { return current; }
+            i++;
+            current = current.right;
+          } else { done = true; }
+        }
+      }
+      return null;
+    };
+
+
+    /**
+     * Returns node with the minimum key
+     * @return {?Node}
+     */
+    AVLTree.prototype.minNode = function minNode () {
+      var node = this._root;
+      if (!node) { return null; }
+      while (node.left) { node = node.left; }
+      return node;
+    };
+
+
+    /**
+     * Returns node with the max key
+     * @return {?Node}
+     */
+    AVLTree.prototype.maxNode = function maxNode () {
+      var node = this._root;
+      if (!node) { return null; }
+      while (node.right) { node = node.right; }
+      return node;
+    };
+
+
+    /**
+     * Min key
+     * @return {?Key}
+     */
+    AVLTree.prototype.min = function min () {
+      var node = this._root;
+      if (!node) { return null; }
+      while (node.left) { node = node.left; }
+      return node.key;
+    };
+
+
+    /**
+     * Max key
+     * @return {?Key}
+     */
+    AVLTree.prototype.max = function max () {
+      var node = this._root;
+      if (!node) { return null; }
+      while (node.right) { node = node.right; }
+      return node.key;
+    };
+
+
+    /**
+     * @return {boolean} true/false
+     */
+    AVLTree.prototype.isEmpty = function isEmpty () {
+      return !this._root;
+    };
+
+
+    /**
+     * Removes and returns the node with smallest key
+     * @return {?Node}
+     */
+    AVLTree.prototype.pop = function pop () {
+      var node = this._root, returnValue = null;
+      if (node) {
+        while (node.left) { node = node.left; }
+        returnValue = { key: node.key, data: node.data };
+        this.remove(node.key);
+      }
+      return returnValue;
+    };
+
+
+    /**
+     * Find node by key
+     * @param{Key} key
+     * @return {?Node}
+     */
+    AVLTree.prototype.find = function find (key) {
+      var root = this._root;
+      // if (root === null)  return null;
+      // if (key === root.key) return root;
+
+      var subtree = root, cmp;
+      var compare = this._comparator;
+      while (subtree) {
+        cmp = compare(key, subtree.key);
+        if    (cmp === 0) { return subtree; }
+        else if (cmp < 0) { subtree = subtree.left; }
+        else              { subtree = subtree.right; }
+      }
+
+      return null;
+    };
+
+
+    /**
+     * Insert a node into the tree
+     * @param{Key} key
+     * @param{Value} [data]
+     * @return {?Node}
+     */
+    AVLTree.prototype.insert = function insert (key, data) {
+      if (!this._root) {
+        this._root = {
+          parent: null, left: null, right: null, balanceFactor: 0,
+          key: key, data: data
+        };
+        this._size++;
+        return this._root;
+      }
+
+      var compare = this._comparator;
+      var node  = this._root;
+      var parent= null;
+      var cmp   = 0;
+
+      if (this._noDuplicates) {
+        while (node) {
+          cmp = compare(key, node.key);
+          parent = node;
+          if    (cmp === 0) { return null; }
+          else if (cmp < 0) { node = node.left; }
+          else              { node = node.right; }
+        }
+      } else {
+        while (node) {
+          cmp = compare(key, node.key);
+          parent = node;
+          if    (cmp <= 0){ node = node.left; } //return null;
+          else              { node = node.right; }
+        }
+      }
+
+      var newNode = {
+        left: null,
+        right: null,
+        balanceFactor: 0,
+        parent: parent, key: key, data: data
+      };
+      var newRoot;
+      if (cmp <= 0) { parent.left= newNode; }
+      else       { parent.right = newNode; }
+
+      while (parent) {
+        cmp = compare(parent.key, key);
+        if (cmp < 0) { parent.balanceFactor -= 1; }
+        else       { parent.balanceFactor += 1; }
+
+        if      (parent.balanceFactor === 0) { break; }
+        else if (parent.balanceFactor < -1) {
+          // inlined
+          //var newRoot = rightBalance(parent);
+          if (parent.right.balanceFactor === 1) { rotateRight(parent.right); }
+          newRoot = rotateLeft(parent);
+
+          if (parent === this._root) { this._root = newRoot; }
+          break;
+        } else if (parent.balanceFactor > 1) {
+          // inlined
+          // var newRoot = leftBalance(parent);
+          if (parent.left.balanceFactor === -1) { rotateLeft(parent.left); }
+          newRoot = rotateRight(parent);
+
+          if (parent === this._root) { this._root = newRoot; }
+          break;
+        }
+        parent = parent.parent;
+      }
+
+      this._size++;
+      return newNode;
+    };
+
+
+    /**
+     * Removes the node from the tree. If not found, returns null.
+     * @param{Key} key
+     * @return {?Node}
+     */
+    AVLTree.prototype.remove = function remove (key) {
+      if (!this._root) { return null; }
+
+      var node = this._root;
+      var compare = this._comparator;
+      var cmp = 0;
+
+      while (node) {
+        cmp = compare(key, node.key);
+        if    (cmp === 0) { break; }
+        else if (cmp < 0) { node = node.left; }
+        else              { node = node.right; }
+      }
+      if (!node) { return null; }
+
+      var returnValue = node.key;
+      var max, min;
+
+      if (node.left) {
+        max = node.left;
+
+        while (max.left || max.right) {
+          while (max.right) { max = max.right; }
+
+          node.key = max.key;
+          node.data = max.data;
+          if (max.left) {
+            node = max;
+            max = max.left;
+          }
+        }
+
+        node.key= max.key;
+        node.data = max.data;
+        node = max;
+      }
+
+      if (node.right) {
+        min = node.right;
+
+        while (min.left || min.right) {
+          while (min.left) { min = min.left; }
+
+          node.key= min.key;
+          node.data = min.data;
+          if (min.right) {
+            node = min;
+            min = min.right;
+          }
+        }
+
+        node.key= min.key;
+        node.data = min.data;
+        node = min;
+      }
+
+      var parent = node.parent;
+      var pp   = node;
+      var newRoot;
+
+      while (parent) {
+        if (parent.left === pp) { parent.balanceFactor -= 1; }
+        else                  { parent.balanceFactor += 1; }
+
+        if      (parent.balanceFactor < -1) {
+          // inlined
+          //var newRoot = rightBalance(parent);
+          if (parent.right.balanceFactor === 1) { rotateRight(parent.right); }
+          newRoot = rotateLeft(parent);
+
+          if (parent === this._root) { this._root = newRoot; }
+          parent = newRoot;
+        } else if (parent.balanceFactor > 1) {
+          // inlined
+          // var newRoot = leftBalance(parent);
+          if (parent.left.balanceFactor === -1) { rotateLeft(parent.left); }
+          newRoot = rotateRight(parent);
+
+          if (parent === this._root) { this._root = newRoot; }
+          parent = newRoot;
+        }
+
+        if (parent.balanceFactor === -1 || parent.balanceFactor === 1) { break; }
+
+        pp   = parent;
+        parent = parent.parent;
+      }
+
+      if (node.parent) {
+        if (node.parent.left === node) { node.parent.left= null; }
+        else                         { node.parent.right = null; }
+      }
+
+      if (node === this._root) { this._root = null; }
+
+      this._size--;
+      return returnValue;
+    };
+
+
+    /**
+     * Bulk-load items
+     * @param{Array<Key>}keys
+     * @param{Array<Value>}[values]
+     * @return {AVLTree}
+     */
+    AVLTree.prototype.load = function load (keys, values, presort) {
+        if ( keys === void 0 ) keys = [];
+        if ( values === void 0 ) values = [];
+
+      if (this._size !== 0) { throw new Error('bulk-load: tree is not empty'); }
+      var size = keys.length;
+      if (presort) { sort(keys, values, 0, size - 1, this._comparator); }
+      this._root = loadRecursive(null, keys, values, 0, size);
+      markBalance(this._root);
+      this._size = size;
+      return this;
+    };
+
+
+    /**
+     * Returns true if the tree is balanced
+     * @return {boolean}
+     */
+    AVLTree.prototype.isBalanced = function isBalanced$1 () {
+      return isBalanced(this._root);
+    };
+
+
+    /**
+     * String representation of the tree - primitive horizontal print-out
+     * @param{Function(Node):string} [printNode]
+     * @return {string}
+     */
+    AVLTree.prototype.toString = function toString (printNode) {
+      return print(this._root, printNode);
+    };
+
+    Object.defineProperties( AVLTree.prototype, prototypeAccessors$4 );
+
+    AVLTree.default = AVLTree;
+
+    var AVLIndex = function AVLIndex (name, itemFn, keyFn, comparer) {
+        this.comparer = comparer || defaultComparer;
+        this.index = new AVLTree(comparer);
+        this.name = name;
+        this.itemFn = itemFn;
+        this.keyFn = keyFn;
+    };
+
+    var prototypeAccessors$5 = { keys: { configurable: true } };
+        
+    AVLIndex.build = function build (name, itemFn, keyFn, items, comparer) {
+        var bin = new AVLIndex(name, itemFn, keyFn, comparer);
+        bin.populate(items);
+        return bin;
+    };
+
+    prototypeAccessors$5.keys.get = function () {
+        return this.index.keys();
+    };
+
+    AVLIndex.prototype.clear = function clear () {
+        this.index.clear();
+    };
+
+    AVLIndex.prototype.findMany = function findMany (keys) {
+            var this$1 = this;
+
+        keys = oneOrMany(keys);
+        var data = keys.map(function (m) { return this$1.find(m); });
+        return [].concat.apply([], data);
+    };
+
+    AVLIndex.prototype.find = function find (key) {
+        var found = this.index.find(key);
+        if (found) {
+            return found.data;
+        } else {
+            return [];
+        }
+    };
+
+    AVLIndex.prototype.remove = function remove (item) {
+        var key = this.keyFn(item);
+        var entry = this.index.find(key);
+
+        if (entry) {
+            var it = this.itemFn(item);
+            var arr = entry.data;
+            var i = arr.indexOf(it);
+            if (i > -1) {
+                arr.splice(i, 1);
+            }
+            if (arr.length === 0) {
+                this.index.remove(key);
+            }
+        }
+    };
+
+    AVLIndex.prototype.populate = function populate (items) {
+            var this$1 = this;
+
+        items = oneOrMany(items);
+        items.forEach(function (item) { return this$1.insert(item); });
+    };
+        
+    AVLIndex.prototype.insert = function insert (item) {
+        var key = this.keyFn(item);
+        var it = this.itemFn(item);
+        var entry = this.index.find(key);
+            
+        if (entry) {
+            entry.data.push(it);
+        } else {
+            this.index.insert(key, [it]);
+        }
+    };
+
+    AVLIndex.prototype.update = function update (item, olditem) {
+        this.remove(olditem);
+        this.insert(item);
+    };
+
+    Object.defineProperties( AVLIndex.prototype, prototypeAccessors$5 );
 
     var InMemoryStore = function InMemoryStore(keyFn, comparer) {
         this.indexes = new Map([]);
@@ -311,9 +1854,9 @@
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors$3 = { isEmpty: { configurable: true } };
+    var prototypeAccessors$6 = { isEmpty: { configurable: true } };
 
-    prototypeAccessors$3.isEmpty.get = function () {
+    prototypeAccessors$6.isEmpty.get = function () {
         return this.entries.size === 0;
     };
 
@@ -381,6 +1924,18 @@
         return newIndex;
     };
 
+    InMemoryStore.prototype.buildRBIndex = function buildRBIndex (indexName, ixFn) {
+        var newIndex = RBIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
+        this.indexes.set(indexName, newIndex);
+        return newIndex;
+    };
+
+    InMemoryStore.prototype.buildAVLIndex = function buildAVLIndex (indexName, ixFn) {
+        var newIndex = AVLIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
+        this.indexes.set(indexName, newIndex);
+        return newIndex;
+    };
+
     InMemoryStore.prototype.remove = function remove (items) {
             var this$1 = this;
 
@@ -439,7 +1994,7 @@
         this.entries.set(key, item);
     };
 
-    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$3 );
+    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$6 );
 
     return InMemoryStore;
 

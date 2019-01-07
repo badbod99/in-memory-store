@@ -113,11 +113,11 @@
     Object.defineProperties( BinaryArray.prototype, prototypeAccessors );
 
     var BinaryIndex = function BinaryIndex (name, itemFn, keyFn, comparer) {
-        this.index = new BinaryArray(comparer);
+        this.comparer = comparer || defaultComparer;
+        this.index = new BinaryArray(this.comparer);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this.comparer = comparer || defaultComparer;
     };
 
     var prototypeAccessors$1 = { keys: { configurable: true } };
@@ -133,14 +133,14 @@
     };
 
     BinaryIndex.prototype.clear = function clear () {
-        this.index = [];
+        this.index = new BinaryArray(this.comparer);
     };
 
     BinaryIndex.prototype.findMany = function findMany (keys) {
             var this$1 = this;
 
         keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.getOne(m); });
+        var data = keys.map(function (m) { return this$1.find(m); });
         return [].concat.apply([], data);
     };
 
@@ -186,8 +186,8 @@
     };
 
     BinaryIndex.prototype.update = function update (item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
+        this.remove(olditem);
+        this.insert(item);
     };
 
     Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$1 );

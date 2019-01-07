@@ -1,5 +1,7 @@
 import HashIndex from './indexes/hashindex';
 import BinaryIndex from './indexes/binaryindex';
+import RBIndex from './indexes/rbindex';
+import AVLIndex from './indexes/avlindex';
 import * as mem from './common';
 
 class InMemoryStore {
@@ -70,6 +72,18 @@ class InMemoryStore {
 
     buildBinaryIndex(indexName, ixFn) {
         const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
+        this.indexes.set(indexName, newIndex);
+        return newIndex;
+    }
+
+    buildRBIndex(indexName, ixFn) {
+        const newIndex = RBIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
+        this.indexes.set(indexName, newIndex);
+        return newIndex;
+    }
+
+    buildAVLIndex(indexName, ixFn) {
+        const newIndex = AVLIndex.build(indexName, this.keyFn, ixFn, this.entries, this.comparer);
         this.indexes.set(indexName, newIndex);
         return newIndex;
     }

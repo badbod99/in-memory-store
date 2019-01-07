@@ -30,11 +30,11 @@
     }
 
     var HashIndex = function HashIndex (name, itemFn, keyFn, comparer) {
+        this.comparer = comparer || defaultComparer;
         this.index = new Map([]);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this.comparer = comparer || defaultComparer;
     };
 
     var prototypeAccessors = { keys: { configurable: true } };
@@ -57,7 +57,7 @@
             var this$1 = this;
 
         keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.getOne(m); });
+        var data = keys.map(function (m) { return this$1.find(m); });
         return [].concat.apply([], data);
     };
 
@@ -100,8 +100,8 @@
     };
 
     HashIndex.prototype.update = function update (item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
+        this.remove(olditem);
+        this.insert(item);
     };
 
     Object.defineProperties( HashIndex.prototype, prototypeAccessors );

@@ -1,4 +1,6 @@
 import buble from 'rollup-plugin-buble';
+import resolve from 'rollup-plugin-node-resolve';
+import commonJS from 'rollup-plugin-commonjs'
 import { version, author, name as moduleName, license, description } from './package.json';
 
 const banner = `\
@@ -22,7 +24,11 @@ export default [{
     name, banner,
     sourcemap: true,
   },
-  plugins: [ buble() ]
+  plugins: [ buble(), resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
 }, {
   input: 'src/index.js',
   output: {
@@ -30,7 +36,12 @@ export default [{
     file: 'dist/in-memory-store.es6.js',
     name, banner,
     sourcemap: true,
-  }
+  },
+  plugins: [ resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
 }, {
   input: 'src/indexes/binaryindex.js',
   output: {
@@ -66,23 +77,58 @@ export default [{
     sourcemap: true,
   }
 }, {
-  input: 'src/indexes/binaryarray.js',
+  input: 'src/indexes/rbindex.js',
   output: {
     format: 'umd',
-    file: 'dist/binaryarray.js',
+    file: 'dist/rbindex.js',
     name, banner,
     sourcemap: true,
   },
-  plugins: [ buble() ]
+  plugins: [ resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
 }, {
-  input: 'src/indexes/binaryarray.js',
+  input: 'src/indexes/rbindex.js',
   output: {
     format: 'umd',
-    file: 'dist/binaryarray.es6.js',
+    file: 'dist/rbindex.es6.js',
     name, banner,
     sourcemap: true,
-  }
-},
+  },
+  plugins: [ buble(), resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
+}, {
+  input: 'src/indexes/avlindex.js',
+  output: {
+    format: 'umd',
+    file: 'dist/avlindex.js',
+    name, banner,
+    sourcemap: true,
+  },
+  plugins: [ resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
+}, {
+  input: 'src/indexes/avlindex.js',
+  output: {
+    format: 'umd',
+    file: 'dist/avlindex.es6.js',
+    name, banner,
+    sourcemap: true,
+  },
+  plugins: [ buble(), resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
+} ,
 {
   input: 'example/index.js',
   output: {
@@ -91,5 +137,9 @@ export default [{
     name, banner,
     sourcemap: true,
   },
-  plugins: [ buble() ]
+  plugins: [ buble(), resolve(),
+    commonJS({
+      include: 'node_modules/**'
+    }) 
+  ]
 }];

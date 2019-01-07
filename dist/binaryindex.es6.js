@@ -112,11 +112,11 @@
 
     class BinaryIndex {
         constructor (name, itemFn, keyFn, comparer) {
-            this.index = new BinaryArray(comparer);
+            this.comparer = comparer || defaultComparer;
+            this.index = new BinaryArray(this.comparer);
             this.name = name;
             this.itemFn = itemFn;
             this.keyFn = keyFn;
-            this.comparer = comparer || defaultComparer;
         }
         
         static build(name, itemFn, keyFn, items, comparer) {
@@ -130,12 +130,12 @@
         }
 
         clear() {
-            this.index = [];
+            this.index = new BinaryArray(this.comparer);
         }
 
         findMany(keys) {
             keys = oneOrMany(keys);
-            let data = keys.map(m => this.getOne(m));
+            let data = keys.map(m => this.find(m));
             return [].concat.apply([], data);
         }
 
@@ -179,8 +179,8 @@
         }
 
         update(item, olditem) {
-            this.removeOne(olditem);
-            this.addOne(item);
+            this.remove(olditem);
+            this.insert(item);
         }
     }
 

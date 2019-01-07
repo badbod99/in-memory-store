@@ -2,11 +2,11 @@ import * as mem from '../common';
 
 class HashIndex {
     constructor (name, itemFn, keyFn, comparer) {
+        this.comparer = comparer || mem.defaultComparer;
         this.index = new Map([]);
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this.comparer = comparer || mem.defaultComparer;
     }
     
     static build(name, itemFn, keyFn, items, comparer) {
@@ -25,7 +25,7 @@ class HashIndex {
 
     findMany(keys) {
         keys = mem.oneOrMany(keys);
-        let data = keys.map(m => this.getOne(m));
+        let data = keys.map(m => this.find(m));
         return [].concat.apply([], data);
     }
 
@@ -66,8 +66,8 @@ class HashIndex {
     }
 
     update(item, olditem) {
-        this.removeOne(olditem);
-        this.addOne(item);
+        this.remove(olditem);
+        this.insert(item);
     }
 }
 
