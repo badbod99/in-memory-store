@@ -52,14 +52,11 @@ store.updateOne(item);
 let items = [item1, item2, item3];
 store.update(items);
 
-// Build an index (default index type is a HashIndex)
-store.buildIndex('breed', kitten => kitten.breed);
 // Build a binary index (binary indexes are sorted at all times)
 store.buildBinaryIndex('breed', kitten => kitten.breed);
 // Keys are case senstive, so normalise if needed
 store.buildBinaryIndex('breed', kitten => kitten.breed.toLowerCase());
 // Note: You only need to build an index once, update/add/remove all update index automatically
-
 
 // Get all entries with specified breed
 let britishShorthair = store.getOne('breed', 'British Shorthair');
