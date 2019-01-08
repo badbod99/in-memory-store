@@ -1,7 +1,8 @@
-import { HashIndex } from './indexes/hashindex';
-import { BinaryIndex } from './indexes/binaryindex';
-import { AVLIndex } from './indexes/avlindex';
 import * as mem from './common';
+
+/**
+ * @module
+ */
 
 export class InMemoryStore {
    /**
@@ -119,41 +120,21 @@ export class InMemoryStore {
     }
 
     /**
-    * Creates a new Hash index
-    * @param  {string} indexName index to create
-    * @param  {indexCallback} ixFn function to call with the item to get the indexed value
-    * @return {HashIndex} newly created HashIndex with all items from this store populated
+    * Adds a new index onto this store if it does not already exist. Populates index with entries
+    * if index not already populated.
+    * @param  {BaseIndex} index index ensure exists and is populated
+    * @return {boolean} true if index was added by this operation, false if already exists.
     */
-    buildHashIndex(indexName, ixFn) {
-        const newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries);
-        this.indexes.set(indexName, newIndex);
-        return newIndex;
-    }
-
-    /**
-    * Creates a new Binary index
-    * @param  {string} indexName index to create
-    * @param  {indexCallback} ixFn function to call with the item to get the indexed value
-    * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
-    * @return {BinaryIndex} newly created BinaryIndex with all items from this store populated
-    */
-    buildBinaryIndex(indexName, ixFn, comparer) {
-        const newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
-        this.indexes.set(indexName, newIndex);
-        return newIndex;
-    }
-
-    /**
-    * Creates a new AVL index
-    * @param  {string} indexName index to create
-    * @param  {indexCallback} ixFn function to call with the item to get the indexed value
-    * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
-    * @return {Array<any>} values found
-    */
-    buildAVLIndex(indexName, ixFn, comparer) {
-        const newIndex = AVLIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
-        this.indexes.set(indexName, newIndex);
-        return newIndex;
+    ensureIndex(index) {
+        if (!this.indexes.has(index.name)) {
+            this.indexes.set(index.name, index);
+            if (!index.populated) {
+                index.populate(this.entries);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**

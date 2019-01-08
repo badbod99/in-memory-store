@@ -1,11 +1,14 @@
-import { InMemoryStore } from '../src/in-memory-store';
+import { InMemoryStore, BinaryIndex } from '../src/index';
 import { data } from './dummydata/people';
 
-let store = new InMemoryStore(item => item.id);
+let idFn = item => item.id;
+let store = new InMemoryStore(idFn);
 
 let catFn = r => r.name.last.substring(0,1).toUpperCase();
 store.populate(data);
-store.buildAVLIndex("firstLetter", catFn);
+
+let index = new BinaryIndex("firstLetter", idFn, catFn);
+store.ensureIndex(index);
 
 let letters = store.getIndexKeys("firstLetter");
 

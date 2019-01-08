@@ -123,556 +123,8 @@
     }
 
     /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
-    var HashIndex = function HashIndex (name, itemFn, keyFn) {
-        this.index = new Map([]);
-        this.name = name;
-        this.itemFn = itemFn;
-        this.keyFn = keyFn;
-    };
-
-    var prototypeAccessors = { keys: { configurable: true } };
-        
-    /**
-    * Creates a new Hash index
-    * @param  {string} name name of this index
-    * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
-    * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
-    * @return {HashIndex} newly created HashIndex with all items from this store populated
-    */
-    HashIndex.build = function build (name, itemFn, keyFn, items) {
-        var bin = new HashIndex(name, itemFn, keyFn);
-        bin.populate(items);
-        return bin;
-    };
-
-    /**
-    * Returns all keys
-    * @return {Array<Key>}
-    */
-    prototypeAccessors.keys.get = function () {
-        return Array.from(this.index.keys());
-    };
-
-    /**
-    * Removes all items from the index
-    */
-    HashIndex.prototype.clear = function clear () {
-        this.index = new Map([]);
-    };
-
-    /**
-    * Returns items within matching passed index keys
-    * @param  {Array<any>} keys specified index keys
-    * @return {Array<any>} values found
-    */
-    HashIndex.prototype.findMany = function findMany (keys) {
-            var this$1 = this;
-
-        keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.find(m); });
-        return [].concat.apply([], data);
-    };
-
-    /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
-    HashIndex.prototype.find = function find (key) {
-        return this.index.get(key);
-    };
-
-    /**
-    * Removes an item
-    * @param  {any} item item to remove
-    */
-    HashIndex.prototype.remove = function remove (item) {
-        var key = this.keyFn(item);
-        if (this.index.has(key)) {
-            var col = this.index.get(key);
-            var it = this.itemFn(item);
-            var i = col.indexOf(it);
-            if (i > -1) {
-                col.splice(i, 1);
-            }
-            if (col.length === 0) {
-                this.index.delete(key);
-            }
-        }
-    };
-
-    /**
-    * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
-    * @param  {Array<any>} items items to populate store with
-    */
-    HashIndex.prototype.populate = function populate (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) { return this$1.insert(item); });
-    };
-
-    /**
-    * Adds an item with indexes as per itemFn and keyFn defined on index creation
-    * @param  {any} item item to add to index
-    */
-    HashIndex.prototype.insert = function insert (item) {
-        var key = this.keyFn(item);
-        var it = this.itemFn(item);
-        if (it && key) {
-            if (this.index.has(key)) {
-                this.index.get(key).push(it);
-            } else {
-                this.index.set(key, [it]);
-            }
-        }
-    };
-
-    /**
-    * Updates an item by removing any associated index entry based on oldItem and adding new index
-    * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
-    * item in wrong indexed key.
-    * @param  {any} oldItem item as it was prior to being updated
-    * @param  {any} item item as it is now
-    */
-    HashIndex.prototype.update = function update (item, olditem) {
-        this.remove(olditem);
-        this.insert(item);
-    };
-
-    Object.defineProperties( HashIndex.prototype, prototypeAccessors );
-
-    /**
-    * Callback for comparer
-    * @callback comparerCallback
-    * @param   {Key} a
-    * @param   {Key} b
-    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
-    */
-
-    var BinaryArray = function BinaryArray (comparer) {
-        this.arr = [];
-        this.comparer = comparer || defaultComparer;
-    };
-
-    var prototypeAccessors$1 = { keys: { configurable: true } };
-        
-    /**
-    * Removes all items from the index
-    */
-    BinaryArray.prototype.clear = function clear () {
-        this.arr = [];
-    };
-
-    /**
-     * Returns an array of keys store in this Key Value array
-     * @returns {Array<any>} all keys
+     * @module
      */
-    prototypeAccessors$1.keys.get = function () {
-        return this.arr.map(function (m) { return m.key; });
-    };
-
-    /**
-     * Returns the index in this array of the specified key
-     * @param {number} key 
-     */
-    BinaryArray.prototype.indexOf = function indexOf (key) {
-        var i = this.insertPos(key);
-        if (this.arr[i] && eq(this.comparer, this.arr[i].key, key)) {
-            return i;
-        } else {
-            return -1;
-        }
-    };
-
-    /**
-     * Returns the position at which a new item should be inserted into this array.
-     * That position may already contain an item, in which can this key already exists.
-     * @param {number} key key to find in the array
-     */
-    BinaryArray.prototype.insertPos = function insertPos (key) {
-        var low = 0, high = this.arr.length, mid;
-        while (low < high) {
-            // faster version of Math.floor((low + high) / 2)
-            mid = (low + high) >>> 1; 
-            lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid;
-        }
-        return low;
-    };
-
-    /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
-    BinaryArray.prototype.get = function get (key) {
-        var i = this.indexOf(key);
-        if (i > -1) {
-            return this.arr[i].value;
-        }
-    };
-
-    /**
-    * Removes an item by key
-    * @param  {any} key key of item to remove
-    */
-    BinaryArray.prototype.remove = function remove (key) {
-        var i = this.indexOf(key);
-        if (i > -1) {
-            this.removeAt(i);
-        }
-    };
-
-    /**
-    * Adds an key/value with array
-    * @param  {any} key key to add
-    * @param  {any} value item related to the specified key
-    */
-    BinaryArray.prototype.add = function add (key, value) {
-        var ix = this.insertPos(key);
-        this.addAt(ix, key, value);
-    };
-
-    /**
-     * Adds a key/value entry at a specified position in the array.
-     * Will not replace any existing item in that postion, instead
-     * inserting before it.
-     * @param {number} pos index of where to add this entry
-     * @param {any} key key to add
-     * @param {any} value item related to the specified key
-     */
-    BinaryArray.prototype.addAt = function addAt (pos, key, value) {
-        var item = { key: key, value: value };
-        this.arr.splice(pos, 0, item);
-    };
-
-    /**
-     * Removes a key/value entry at a specified position
-     * @param {number} pos index of the item to remove.
-     */
-    BinaryArray.prototype.removeAt = function removeAt (pos) {
-        this.arr.splice(pos, 1);
-    };
-
-    /**
-     * Returns key matching passed index position
-     * @param  {number} pos index of where to add this entry
-     * @return {any} key found at this position
-     */
-    BinaryArray.prototype.getAt = function getAt (pos) {
-        return this.arr[pos];
-    };
-
-    Object.defineProperties( BinaryArray.prototype, prototypeAccessors$1 );
-
-    /**
-    * Callback for comparer
-    * @callback comparerCallback
-    * @param   {Key} a
-    * @param   {Key} b
-    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
-    */
-
-    /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
-    var BinaryIndex = function BinaryIndex (name, itemFn, keyFn, comparer) {
-        this.comparer = comparer || defaultComparer;
-        this.index = new BinaryArray(this.comparer);
-        this.name = name;
-        this.itemFn = itemFn;
-        this.keyFn = keyFn;
-    };
-
-    var prototypeAccessors$2 = { keys: { configurable: true } };
-        
-    /**
-    * Creates a new Binary index
-    * @param  {string} name name of this index
-    * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
-    * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
-    * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
-    * @return {BinaryIndex} newly created BinaryIndex with all items from this store populated
-    */
-    BinaryIndex.build = function build (name, itemFn, keyFn, items, comparer) {
-        var bin = new BinaryIndex(name, itemFn, keyFn, comparer);
-        bin.populate(items);
-        return bin;
-    };
-
-    /**
-    * Returns all keys
-    * @return {Array<Key>}
-    */
-    prototypeAccessors$2.keys.get = function () {
-        return this.index.keys;
-    };
-
-    /**
-    * Removes all items from the index
-    */
-    BinaryIndex.prototype.clear = function clear () {
-        this.index = new BinaryArray(this.comparer);
-    };
-
-    /**
-    * Returns items within matching passed index keys
-    * @param  {Array<any>} keys specified index keys
-    * @return {Array<any>} values found
-    */
-    BinaryIndex.prototype.findMany = function findMany (keys) {
-            var this$1 = this;
-
-        keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.find(m); });
-        return [].concat.apply([], data);
-    };
-
-    /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
-    BinaryIndex.prototype.find = function find (key) {
-        return this.index.get(key);
-    };
-
-    /**
-    * Removes an item
-    * @param  {any} item item to remove
-    */
-    BinaryIndex.prototype.remove = function remove (item) {
-        var key = this.keyFn(item);
-        var pos = this.index.indexOf(key);
-            
-        if (pos > -1) {
-            var entry = this.index.getAt(pos);
-            var it = this.itemFn(item);
-            var i = entry.value.indexOf(it);
-            if (i > -1) {
-                entry.value.splice(i, 1);
-            }
-            if (entry.value.length === 0) {
-                this.index.removeAt(pos);
-            }
-        }
-    };
-
-    /**
-    * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
-    * @param  {Array<any>} items items to populate store with
-    */
-    BinaryIndex.prototype.populate = function populate (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) { return this$1.insert(item); });
-    };
-        
-    /**
-    * Adds an item with indexes as per itemFn and keyFn defined on index creation
-    * @param  {any} item item to add to index
-    */
-    BinaryIndex.prototype.insert = function insert (item) {
-        var key = this.keyFn(item);
-        var it = this.itemFn(item);
-        var pos = this.index.insertPos(key);
-        var entry = this.index.getAt(pos);
-            
-        if (entry && eq(this.comparer, entry.key, key)) {
-            entry.value.push(it);
-        } else {
-            this.index.addAt(pos, key, [it]); 
-        }
-    };
-
-    /**
-    * Updates an item by removing any associated index entry based on oldItem and adding new index
-    * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
-    * item in wrong indexed key.
-    * @param  {any} oldItem item as it was prior to being updated
-    * @param  {any} item item as it is now
-    */
-    BinaryIndex.prototype.update = function update (item, olditem) {
-        this.remove(olditem);
-        this.insert(item);
-    };
-
-    Object.defineProperties( BinaryIndex.prototype, prototypeAccessors$2 );
-
-    /**
-    * Callback for comparer
-    * @callback comparerCallback
-    * @param   {Key} a
-    * @param   {Key} b
-    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
-    */
-
-    /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
-    var AVLIndex = function AVLIndex (name, itemFn, keyFn, comparer) {
-        this.comparer = comparer || defaultComparer;
-        this.index = new AVLTree(comparer);
-        this.name = name;
-        this.itemFn = itemFn;
-        this.keyFn = keyFn;
-    };
-
-    var prototypeAccessors$3 = { keys: { configurable: true } };
-        
-    /**
-    * Creates a new AVL index
-    * @param  {string} name name of this index
-    * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
-    * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
-    * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
-    * @return {AVLIndex} newly created AVLIndex with all items from this store populated
-    */
-    AVLIndex.build = function build (name, itemFn, keyFn, items, comparer) {
-        var bin = new AVLIndex(name, itemFn, keyFn, comparer);
-        bin.populate(items);
-        return bin;
-    };
-
-    /**
-    * Returns all keys
-    * @return {Array<Key>}
-    */
-    prototypeAccessors$3.keys.get = function () {
-        return this.index.keys();
-    };
-
-    /**
-    * Removes all items from the index
-    */
-    AVLIndex.prototype.clear = function clear () {
-        this.index.clear();
-    };
-
-    /**
-    * Returns items within matching passed index keys
-    * @param  {Array<any>} keys specified index keys
-    * @return {Array<any>} values found
-    */
-    AVLIndex.prototype.findMany = function findMany (keys) {
-            var this$1 = this;
-
-        keys = oneOrMany(keys);
-        var data = keys.map(function (m) { return this$1.find(m); });
-        return [].concat.apply([], data);
-    };
-
-    /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
-    AVLIndex.prototype.find = function find (key) {
-        var found = this.index.find(key);
-        if (found) {
-            return found.data;
-        } else {
-            return [];
-        }
-    };
-
-    /**
-    * Removes an item
-    * @param  {any} item item to remove
-    */
-    AVLIndex.prototype.remove = function remove (item) {
-        var key = this.keyFn(item);
-        var entry = this.index.find(key);
-
-        if (entry) {
-            var it = this.itemFn(item);
-            var arr = entry.data;
-            var i = arr.indexOf(it);
-            if (i > -1) {
-                arr.splice(i, 1);
-            }
-            if (arr.length === 0) {
-                this.index.remove(key);
-            }
-        }
-    };
-
-    /**
-    * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
-    * @param  {Array<any>} items items to populate store with
-    */
-    AVLIndex.prototype.populate = function populate (items) {
-            var this$1 = this;
-
-        items = oneOrMany(items);
-        items.forEach(function (item) { return this$1.insert(item); });
-    };
-        
-    /**
-    * Adds an item with indexes as per itemFn and keyFn defined on index creation
-    * @param  {any} item item to add to index
-    */
-    AVLIndex.prototype.insert = function insert (item) {
-        var key = this.keyFn(item);
-        var it = this.itemFn(item);
-        var entry = this.index.find(key);
-            
-        if (entry) {
-            entry.data.push(it);
-        } else {
-            this.index.insert(key, [it]);
-        }
-    };
-
-    /**
-    * Updates an item by removing any associated index entry based on oldItem and adding new index
-    * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
-    * item in wrong indexed key.
-    * @param  {any} oldItem item as it was prior to being updated
-    * @param  {any} item item as it is now
-    */
-    AVLIndex.prototype.update = function update (item, olditem) {
-        this.remove(olditem);
-        this.insert(item);
-    };
-
-    Object.defineProperties( AVLIndex.prototype, prototypeAccessors$3 );
 
     var InMemoryStore = function InMemoryStore(keyFn) {
          this.indexes = new Map([]);
@@ -680,13 +132,13 @@
          this.keyFn = keyFn;
      };
 
-    var prototypeAccessors$4 = { isEmpty: { configurable: true },size: { configurable: true } };
+    var prototypeAccessors = { isEmpty: { configurable: true },size: { configurable: true } };
 
      /**
      * Returns whether the store is empty
      * @return {boolean}
      */
-     prototypeAccessors$4.isEmpty.get = function () {
+     prototypeAccessors.isEmpty.get = function () {
          return this.entries.size === 0;
      };
 
@@ -694,7 +146,7 @@
      * Returns the number of items in the store
      * @return {number}
      */
-     prototypeAccessors$4.size.get = function () {
+     prototypeAccessors.size.get = function () {
          return this.entries.size;
      };
 
@@ -790,41 +242,21 @@
      };
 
      /**
-     * Creates a new Hash index
-     * @param  {string} indexName index to create
-     * @param  {indexCallback} ixFn function to call with the item to get the indexed value
-     * @return {HashIndex} newly created HashIndex with all items from this store populated
+     * Adds a new index onto this store if it does not already exist. Populates index with entries
+     * if index not already populated.
+     * @param  {BaseIndex} index index ensure exists and is populated
+     * @return {boolean} true if index was added by this operation, false if already exists.
      */
-     InMemoryStore.prototype.buildHashIndex = function buildHashIndex (indexName, ixFn) {
-         var newIndex = HashIndex.build(indexName, this.keyFn, ixFn, this.entries);
-         this.indexes.set(indexName, newIndex);
-         return newIndex;
-     };
-
-     /**
-     * Creates a new Binary index
-     * @param  {string} indexName index to create
-     * @param  {indexCallback} ixFn function to call with the item to get the indexed value
-     * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
-     * @return {BinaryIndex} newly created BinaryIndex with all items from this store populated
-     */
-     InMemoryStore.prototype.buildBinaryIndex = function buildBinaryIndex (indexName, ixFn, comparer) {
-         var newIndex = BinaryIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
-         this.indexes.set(indexName, newIndex);
-         return newIndex;
-     };
-
-     /**
-     * Creates a new AVL index
-     * @param  {string} indexName index to create
-     * @param  {indexCallback} ixFn function to call with the item to get the indexed value
-     * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
-     * @return {Array<any>} values found
-     */
-     InMemoryStore.prototype.buildAVLIndex = function buildAVLIndex (indexName, ixFn, comparer) {
-         var newIndex = AVLIndex.build(indexName, this.keyFn, ixFn, this.entries, comparer);
-         this.indexes.set(indexName, newIndex);
-         return newIndex;
+     InMemoryStore.prototype.ensureIndex = function ensureIndex (index) {
+         if (!this.indexes.has(index.name)) {
+             this.indexes.set(index.name, index);
+             if (!index.populated) {
+                 index.populate(this.entries);
+             }
+             return true;
+         } else {
+             return false;
+         }
      };
 
      /**
@@ -915,7 +347,546 @@
          this.entries.set(key, item);
      };
 
-    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors$4 );
+    Object.defineProperties( InMemoryStore.prototype, prototypeAccessors );
+
+    /**
+    * Callback for item identifier
+    * @callback itemCallback
+    * @param   {any} item
+    * @returns {any} unique value to identify the item
+    */
+
+    /**
+    * Callback for key value
+    * @callback keyCallback
+    * @param   {any} item
+    * @returns {any} value to index this item on
+    */
+
+    var BaseIndex = function BaseIndex (name, itemFn, keyFn) {
+        if (this.constructor === BaseIndex) {
+            throw new TypeError("Cannot construct BaseIndex directly");
+        }
+
+        this.name = name;
+        this.itemFn = itemFn;
+        this.keyFn = keyFn;
+        this._populated = false;
+    };
+
+    var prototypeAccessors$1 = { keys: { configurable: true },populated: { configurable: true } };
+
+    /**
+    * Returns all keys
+    * @return {Array<Key>}
+    */
+    prototypeAccessors$1.keys.get = function () {
+        throw new TypeError("Must implement keys property");
+    };
+
+    /**
+    * Removes all items from the index
+    */
+    BaseIndex.prototype.clear = function clear () {
+        throw new TypeError("Must implement clear method");
+    };
+
+    /**
+    * Returns items within matching passed index keys
+    * @param  {Array<any>} keys specified index keys
+    * @return {Array<any>} values found
+    */
+    BaseIndex.prototype.findMany = function findMany (keys) {
+            var this$1 = this;
+
+        keys = oneOrMany(keys);
+        var data = keys.map(function (m) { return this$1.find(m); });
+        return [].concat.apply([], data);
+    };
+
+    /**
+    * Returns items matching passed index key
+    * @param  {any} key specified index key
+    * @return {Array<any>} values found
+    */
+    BaseIndex.prototype.find = function find (key) {
+        throw new TypeError("Must implement find method");
+    };
+
+    /**
+    * Removes an item
+    * @param  {any} item item to remove
+    */
+    BaseIndex.prototype.remove = function remove (item) {
+        throw new TypeError("Must implement build method");
+    };
+
+    /**
+    * Returns whether of not this index has been populated
+    * @return {boolean}
+    */
+    prototypeAccessors$1.populated.get = function () {
+        return this._populated;
+    };
+
+    /**
+    * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
+    * @param  {Array<any>} items items to populate store with
+    */
+    BaseIndex.prototype.populate = function populate (items) {
+            var this$1 = this;
+
+        items = oneOrMany(items);
+        items.forEach(function (item) { return this$1.insert(item); });
+        this._populated = true;
+    };
+
+    /**
+    * Adds an item with indexes as per itemFn and keyFn defined on index creation
+    * @param  {any} item item to add to index
+    */
+    BaseIndex.prototype.insert = function insert (item) {
+        throw new TypeError("Must implement insert method");
+    };
+
+    /**
+    * Updates an item by removing any associated index entry based on oldItem and adding new index
+    * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
+    * item in wrong indexed key.
+    * @param  {any} oldItem item as it was prior to being updated
+    * @param  {any} item item as it is now
+    */
+    BaseIndex.prototype.update = function update (item, olditem) {
+        this.remove(olditem);
+        this.insert(item);
+    };
+
+    Object.defineProperties( BaseIndex.prototype, prototypeAccessors$1 );
+
+    /**
+    * Callback for item identifier
+    * @callback itemCallback
+    * @param   {any} item
+    * @returns {any} unique value to identify the item
+    */
+
+    /**
+    * Callback for key value
+    * @callback keyCallback
+    * @param   {any} item
+    * @returns {any} value to index this item on
+    */
+
+    var HashIndex = /*@__PURE__*/(function (BaseIndex$$1) {
+        function HashIndex (name, itemFn, keyFn) {
+            this.index = new Map([]);
+            BaseIndex$$1.call(this, name, itemFn, keyFn);
+        }
+
+        if ( BaseIndex$$1 ) HashIndex.__proto__ = BaseIndex$$1;
+        HashIndex.prototype = Object.create( BaseIndex$$1 && BaseIndex$$1.prototype );
+        HashIndex.prototype.constructor = HashIndex;
+
+        var prototypeAccessors = { keys: { configurable: true } };
+
+        /**
+        * Returns all keys
+        * @return {Array<Key>}
+        */
+        prototypeAccessors.keys.get = function () {
+            return Array.from(this.index.keys());
+        };
+
+        /**
+        * Removes all items from the index
+        */
+        HashIndex.prototype.clear = function clear () {
+            this.index = new Map([]);
+        };
+
+        /**
+        * Returns items matching passed index key
+        * @param  {any} key specified index key
+        * @return {Array<any>} values found
+        */
+        HashIndex.prototype.find = function find (key) {
+            return this.index.get(key);
+        };
+
+        /**
+        * Removes an item
+        * @param  {any} item item to remove
+        */
+        HashIndex.prototype.remove = function remove (item) {
+            var key = this.keyFn(item);
+            if (this.index.has(key)) {
+                var col = this.index.get(key);
+                var it = this.itemFn(item);
+                var i = col.indexOf(it);
+                if (i > -1) {
+                    col.splice(i, 1);
+                }
+                if (col.length === 0) {
+                    this.index.delete(key);
+                }
+            }
+        };
+
+        /**
+        * Adds an item with indexes as per itemFn and keyFn defined on index creation
+        * @param  {any} item item to add to index
+        */
+        HashIndex.prototype.insert = function insert (item) {
+            var key = this.keyFn(item);
+            var it = this.itemFn(item);
+            if (it && key) {
+                if (this.index.has(key)) {
+                    this.index.get(key).push(it);
+                } else {
+                    this.index.set(key, [it]);
+                }
+            }
+        };
+
+        Object.defineProperties( HashIndex.prototype, prototypeAccessors );
+
+        return HashIndex;
+    }(BaseIndex));
+
+    /**
+    * Callback for comparer
+    * @callback comparerCallback
+    * @param   {Key} a
+    * @param   {Key} b
+    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
+    */
+
+    var BinaryArray = function BinaryArray (comparer) {
+        this.arr = [];
+        this.comparer = comparer || defaultComparer;
+    };
+
+    var prototypeAccessors$2 = { keys: { configurable: true } };
+        
+    /**
+    * Removes all items from the index
+    */
+    BinaryArray.prototype.clear = function clear () {
+        this.arr = [];
+    };
+
+    /**
+     * Returns an array of keys store in this Key Value array
+     * @returns {Array<any>} all keys
+     */
+    prototypeAccessors$2.keys.get = function () {
+        return this.arr.map(function (m) { return m.key; });
+    };
+
+    /**
+     * Returns the index in this array of the specified key
+     * @param {number} key 
+     */
+    BinaryArray.prototype.indexOf = function indexOf (key) {
+        var i = this.insertPos(key);
+        if (this.arr[i] && eq(this.comparer, this.arr[i].key, key)) {
+            return i;
+        } else {
+            return -1;
+        }
+    };
+
+    /**
+     * Returns the position at which a new item should be inserted into this array.
+     * That position may already contain an item, in which can this key already exists.
+     * @param {number} key key to find in the array
+     */
+    BinaryArray.prototype.insertPos = function insertPos (key) {
+        var low = 0, high = this.arr.length, mid;
+        while (low < high) {
+            // faster version of Math.floor((low + high) / 2)
+            mid = (low + high) >>> 1; 
+            lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid;
+        }
+        return low;
+    };
+
+    /**
+    * Returns items matching passed index key
+    * @param  {any} key specified index key
+    * @return {Array<any>} values found
+    */
+    BinaryArray.prototype.get = function get (key) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            return this.arr[i].value;
+        }
+    };
+
+    /**
+    * Removes an item by key
+    * @param  {any} key key of item to remove
+    */
+    BinaryArray.prototype.remove = function remove (key) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            this.removeAt(i);
+        }
+    };
+
+    /**
+    * Adds an key/value with array
+    * @param  {any} key key to add
+    * @param  {any} value item related to the specified key
+    */
+    BinaryArray.prototype.add = function add (key, value) {
+        var ix = this.insertPos(key);
+        this.addAt(ix, key, value);
+    };
+
+    /**
+     * Adds a key/value entry at a specified position in the array.
+     * Will not replace any existing item in that postion, instead
+     * inserting before it.
+     * @param {number} pos index of where to add this entry
+     * @param {any} key key to add
+     * @param {any} value item related to the specified key
+     */
+    BinaryArray.prototype.addAt = function addAt (pos, key, value) {
+        var item = { key: key, value: value };
+        this.arr.splice(pos, 0, item);
+    };
+
+    /**
+     * Removes a key/value entry at a specified position
+     * @param {number} pos index of the item to remove.
+     */
+    BinaryArray.prototype.removeAt = function removeAt (pos) {
+        this.arr.splice(pos, 1);
+    };
+
+    /**
+     * Returns key matching passed index position
+     * @param  {number} pos index of where to add this entry
+     * @return {any} key found at this position
+     */
+    BinaryArray.prototype.getAt = function getAt (pos) {
+        return this.arr[pos];
+    };
+
+    Object.defineProperties( BinaryArray.prototype, prototypeAccessors$2 );
+
+    /**
+    * Callback for comparer
+    * @callback comparerCallback
+    * @param   {Key} a
+    * @param   {Key} b
+    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
+    */
+
+    /**
+    * Callback for item identifier
+    * @callback itemCallback
+    * @param   {any} item
+    * @returns {any} unique value to identify the item
+    */
+
+    /**
+    * Callback for key value
+    * @callback keyCallback
+    * @param   {any} item
+    * @returns {any} value to index this item on
+    */
+
+    var BinaryIndex = /*@__PURE__*/(function (BaseIndex$$1) {
+        function BinaryIndex (name, itemFn, keyFn, comparer) {
+            this.comparer = comparer || defaultComparer;
+            this.index = new BinaryArray(this.comparer);
+            BaseIndex$$1.call(this, name, itemFn, keyFn);
+        }
+
+        if ( BaseIndex$$1 ) BinaryIndex.__proto__ = BaseIndex$$1;
+        BinaryIndex.prototype = Object.create( BaseIndex$$1 && BaseIndex$$1.prototype );
+        BinaryIndex.prototype.constructor = BinaryIndex;
+
+        var prototypeAccessors = { keys: { configurable: true } };
+
+        /**
+        * Returns all keys
+        * @return {Array<Key>}
+        */
+        prototypeAccessors.keys.get = function () {
+            return this.index.keys;
+        };
+
+        /**
+        * Removes all items from the index
+        */
+        BinaryIndex.prototype.clear = function clear () {
+            this.index = new BinaryArray(this.comparer);
+        };
+
+        /**
+        * Returns items matching passed index key
+        * @param  {any} key specified index key
+        * @return {Array<any>} values found
+        */
+        BinaryIndex.prototype.find = function find (key) {
+            return this.index.get(key);
+        };
+
+        /**
+        * Removes an item
+        * @param  {any} item item to remove
+        */
+        BinaryIndex.prototype.remove = function remove (item) {
+            var key = this.keyFn(item);
+            var pos = this.index.indexOf(key);
+            
+            if (pos > -1) {
+                var entry = this.index.getAt(pos);
+                var it = this.itemFn(item);
+                var i = entry.value.indexOf(it);
+                if (i > -1) {
+                    entry.value.splice(i, 1);
+                }
+                if (entry.value.length === 0) {
+                    this.index.removeAt(pos);
+                }
+            }
+        };
+        
+        /**
+        * Adds an item with indexes as per itemFn and keyFn defined on index creation
+        * @param  {any} item item to add to index
+        */
+        BinaryIndex.prototype.insert = function insert (item) {
+            var key = this.keyFn(item);
+            var it = this.itemFn(item);
+            var pos = this.index.insertPos(key);
+            var entry = this.index.getAt(pos);
+            
+            if (entry && eq(this.comparer, entry.key, key)) {
+                entry.value.push(it);
+            } else {
+                this.index.addAt(pos, key, [it]); 
+            }
+        };
+
+        Object.defineProperties( BinaryIndex.prototype, prototypeAccessors );
+
+        return BinaryIndex;
+    }(BaseIndex));
+
+    /**
+    * Callback for comparer
+    * @callback comparerCallback
+    * @param   {Key} a
+    * @param   {Key} b
+    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
+    */
+
+    /**
+    * Callback for item identifier
+    * @callback itemCallback
+    * @param   {any} item
+    * @returns {any} unique value to identify the item
+    */
+
+    /**
+    * Callback for key value
+    * @callback keyCallback
+    * @param   {any} item
+    * @returns {any} value to index this item on
+    */
+
+    var AVLIndex = /*@__PURE__*/(function (BaseIndex$$1) {
+        function AVLIndex (name, itemFn, keyFn, comparer) {
+            this.comparer = comparer || defaultComparer;
+            this.index = new AVLTree(comparer);
+            BaseIndex$$1.call(this, name, itemFn, keyFn);
+        }
+
+        if ( BaseIndex$$1 ) AVLIndex.__proto__ = BaseIndex$$1;
+        AVLIndex.prototype = Object.create( BaseIndex$$1 && BaseIndex$$1.prototype );
+        AVLIndex.prototype.constructor = AVLIndex;
+
+        var prototypeAccessors = { keys: { configurable: true } };
+
+        /**
+        * Returns all keys
+        * @return {Array<Key>}
+        */
+        prototypeAccessors.keys.get = function () {
+            return this.index.keys();
+        };
+
+        /**
+        * Removes all items from the index
+        */
+        AVLIndex.prototype.clear = function clear () {
+            this.index.clear();
+        };
+
+        /**
+        * Returns items matching passed index key
+        * @param  {any} key specified index key
+        * @return {Array<any>} values found
+        */
+        AVLIndex.prototype.find = function find (key) {
+            var found = this.index.find(key);
+            if (found) {
+                return found.data;
+            } else {
+                return [];
+            }
+        };
+
+        /**
+        * Removes an item
+        * @param  {any} item item to remove
+        */
+        AVLIndex.prototype.remove = function remove (item) {
+            var key = this.keyFn(item);
+            var entry = this.index.find(key);
+
+            if (entry) {
+                var it = this.itemFn(item);
+                var arr = entry.data;
+                var i = arr.indexOf(it);
+                if (i > -1) {
+                    arr.splice(i, 1);
+                }
+                if (arr.length === 0) {
+                    this.index.remove(key);
+                }
+            }
+        };
+        
+        /**
+        * Adds an item with indexes as per itemFn and keyFn defined on index creation
+        * @param  {any} item item to add to index
+        */
+        AVLIndex.prototype.insert = function insert (item) {
+            var key = this.keyFn(item);
+            var it = this.itemFn(item);
+            var entry = this.index.find(key);
+            
+            if (entry) {
+                entry.data.push(it);
+            } else {
+                this.index.insert(key, [it]);
+            }
+        };
+
+        Object.defineProperties( AVLIndex.prototype, prototypeAccessors );
+
+        return AVLIndex;
+    }(BaseIndex));
+
+    /**
+     * @module
+     */
 
     exports.InMemoryStore = InMemoryStore;
     exports.HashIndex = HashIndex;

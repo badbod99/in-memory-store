@@ -4,13 +4,15 @@ const { AVLIndex, BinaryIndex, HashIndex, RBIndex } = require('../dist/benchmark
 
 const A = 500;
 const N = 10000;
-const rvalues = new Array(N).fill(0).map((n, i) => {
+let rvalues = new Array(N).fill(0).map((n, i) => {
   return {
-    id: Math.floor(Math.random() * N),
+    id: i, // As we don't keep duplicates, need unique id, not random
     rnd1: Math.floor(Math.random() * A),
     rnd2: Math.floor(Math.random() * A)
   }
 });
+// Shuffle it after so it's not in sequence
+rvalues = shuffle(rvalues);
 
 const avalues = new Array(N).fill(0).map((n, i) => Math.floor(Math.random() * A));
 
@@ -32,14 +34,13 @@ const options = {
   }
 };
 
-console.clear();
+
+let slicedA = avalues.slice(0,10);
 console.log('--------------------- CORRECTNESS CHECK -----------------');
-for (var i = 0; i < 10; i++) {
-  console.log(`${prefilledAVL.find(avalues[i]).length} [${avalues[i]}] values found in AVLIndex`);
-  console.log(`${prefilledRB.find(avalues[i]).length} [${avalues[i]}] values found in prefilledRB`);
-  console.log(`${prefilledMemBin.find(avalues[i]).length} [${avalues[i]}] values found in prefilledMemBin`);
-  console.log(`${prefilledMemHash.find(avalues[i]).length} [${avalues[i]}] values found in prefilledMemHash`);
-}
+console.log(`${prefilledAVL.findMany(slicedA).length} [${slicedA}] values found in AVLIndex`);
+console.log(`${prefilledRB.findMany(slicedA).length} [${slicedA}] values found in prefilledRB`);
+console.log(`${prefilledMemBin.findMany(slicedA).length} [${slicedA}] values found in prefilledMemBin`);
+console.log(`${prefilledMemHash.findMany(slicedA).length} [${slicedA}] values found in prefilledMemHash`);
 console.log('---------------------------------------------------------');
 
 new Benchmark.Suite(`Insert (x${N})`, options)
@@ -98,3 +99,19 @@ new Benchmark.Suite(`Remove (x${N})`, options)
     for (let i = N - 1; i; i--) prefilledMemHash.remove(rvalues[i]);
   })
   .run();
+
+
+/**
+ * Shuffles array in place.
+ * @param {Array} a items An array containing the items.
+ */
+function shuffle(a) {
+  var j, x, i;
+  for (i = a.length - 1; i > 0; i--) {
+      j = Math.floor(Math.random() * (i + 1));
+      x = a[i];
+      a[i] = a[j];
+      a[j] = x;
+  }
+  return a;
+}

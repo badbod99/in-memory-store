@@ -5,22 +5,15 @@
 
 import * as mem from '../src/common';
 import { RBTree } from 'bintrees';
+import { BaseIndex } from '../src/indexes/baseindex';
 
-export class RBIndex {
+export class RBIndex extends BaseIndex {
     constructor (name, itemFn, keyFn, comparer) {
         this.comparer = mem.keyWrapComparer(comparer || mem.defaultComparer);
         this.index = new RBTree(this.comparer);
-        this.name = name;
-        this.itemFn = itemFn;
-        this.keyFn = keyFn;
+        super(name, itemFn, keyFn);
     }
     
-    static build(name, itemFn, keyFn, items, comparer) {
-        let bin = new RBIndex(name, itemFn, keyFn, comparer);
-        bin.populate(items);
-        return bin;
-    }
-
     get keys() {
         let arr = [];
         this.index.each(f => arr.push(f.key));
@@ -29,12 +22,6 @@ export class RBIndex {
 
     clear() {
         this.index.clear();
-    }
-
-    findMany(keys) {
-        keys = mem.oneOrMany(keys);
-        let data = keys.map(m => this.find(m));
-        return [].concat.apply([], data);
     }
 
     find(key) {
@@ -62,11 +49,6 @@ export class RBIndex {
             }
         }
     }
-
-    populate(items) {
-        items = mem.oneOrMany(items);
-        items.forEach(item => this.insert(item));
-    }
     
     insert(item) {
         const key = this.keyFn(item);
@@ -78,10 +60,5 @@ export class RBIndex {
         } else {
             this.index.insert({key: key, value: [it]});
         }
-    }
-
-    update(item, olditem) {
-        this.remove(olditem);
-        this.insert(item);
     }
 }

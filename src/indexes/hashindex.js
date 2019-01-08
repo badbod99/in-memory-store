@@ -1,4 +1,4 @@
-import * as mem from '../common';
+import { BaseIndex } from './baseindex';
 
 /**
 * Callback for item identifier
@@ -14,33 +14,19 @@ import * as mem from '../common';
 * @returns {any} value to index this item on
 */
 
-export class HashIndex {
+export class HashIndex extends BaseIndex {
     /**
     * @class Index based on javascript Map object for key/value storage. Groups items by index value, 
     * stores items within index value as array using linear search.
     * @constructor
+    * @implements {BaseIndex}
     * @param  {string} name name of this index
     * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
     * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
     */
     constructor (name, itemFn, keyFn) {
         this.index = new Map([]);
-        this.name = name;
-        this.itemFn = itemFn;
-        this.keyFn = keyFn;
-    }
-    
-    /**
-    * Creates a new Hash index
-    * @param  {string} name name of this index
-    * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
-    * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
-    * @return {HashIndex} newly created HashIndex with all items from this store populated
-    */
-    static build(name, itemFn, keyFn, items) {
-        let bin = new HashIndex(name, itemFn, keyFn);
-        bin.populate(items);
-        return bin;
+        super(name, itemFn, keyFn);
     }
 
     /**
@@ -56,17 +42,6 @@ export class HashIndex {
     */
     clear() {
         this.index = new Map([]);
-    }
-
-    /**
-    * Returns items within matching passed index keys
-    * @param  {Array<any>} keys specified index keys
-    * @return {Array<any>} values found
-    */
-    findMany(keys) {
-        keys = mem.oneOrMany(keys);
-        let data = keys.map(m => this.find(m));
-        return [].concat.apply([], data);
     }
 
     /**
@@ -98,15 +73,6 @@ export class HashIndex {
     }
 
     /**
-    * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
-    * @param  {Array<any>} items items to populate store with
-    */
-    populate(items) {
-        items = mem.oneOrMany(items);
-        items.forEach(item => this.insert(item));
-    }
-
-    /**
     * Adds an item with indexes as per itemFn and keyFn defined on index creation
     * @param  {any} item item to add to index
     */
@@ -120,17 +86,5 @@ export class HashIndex {
                 this.index.set(key, [it]);
             }
         }
-    }
-
-    /**
-    * Updates an item by removing any associated index entry based on oldItem and adding new index
-    * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
-    * item in wrong indexed key.
-    * @param  {any} oldItem item as it was prior to being updated
-    * @param  {any} item item as it is now
-    */
-    update(item, olditem) {
-        this.remove(olditem);
-        this.insert(item);
     }
 }
