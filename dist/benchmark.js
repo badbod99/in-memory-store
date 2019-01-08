@@ -22,6 +22,20 @@
     */
 
     /**
+     * Callback for item identifier
+     * @callback itemCallback
+     * @param   {any} item
+     * @returns {any} unique value to identify the item
+     */
+
+    /**
+     * Callback for key value
+     * @callback keyCallback
+     * @param   {any} item
+     * @returns {any} value to index this item on
+     */
+
+    /**
      * Converts a passed value into an array.  Useful if you don't know
      * if your passed parameter is an array or single value.
      * @param  {any} items single item, array or javascript Map object
@@ -134,9 +148,8 @@
     }
 
     /**
-     * @module
+     * Key value storage with support for grouping/returning items by index value
      */
-
     var InMemoryStore = function InMemoryStore(keyFn) {
          this.indexes = new Map([]);
          this.entries = new Map([]);
@@ -146,33 +159,33 @@
     var prototypeAccessors = { isEmpty: { configurable: true },size: { configurable: true } };
 
      /**
-     * Returns whether the store is empty
-     * @return {boolean}
-     */
+      * Returns whether the store is empty
+      * @return {boolean}
+      */
      prototypeAccessors.isEmpty.get = function () {
          return this.entries.size === 0;
      };
 
      /**
-     * Returns the number of items in the store
-     * @return {number}
-     */
+      * Returns the number of items in the store
+      * @return {number}
+      */
      prototypeAccessors.size.get = function () {
          return this.entries.size;
      };
 
      /**
-     * Returns all keys wihin the specified index
-     * @return {Array<Key>}
-     */
+      * Returns all keys wihin the specified index
+      * @return {Array<Key>}
+      */
      InMemoryStore.prototype.getIndexKeys = function getIndexKeys (indexName) {
          return this.indexes.get(indexName).keys;
      };
 
      /**
-     * Populates a new store with items using bulk load methods for indexes if available
-     * @param  {Array<any>} items items to populate store with
-     */
+      * Populates a new store with items using bulk load methods for indexes if available
+      * @param  {Array<any>} items items to populate store with
+      */
      InMemoryStore.prototype.populate = function populate (items) {
             var this$1 = this;
 
@@ -183,10 +196,10 @@
      };
 
      /**
-     * Clears and re-populates a new store with items using bulk 
-     * load methods for indexes if available
-     * @param  {Array<any>} items items to populate store with
-     */
+      * Clears and re-populates a new store with items using bulk 
+      * load methods for indexes if available
+      * @param  {Array<any>} items items to populate store with
+      */
      InMemoryStore.prototype.rebuild = function rebuild (items) {
          this.entries = new Map([]);
          this.indexes.forEach(function (index) { return index.clear(); });
@@ -194,9 +207,9 @@
      };
 
      /**
-     * Clear the store
-     * @return {InMemoryStore}
-     */
+      * Clear the store
+      * @return {InMemoryStore}
+      */
      InMemoryStore.prototype.destroy = function destroy () {
          this.indexes = new Map([]);
          this.entries = new Map([]);
@@ -204,20 +217,20 @@
      };
         
      /**
-     * Whether the store contains an item with the given key
-     * @param  {Key} key
-     * @return {boolean} true/false
-     */
+      * Whether the store contains an item with the given key
+      * @param  {Key} key
+      * @return {boolean} true/false
+      */
      InMemoryStore.prototype.has = function has (item) {
          return this.entries.has(this.keyFn(item));
      };
 
      /**
-     * Returns items within specified index matching passed values
-     * @param  {string} indexName index to search
-     * @param  {Array<any>} values specified index values
-     * @return {Array<any>} values found
-     */
+      * Returns items within specified index matching passed values
+      * @param  {string} indexName index to search
+      * @param  {Array<any>} values specified index values
+      * @return {Array<any>} values found
+      */
     	InMemoryStore.prototype.get = function get (indexName, values) {
          var data = this.indexes.has(indexName) ? 
              this.indexes.get(indexName).findMany(values) : [];
@@ -225,11 +238,11 @@
      };
 
      /**
-     * Returns items within specified index matching passed value
-     * @param  {string} indexName index to search
-     * @param  {any} value specified index value
-     * @return {Array<any>} values found
-     */
+      * Returns items within specified index matching passed value
+      * @param  {string} indexName index to search
+      * @param  {any} value specified index value
+      * @return {Array<any>} values found
+      */
      InMemoryStore.prototype.getOne = function getOne (indexName, value) {
          var data = this.indexes.has(indexName) ? 
              this.indexes.get(indexName).find(value) : [];
@@ -238,10 +251,10 @@
 
      // Takes array of [indexName, [exactMatch, exactMatch]]
      /**
-     * Searches many indexes each with many values and intersects the results
-     * @param  {Array<string, Array<any>>} valueSet [indexName, [exactMatch, exactMatch]]
-     * @return {Array<any>} values found
-     */
+      * Searches many indexes each with many values and intersects the results
+      * @param  {Array<string, Array<any>>} valueSet [indexName, [exactMatch, exactMatch]]
+      * @return {Array<any>} values found
+      */
      InMemoryStore.prototype.getFromSet = function getFromSet (valueSet) {
             var this$1 = this;
 
@@ -253,11 +266,11 @@
      };
 
      /**
-     * Adds a new index onto this store if it does not already exist. Populates index with entries
-     * if index not already populated.
-     * @param  {BaseIndex} index index ensure exists and is populated
-     * @return {boolean} true if index was added by this operation, false if already exists.
-     */
+      * Adds a new index onto this store if it does not already exist. Populates index with entries
+      * if index not already populated.
+      * @param  {BaseIndex} index index ensure exists and is populated
+      * @return {boolean} true if index was added by this operation, false if already exists.
+      */
      InMemoryStore.prototype.ensureIndex = function ensureIndex (index) {
          if (!this.indexes.has(index.name)) {
              this.indexes.set(index.name, index);
@@ -271,10 +284,10 @@
      };
 
      /**
-     * Removes items from the store and any associated indexes
-     * @param  {Array<any>} items items to remove
-     * @return {Array<boolean>} whether each remove succeeded (false if not found)
-     */
+      * Removes items from the store and any associated indexes
+      * @param  {Array<any>} items items to remove
+      * @return {Array<boolean>} whether each remove succeeded (false if not found)
+      */
      InMemoryStore.prototype.remove = function remove (items) {
             var this$1 = this;
 
@@ -283,10 +296,10 @@
      };
 
      /**
-     * Removes an item from the store and any associated indexes
-     * @param  {any} item item to remove
-     * @return {boolean} whether remove succeeded (false if not found)
-     */
+      * Removes an item from the store and any associated indexes
+      * @param  {any} item item to remove
+      * @return {boolean} whether remove succeeded (false if not found)
+      */
      InMemoryStore.prototype.removeOne = function removeOne (item) {
          if (this.indexes.size > 0) {
              this.indexes.forEach(function (index) { return index.remove(item); });
@@ -295,10 +308,10 @@
      };
 
      /**
-     * Removes an item from the store by key and any associated indexes
-     * @param  {any} key key of item to remove
-     * @return {boolean} whether remove succeeded (false if not found)
-     */
+      * Removes an item from the store by key and any associated indexes
+      * @param  {any} key key of item to remove
+      * @return {boolean} whether remove succeeded (false if not found)
+      */
      InMemoryStore.prototype.removeKey = function removeKey (key) {
          var item = this.entries.get(key);
          if (!item) {
@@ -311,9 +324,9 @@
      };
 
      /**
-     * Adds items to the store and updated any associated indexes
-     * @param  {Array<any>} items items to add
-     */
+      * Adds items to the store and updated any associated indexes
+      * @param  {Array<any>} items items to add
+      */
      InMemoryStore.prototype.add = function add (items) {
             var this$1 = this;
 
@@ -322,17 +335,17 @@
      };
 
      /**
-     * Adds an item to the store and updated any associated indexes
-     * @param  {any} item item to add
-     */
+      * Adds an item to the store and updated any associated indexes
+      * @param  {any} item item to add
+      */
      InMemoryStore.prototype.addOne = function addOne (item) {
          this.updateOne(item);
      };
 
      /**
-     * Updates items to the store and updated any associated indexes
-     * @param  {Array<any>} items items to update
-     */
+      * Updates items to the store and updated any associated indexes
+      * @param  {Array<any>} items items to update
+      */
      InMemoryStore.prototype.update = function update (items) {
             var this$1 = this;
 
@@ -343,9 +356,9 @@
      };
 
      /**
-     * Updates an item in the store and updated any associated indexes
-     * @param  {any} item item to update
-     */
+      * Updates an item in the store and updated any associated indexes
+      * @param  {any} item item to update
+      */
      InMemoryStore.prototype.updateOne = function updateOne (item) {
          var old;
          var key = this.keyFn(item);
@@ -1167,19 +1180,8 @@
     AVLTree.default = AVLTree;
 
     /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
+     * Base index for use with in-memory-store
+     */
     var BaseIndex = function BaseIndex (name, itemFn, keyFn) {
         if (this.constructor === BaseIndex) {
             throw new TypeError("Cannot construct BaseIndex directly");
@@ -1194,25 +1196,27 @@
     var prototypeAccessors$2 = { keys: { configurable: true },populated: { configurable: true } };
 
     /**
-    * Returns all keys
-    * @return {Array<Key>}
-    */
+     * Returns all keys
+     * @abstract
+     * @return {Array<Key>}
+     */
     prototypeAccessors$2.keys.get = function () {
         throw new TypeError("Must implement keys property");
     };
 
     /**
-    * Removes all items from the index
-    */
+     * Removes all items from the index
+     * @abstract
+     */
     BaseIndex.prototype.clear = function clear () {
         throw new TypeError("Must implement clear method");
     };
 
     /**
-    * Returns items within matching passed index keys
-    * @param  {Array<any>} keys specified index keys
-    * @return {Array<any>} values found
-    */
+     * Returns items within matching passed index keys
+     * @param  {Array<any>} keys specified index keys
+     * @return {Array<any>} values found
+     */
     BaseIndex.prototype.findMany = function findMany (keys) {
             var this$1 = this;
 
@@ -1222,34 +1226,36 @@
     };
 
     /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
+     * Returns items matching passed index key
+     * @abstract
+     * @param  {any} key specified index key
+     * @return {Array<any>} values found
+     */
     BaseIndex.prototype.find = function find (key) {
         throw new TypeError("Must implement find method");
     };
 
     /**
-    * Removes an item
-    * @param  {any} item item to remove
-    */
+     * Removes an item
+     * @abstract
+     * @param  {any} item item to remove
+     */
     BaseIndex.prototype.remove = function remove (item) {
         throw new TypeError("Must implement build method");
     };
 
     /**
-    * Returns whether of not this index has been populated
-    * @return {boolean}
-    */
+     * Returns whether of not this index has been populated
+     * @return {boolean}
+     */
     prototypeAccessors$2.populated.get = function () {
         return this._populated;
     };
 
     /**
-    * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
-    * @param  {Array<any>} items items to populate store with
-    */
+     * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
+     * @param  {Array<any>} items items to populate store with
+     */
     BaseIndex.prototype.populate = function populate (items) {
             var this$1 = this;
 
@@ -1259,20 +1265,21 @@
     };
 
     /**
-    * Adds an item with indexes as per itemFn and keyFn defined on index creation
-    * @param  {any} item item to add to index
-    */
+     * Adds an item with indexes as per itemFn and keyFn defined on index creation
+     * @abstract
+     * @param  {any} item item to add to index
+     */
     BaseIndex.prototype.insert = function insert (item) {
         throw new TypeError("Must implement insert method");
     };
 
     /**
-    * Updates an item by removing any associated index entry based on oldItem and adding new index
-    * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
-    * item in wrong indexed key.
-    * @param  {any} oldItem item as it was prior to being updated
-    * @param  {any} item item as it is now
-    */
+     * Updates an item by removing any associated index entry based on oldItem and adding new index
+     * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
+     * item in wrong indexed key.
+     * @param  {any} oldItem item as it was prior to being updated
+     * @param  {any} item item as it is now
+     */
     BaseIndex.prototype.update = function update (item, olditem) {
         this.remove(olditem);
         this.insert(item);
@@ -1281,27 +1288,10 @@
     Object.defineProperties( BaseIndex.prototype, prototypeAccessors$2 );
 
     /**
-    * Callback for comparer
-    * @callback comparerCallback
-    * @param   {Key} a
-    * @param   {Key} b
-    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
-    */
-
-    /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
+     * Index based on AVL Tree object for key/value storage. Groups items by index value, 
+     * stores items within index value as array using linear search.
+     * @extends {BaseIndex}
+     */
     var AVLIndex = /*@__PURE__*/(function (BaseIndex$$1) {
         function AVLIndex (name, itemFn, keyFn, comparer) {
             this.comparer = comparer || defaultComparer;
@@ -1316,25 +1306,25 @@
         var prototypeAccessors = { keys: { configurable: true } };
 
         /**
-        * Returns all keys
-        * @return {Array<Key>}
-        */
+         * Returns all keys
+         * @return {Array<Key>}
+         */
         prototypeAccessors.keys.get = function () {
             return this.index.keys();
         };
 
         /**
-        * Removes all items from the index
-        */
+         * Removes all items from the index
+         */
         AVLIndex.prototype.clear = function clear () {
             this.index.clear();
         };
 
         /**
-        * Returns items matching passed index key
-        * @param  {any} key specified index key
-        * @return {Array<any>} values found
-        */
+         * Returns items matching passed index key
+         * @param  {any} key specified index key
+         * @return {Array<any>} values found
+         */
         AVLIndex.prototype.find = function find (key) {
             var found = this.index.find(key);
             if (found) {
@@ -1345,9 +1335,9 @@
         };
 
         /**
-        * Removes an item
-        * @param  {any} item item to remove
-        */
+         * Removes an item
+         * @param  {any} item item to remove
+         */
         AVLIndex.prototype.remove = function remove (item) {
             var key = this.keyFn(item);
             var entry = this.index.find(key);
@@ -1366,9 +1356,9 @@
         };
         
         /**
-        * Adds an item with indexes as per itemFn and keyFn defined on index creation
-        * @param  {any} item item to add to index
-        */
+         * Adds an item with indexes as per itemFn and keyFn defined on index creation
+         * @param  {any} item item to add to index
+         */
         AVLIndex.prototype.insert = function insert (item) {
             var key = this.keyFn(item);
             var it = this.itemFn(item);
@@ -2016,19 +2006,10 @@
     }(BaseIndex));
 
     /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
+     * Index based on javascript Map object for key/value storage. Groups items by index value, 
+     * stores items within index value as array using linear search.
+     * @extends {BaseIndex}
+     */
     var HashIndex = /*@__PURE__*/(function (BaseIndex$$1) {
         function HashIndex (name, itemFn, keyFn) {
             this.index = new Map([]);
@@ -2042,33 +2023,33 @@
         var prototypeAccessors = { keys: { configurable: true } };
 
         /**
-        * Returns all keys
-        * @return {Array<Key>}
-        */
+         * Returns all keys
+         * @return {Array<Key>}
+         */
         prototypeAccessors.keys.get = function () {
             return Array.from(this.index.keys());
         };
 
         /**
-        * Removes all items from the index
-        */
+         * Removes all items from the index
+         */
         HashIndex.prototype.clear = function clear () {
             this.index = new Map([]);
         };
 
         /**
-        * Returns items matching passed index key
-        * @param  {any} key specified index key
-        * @return {Array<any>} values found
-        */
+         * Returns items matching passed index key
+         * @param  {any} key specified index key
+         * @return {Array<any>} values found
+         */
         HashIndex.prototype.find = function find (key) {
             return this.index.get(key);
         };
 
         /**
-        * Removes an item
-        * @param  {any} item item to remove
-        */
+         * Removes an item
+         * @param  {any} item item to remove
+         */
         HashIndex.prototype.remove = function remove (item) {
             var key = this.keyFn(item);
             if (this.index.has(key)) {
@@ -2085,9 +2066,9 @@
         };
 
         /**
-        * Adds an item with indexes as per itemFn and keyFn defined on index creation
-        * @param  {any} item item to add to index
-        */
+         * Adds an item with indexes as per itemFn and keyFn defined on index creation
+         * @param  {any} item item to add to index
+         */
         HashIndex.prototype.insert = function insert (item) {
             var key = this.keyFn(item);
             var it = this.itemFn(item);
@@ -2106,13 +2087,9 @@
     }(BaseIndex));
 
     /**
-    * Callback for comparer
-    * @callback comparerCallback
-    * @param   {Key} a
-    * @param   {Key} b
-    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
-    */
-
+     * Binary key/value storage backed by native javascript array. Performs binary search on entries and
+     * keeps items in sorted order based on comparer.
+     */
     var BinaryArray = function BinaryArray (comparer) {
         this.arr = [];
         this.comparer = comparer || defaultComparer;
@@ -2121,8 +2098,8 @@
     var prototypeAccessors$3 = { keys: { configurable: true } };
         
     /**
-    * Removes all items from the index
-    */
+     * Removes all items from the index
+     */
     BinaryArray.prototype.clear = function clear () {
         this.arr = [];
     };
@@ -2164,10 +2141,10 @@
     };
 
     /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
+     * Returns items matching passed index key
+     * @param  {any} key specified index key
+     * @return {Array<any>} values found
+     */
     BinaryArray.prototype.get = function get (key) {
         var i = this.indexOf(key);
         if (i > -1) {
@@ -2176,9 +2153,9 @@
     };
 
     /**
-    * Removes an item by key
-    * @param  {any} key key of item to remove
-    */
+     * Removes an item by key
+     * @param  {any} key key of item to remove
+     */
     BinaryArray.prototype.remove = function remove (key) {
         var i = this.indexOf(key);
         if (i > -1) {
@@ -2187,10 +2164,10 @@
     };
 
     /**
-    * Adds an key/value with array
-    * @param  {any} key key to add
-    * @param  {any} value item related to the specified key
-    */
+     * Adds an key/value with array
+     * @param  {any} key key to add
+     * @param  {any} value item related to the specified key
+     */
     BinaryArray.prototype.add = function add (key, value) {
         var ix = this.insertPos(key);
         this.addAt(ix, key, value);
@@ -2229,27 +2206,10 @@
     Object.defineProperties( BinaryArray.prototype, prototypeAccessors$3 );
 
     /**
-    * Callback for comparer
-    * @callback comparerCallback
-    * @param   {Key} a
-    * @param   {Key} b
-    * @returns {number} -1 if a < b, 0 if a === b, 1 if a > b
-    */
-
-    /**
-    * Callback for item identifier
-    * @callback itemCallback
-    * @param   {any} item
-    * @returns {any} unique value to identify the item
-    */
-
-    /**
-    * Callback for key value
-    * @callback keyCallback
-    * @param   {any} item
-    * @returns {any} value to index this item on
-    */
-
+     * Index based on BinaryArray for key/value storage. Groups items by index value, 
+     * stores items within index value as array using linear search.
+     * @extends {BaseIndex}
+     */
     var BinaryIndex = /*@__PURE__*/(function (BaseIndex$$1) {
         function BinaryIndex (name, itemFn, keyFn, comparer) {
             this.comparer = comparer || defaultComparer;
@@ -2264,33 +2224,33 @@
         var prototypeAccessors = { keys: { configurable: true } };
 
         /**
-        * Returns all keys
-        * @return {Array<Key>}
-        */
+         * Returns all keys
+         * @return {Array<Key>}
+         */
         prototypeAccessors.keys.get = function () {
             return this.index.keys;
         };
 
         /**
-        * Removes all items from the index
-        */
+         * Removes all items from the index
+         */
         BinaryIndex.prototype.clear = function clear () {
             this.index = new BinaryArray(this.comparer);
         };
 
         /**
-        * Returns items matching passed index key
-        * @param  {any} key specified index key
-        * @return {Array<any>} values found
-        */
+         * Returns items matching passed index key
+         * @param  {any} key specified index key
+         * @return {Array<any>} values found
+         */
         BinaryIndex.prototype.find = function find (key) {
             return this.index.get(key);
         };
 
         /**
-        * Removes an item
-        * @param  {any} item item to remove
-        */
+         * Removes an item
+         * @param  {any} item item to remove
+         */
         BinaryIndex.prototype.remove = function remove (item) {
             var key = this.keyFn(item);
             var pos = this.index.indexOf(key);
@@ -2309,9 +2269,9 @@
         };
         
         /**
-        * Adds an item with indexes as per itemFn and keyFn defined on index creation
-        * @param  {any} item item to add to index
-        */
+         * Adds an item with indexes as per itemFn and keyFn defined on index creation
+         * @param  {any} item item to add to index
+         */
         BinaryIndex.prototype.insert = function insert (item) {
             var key = this.keyFn(item);
             var it = this.itemFn(item);

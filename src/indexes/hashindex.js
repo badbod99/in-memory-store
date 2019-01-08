@@ -1,62 +1,49 @@
 import { BaseIndex } from './baseindex';
 
 /**
-* Callback for item identifier
-* @callback itemCallback
-* @param   {any} item
-* @returns {any} unique value to identify the item
-*/
-
-/**
-* Callback for key value
-* @callback keyCallback
-* @param   {any} item
-* @returns {any} value to index this item on
-*/
-
+ * Index based on javascript Map object for key/value storage. Groups items by index value, 
+ * stores items within index value as array using linear search.
+ * @extends {BaseIndex}
+ */
 export class HashIndex extends BaseIndex {
     /**
-    * @class Index based on javascript Map object for key/value storage. Groups items by index value, 
-    * stores items within index value as array using linear search.
-    * @constructor
-    * @implements {BaseIndex}
-    * @param  {string} name name of this index
-    * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
-    * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
-    */
+     * @param  {string} name name of this index
+     * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
+     * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
+     */
     constructor (name, itemFn, keyFn) {
         this.index = new Map([]);
         super(name, itemFn, keyFn);
     }
 
     /**
-    * Returns all keys
-    * @return {Array<Key>}
-    */
+     * Returns all keys
+     * @return {Array<Key>}
+     */
     get keys() {
         return Array.from(this.index.keys());
     }
 
     /**
-    * Removes all items from the index
-    */
+     * Removes all items from the index
+     */
     clear() {
         this.index = new Map([]);
     }
 
     /**
-    * Returns items matching passed index key
-    * @param  {any} key specified index key
-    * @return {Array<any>} values found
-    */
+     * Returns items matching passed index key
+     * @param  {any} key specified index key
+     * @return {Array<any>} values found
+     */
     find(key) {
         return this.index.get(key);
     }
 
     /**
-    * Removes an item
-    * @param  {any} item item to remove
-    */
+     * Removes an item
+     * @param  {any} item item to remove
+     */
     remove(item) {
         const key = this.keyFn(item);
         if (this.index.has(key)) {
@@ -73,9 +60,9 @@ export class HashIndex extends BaseIndex {
     }
 
     /**
-    * Adds an item with indexes as per itemFn and keyFn defined on index creation
-    * @param  {any} item item to add to index
-    */
+     * Adds an item with indexes as per itemFn and keyFn defined on index creation
+     * @param  {any} item item to add to index
+     */
     insert(item) {
         const key = this.keyFn(item);
         const it = this.itemFn(item);
