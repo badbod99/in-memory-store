@@ -102,10 +102,14 @@ a more complex library and maintained seperately.
 # Performance
 Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 
-Test create 10,000 objects in format {id: X, rnd1: Y, rnd2: Z} where X=1 to 10,000, 
-Y=rnd(1 to 500) and Z=rnd(1 to 500). Index is created on Y (so items grouped by Y).
-We then find each grouped Y (all 500 of them), 20 times over.
+## Test definition:
+1. Define object as `{id: X, rnd1: Y, rnd2: Z}` where X=1 to 10,000 Y=rnd(1 to 500) and Z=rnd(1 to 500). 
+2. Create index (of each type) on Y (so items grouped by Y).
+3. Create 10,000 objects as above in each index
+4. Find each grouped Y (all 500 of them), 20 times over (10,000 find operations)
+5. Remove all items (1-10,000) from each index
 
+## Different index types tested
 * HashIndex - Backed by a javascript Map object. Insert and Read is  
 very fast.
 * BinaryIndex is an array backed binary search index.  Performance is not
@@ -114,6 +118,7 @@ results to be returned as sorted arrays.
 * RBIndex - Index built on Red Black Tree from [bintrees](https://github.com/vadimg/js_bintrees).
 * AVLIndex - Index built on AVLIndex from [AVL](https://github.com/w8r/avl).
 
+## Results
 ```shell
 Insert (x10000)
 RBIndex x 788 ops/sec ±1.42% (92 runs sampled)
