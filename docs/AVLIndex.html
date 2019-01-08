@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: HashIndex</title>
+    <title>JSDoc: Class: AVLIndex</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: HashIndex</h1>
+    <h1 class="page-title">Class: AVLIndex</h1>
 
     
 
@@ -28,9 +28,9 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>HashIndex<span class="signature">(name, keyFn, itemFn)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>AVLIndex<span class="signature">(name, keyFn, itemFn, comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description">Index based on javascript Map object for key/value storage. Groups items by index value, stores items within index value as array using linear search.</div>
+            <div class="class-description">Index based on AVL Tree object for key/value storage. Groups items by index value, stores items within index value as array using linear search.</div>
         
     
 </header>
@@ -45,7 +45,7 @@
     
 
     
-    <h4 class="name" id="HashIndex"><span class="type-signature"></span>new HashIndex<span class="signature">(name, keyFn, itemFn)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="AVLIndex"><span class="type-signature"></span>new AVLIndex<span class="signature">(name, keyFn, itemFn, comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -73,6 +73,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -98,6 +100,14 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
@@ -120,6 +130,14 @@
             
             </td>
 
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -144,10 +162,51 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
             <td class="description last">function to call to get the unique item key of the items in this index</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>comparer</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#comparerCallback">comparerCallback</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">comparer to use when comparing one index value to another</td>
         </tr>
 
     
@@ -188,7 +247,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_hashindex.js.html">indexes/hashindex.js</a>, <a href="indexes_hashindex.js.html#line8">line 8</a>
+        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line10">line 10</a>
     </li></ul></dd>
     
 
@@ -296,7 +355,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_hashindex.js.html">indexes/hashindex.js</a>, <a href="indexes_hashindex.js.html#line23">line 23</a>
+        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -448,7 +507,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_hashindex.js.html">indexes/hashindex.js</a>, <a href="indexes_hashindex.js.html#line30">line 30</a>
+        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -588,7 +647,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_hashindex.js.html">indexes/hashindex.js</a>, <a href="indexes_hashindex.js.html#line39">line 39</a>
+        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line43">line 43</a>
     </li></ul></dd>
     
 
@@ -912,7 +971,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_hashindex.js.html">indexes/hashindex.js</a>, <a href="indexes_hashindex.js.html#line66">line 66</a>
+        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line77">line 77</a>
     </li></ul></dd>
     
 
@@ -1192,7 +1251,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_hashindex.js.html">indexes/hashindex.js</a>, <a href="indexes_hashindex.js.html#line47">line 47</a>
+        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line56">line 56</a>
     </li></ul></dd>
     
 
@@ -1405,7 +1464,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Jan 08 2019 17:32:22 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Jan 08 2019 17:35:54 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

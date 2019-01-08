@@ -6,7 +6,7 @@
   "scripts": {
     "preexample": "npm run build",
     "example": "http-server example",
-    "build": "rollup -c && jsdoc ./src -r -d ./docs -P ./package.json",
+    "build": "rollup -c && jsdoc ./src -r -d ./docs -R ./README.md",
     "prebenchmark": "npm run build",
     "benchmark": "node bench/benchmark.js"
   },

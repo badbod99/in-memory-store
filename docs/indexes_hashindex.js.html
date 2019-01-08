@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: indexes/baseindex.js</title>
+    <title>JSDoc: Source: indexes/hashindex.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: indexes/baseindex.js</h1>
+    <h1 class="page-title">Source: indexes/hashindex.js</h1>
 
     
 
@@ -26,112 +26,81 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>import * as mem from '../common';
+            <pre class="prettyprint source linenums"><code>import { BaseIndex } from './baseindex';
 
 /**
- * Base index for use with in-memory-store
+ * Index based on javascript Map object for key/value storage. Groups items by index value, 
+ * stores items within index value as array using linear search.
+ * @extends {BaseIndex}
  */
-export class BaseIndex {
+export class HashIndex extends BaseIndex {
     /**
      * @param  {string} name name of this index
      * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
      * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
      */
     constructor (name, itemFn, keyFn) {
-        if (this.constructor === BaseIndex) {
-            throw new TypeError("Cannot construct BaseIndex directly");
-        }
-
-        this.name = name;
-        this.itemFn = itemFn;
-        this.keyFn = keyFn;
-        this._populated = false;
+        this.index = new Map([]);
+        super(name, itemFn, keyFn);
     }
 
     /**
      * Returns all keys
-     * @abstract
      * @return {Array&lt;Key>}
      */
     get keys() {
-        throw new TypeError(`Must implement keys property`);
+        return Array.from(this.index.keys());
     }
 
     /**
      * Removes all items from the index
-     * @abstract
      */
     clear() {
-        throw new TypeError(`Must implement clear method`);
-    }
-
-    /**
-     * Returns items within matching passed index keys
-     * @param  {Array&lt;any>} keys specified index keys
-     * @return {Array&lt;any>} values found
-     */
-    findMany(keys) {
-        keys = mem.oneOrMany(keys);
-        let data = keys.map(m => this.find(m));
-        return [].concat.apply([], data);
+        this.index = new Map([]);
     }
 
     /**
      * Returns items matching passed index key
-     * @abstract
      * @param  {any} key specified index key
      * @return {Array&lt;any>} values found
      */
     find(key) {
-        throw new TypeError(`Must implement find method`);
+        return this.index.get(key);
     }
 
     /**
      * Removes an item
-     * @abstract
      * @param  {any} item item to remove
      */
     remove(item) {
-        throw new TypeError(`Must implement build method`);
-    }
-
-    /**
-     * Returns whether of not this index has been populated
-     * @return {boolean}
-     */
-    get populated() {
-        return this._populated;
-    }
-
-    /**
-     * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
-     * @param  {Array&lt;any>} items items to populate store with
-     */
-    populate(items) {
-        items = mem.oneOrMany(items);
-        items.forEach(item => this.insert(item));
-        this._populated = true;
+        const key = this.keyFn(item);
+        if (this.index.has(key)) {
+            const col = this.index.get(key);
+            const it = this.itemFn(item);
+            const i = col.indexOf(it);
+            if (i > -1) {
+                col.splice(i, 1);
+            }
+            if (col.length === 0) {
+                this.index.delete(key);
+            }
+        }
     }
 
     /**
      * Adds an item with indexes as per itemFn and keyFn defined on index creation
-     * @abstract
      * @param  {any} item item to add to index
      */
     insert(item) {
-        throw new TypeError(`Must implement insert method`);
-    }
-
-    /**
-     * Updates an item by removing any associated index entry based on oldItem and adding new index
-     * entries based on the new item.  Important to pass oldItem otherwise index may contain entries from
-     * item in wrong indexed key.
-     * @param  {any} oldItem item as it was prior to being updated
-     * @param  {any} item item as it is now
-     */
-    update(item, olditem) {
-        this.remove(olditem);
-        this.insert(item);
+        const key = this.keyFn(item);
+        const it = this.itemFn(item);
+        if (it &amp;&amp; key) {
+            if (this.index.has(key)) {
+                this.index.get(key).push(it);
+            } else {
+                this.index.set(key, [it]);
+            }
+        }
     }
 }</code></pre>
         </article>
@@ -149,7 +118,7 @@ export class BaseIndex {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Jan 08 2019 17:32:22 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Jan 08 2019 17:35:54 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
