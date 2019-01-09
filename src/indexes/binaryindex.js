@@ -22,6 +22,15 @@ export class BinaryIndex extends BaseIndex {
     }
 
     /**
+     * Returns whether or not this index is empty
+     * @abstract
+     * @return {boolean}
+     */
+    get isEmpty() {
+        return this.index.length === 0;
+    }
+
+    /**
      * Returns all keys
      * @return {Array<Key>}
      */
@@ -34,6 +43,42 @@ export class BinaryIndex extends BaseIndex {
      */
     clear() {
         this.index = new BinaryArray(this.comparer);
+    }
+
+    /**
+     * Returns all entries less than the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    lt(key) {
+        return this.index.lt(key);
+    }
+
+    /**
+     * Returns all entries less or equal to the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    lte(key) {
+        return this.index.lte(key);
+    }
+
+    /**
+     * Returns all entries greater than the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    gt(key) {
+        return this.index.gt(key);
+    }
+
+    /**
+     * Returns all entries greater than or equal to the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    gte(key) {
+        return this.index.gte(key);
     }
 
     /**

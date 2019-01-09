@@ -27,14 +27,11 @@ Example usage...
 let store = new InMemoryStore(obj => obj.key);
 // and populate it
 store.populate(items);
-// Note: Populate does not check for existing index entries,
-// it's designed for initial population and this is omitted for performance
-// if you know your entries have never been added before, it's safe to call
-// multiple times.  Otherwise use .add(items).
+// Note: Populate can only be called on an empty store.
 
-// or add individual items one by one (slower than populate)
+// or add individual items one by one
 store.addOne(item);
-// or add multiple items later (slower than populate)
+// or add multiple items later
 let items = [item1, item2, item3];
 store.add(items);
 
@@ -58,6 +55,15 @@ store.buildBinaryIndex('breed', kitten => kitten.breed);
 store.buildBinaryIndex('breed', kitten => kitten.breed.toLowerCase());
 // Note: You only need to build an index once, update/add/remove all update index automatically
 
+// Build a binary index (binary indexes are sorted at all times)
+let index = new BinaryIndex("firstLetter", obj => obj.key, kitten => kitten.breed);
+// Build a hash index (hash indexes are very fast, but can't do range searches)
+let index = new HashIndex("firstLetter", kitten => kitten.breed);
+// Keys are case senstive, so normalise if needed
+let index = new BinaryIndex("firstLetter", obj => obj.key, kitten => kitten.breed.toLowerCase());
+// Add an index to the store (populates it with items in the store if not already populated)
+store.ensureIndex(index);
+
 // Get all entries with specified breed
 let britishShorthair = store.getOne('breed', 'British Shorthair');
 // Get based on array of breeds
@@ -68,6 +74,11 @@ let oldMixed = store.getFromSet([['breed', ['British Shorthair','Moggy'], ['age'
 let mixed = store.get('breed', ['British Shorthair','Moggy']);
 let old = store.get('age', [5,6,7]);
 let oldOrMixed = [...old, ...mixed];
+
+// Get all kittens age more than 2 months
+let allSorts = store.gt('age', 2);
+// Get all kittens with age less than or equal to 3
+let allSorts = store.lte('age', 3);
 
 // Rebuild the store with new items keeping the same indexes and keyFn
 store.rebuild(items);
@@ -104,7 +115,11 @@ Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 2. Create index (of each type) on Y (so items grouped by Y).
 3. Create 10,000 objects as above in each index
 4. Find each grouped Y (all 500 of them), 20 times over (10,000 find operations)
-5. Remove all items (1-10,000) from each index
+5. Find all values where key > Y (all 500 of them), 20 times over (10,000 find operations) **
+6. Find all values where key <=> Y (all 500 of them), 20 times over (10,000 find operations) **
+7. Remove all items (1-10,000) from each index
+
+** RBIndex omitted and library does not contain functions suitable for range searches.
 
 ## Different index types tested
 * HashIndex - Backed by a javascript Map object. Insert and Read is  

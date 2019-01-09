@@ -34,7 +34,6 @@ const options = {
   }
 };
 
-
 let slicedA = avalues.slice(0,10);
 console.log('--------------------- CORRECTNESS CHECK -----------------');
 console.log(`${prefilledAVL.findMany(slicedA).length} [${slicedA}] values found in AVLIndex`);
@@ -81,6 +80,42 @@ new Benchmark.Suite(`Random read (${A} finds x ${N / A} times)`, options)
   .add('HashIndex', () => {
     for (let lp = N / A; lp; lp--) {
       for (let i = A - 1; i; i--) prefilledMemHash.find(avalues[i]);
+    }
+  })
+  .run();
+
+new Benchmark.Suite(`gt read (${A} finds x ${N / A} times)`, options)
+  .add('AVLIndex', () => {
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledAVL.gt(avalues[i]);
+    }
+  })
+  .add('BinaryIndex', () => {
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledMemBin.gt(avalues[i]);
+    }
+  })
+  .add('HashIndex', () => {
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledMemHash.gt(avalues[i]);
+    }
+  })
+  .run();
+
+new Benchmark.Suite(`lte read (${A} finds x ${N / A} times)`, options)
+  .add('AVLIndex', () => {
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledAVL.lte(avalues[i]);
+    }
+  })
+  .add('BinaryIndex', () => {
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledMemBin.lte(avalues[i]);
+    }
+  })
+  .add('HashIndex', () => {
+    for (let lp = N / A; lp; lp--) {
+      for (let i = A - 1; i; i--) prefilledMemHash.lte(avalues[i]);
     }
   })
   .run();

@@ -17,7 +17,15 @@ export class BaseIndex {
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this._populated = false;
+    }
+
+    /**
+     * Returns whether or not this index is empty
+     * @abstract
+     * @return {boolean}
+     */
+    get isEmpty() {
+        throw new TypeError(`Must implement isEmpty property`);
     }
 
     /**
@@ -27,7 +35,7 @@ export class BaseIndex {
      */
     get keys() {
         throw new TypeError(`Must implement keys property`);
-    }
+    }    
 
     /**
      * Removes all items from the index
@@ -68,21 +76,16 @@ export class BaseIndex {
     }
 
     /**
-     * Returns whether of not this index has been populated
-     * @return {boolean}
-     */
-    get populated() {
-        return this._populated;
-    }
-
-    /**
      * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
      * @param  {Array<any>} items items to populate store with
      */
     populate(items) {
+        if (!this.isEmpty) {
+            throw new Error(`${typeof this} index must be empty in order to use populate`);
+        }
+
         items = mem.oneOrMany(items);
         items.forEach(item => this.insert(item));
-        this._populated = true;
     }
 
     /**

@@ -43,6 +43,28 @@ export function oneOrMany(items) {
  * @param  {comparerCallback} comparer comparer to use
  * @param  {any} a 
  * @param  {any} b 
+ * @return {boolean} whether or not a <= b
+ */
+export function lte(comparer, a, b) {
+    return comparer(a, b) <= 0;
+}
+
+/**
+ * Returns whether or not a > b
+ * @param  {comparerCallback} comparer comparer to use
+ * @param  {any} a 
+ * @param  {any} b 
+ * @return {boolean} whether or not a => b
+ */
+export function gte(comparer, a, b) {
+    return comparer(a, b) >= 0;
+}
+
+/**
+ * Returns whether or not a < b
+ * @param  {comparerCallback} comparer comparer to use
+ * @param  {any} a 
+ * @param  {any} b 
  * @return {boolean} whether or not a < b
  */
 export function lt(comparer, a, b) {

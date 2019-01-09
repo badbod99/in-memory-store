@@ -21,6 +21,15 @@ export class AVLIndex extends BaseIndex {
     }
 
     /**
+     * Returns whether or not this index is empty
+     * @abstract
+     * @return {boolean}
+     */
+    get isEmpty() {
+        return this.index.size === 0;
+    }
+
+    /**
      * Returns all keys
      * @return {Array<Key>}
      */
@@ -33,6 +42,78 @@ export class AVLIndex extends BaseIndex {
      */
     clear() {
         this.index.clear();
+    }
+
+    /**
+     * Returns all entries less than the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    lt(key) {
+        let lastKey;
+        let data = [];
+        this.index.range(this.index.min, key, n => {
+            lastKey = n.key;
+            data.push(n.data);
+        });
+        if (data.length === 0) {
+            return [];
+        }
+        // Since Tree is unique, we only need to check last key to omit
+        if (mem.eq(this.comparer, lastKey, key)) {
+            data.pop();
+        }
+        return data;
+    }
+
+    /**
+     * Returns all entries less or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    lte(key) {
+        let data = [];
+        this.index.range(this.index.min, key, n => {
+            data.push(n.data);
+        });
+        return data;
+    }
+
+    /**
+     * Returns all entries greater than or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    gt(key) {
+        let firstKey;
+        let data = [];
+        this.index.range(key, this.index.max, n => {
+            if (firstKey === undefined) {
+                firstKey = n.key;
+            }
+            data.push(n.data);
+        });
+        if (data.length === 0) {
+            return [];
+        }
+        // Since Tree is unique, we only need to check first key to omit
+        if (mem.eq(this.comparer, firstKey, key)) {
+            data.shift();
+        }
+        return data;
+    }
+
+    /**
+     * Returns all entries greater than or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    gte(key) {
+        let data = [];
+        this.index.range(key, this.index.max, n => {
+            data.push(n.data);
+        });
+        return data;
     }
 
     /**

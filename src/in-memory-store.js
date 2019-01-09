@@ -10,7 +10,7 @@ export class InMemoryStore {
     constructor(keyFn) {
         this.indexes = new Map([]);
         this.entries = new Map([]);
-        this.keyFn = keyFn;
+        this.keyFn = keyFn;        
     }
 
     /**
@@ -30,6 +30,15 @@ export class InMemoryStore {
     }
 
     /**
+     * Returns whether or not this store is empty
+     * @abstract
+     * @return {boolean}
+     */
+    get isEmpty() {
+        return this.size === 0;
+    }
+
+    /**
      * Returns all keys wihin the specified index
      * @return {Array<Key>}
      */
@@ -42,6 +51,11 @@ export class InMemoryStore {
      * @param  {Array<any>} items items to populate store with
      */
     populate(items) {
+        if (!this.isEmpty) {
+            throw new Error(`Store must be empty to use populate. 
+                Store currently has ${this.size} items.`);
+        }
+
         items = mem.oneOrMany(items);
         this.indexes.forEach(index => index.populate(items));
         const data = items.map(item => [this.keyFn(item), item]);
@@ -125,7 +139,7 @@ export class InMemoryStore {
     ensureIndex(index) {
         if (!this.indexes.has(index.name)) {
             this.indexes.set(index.name, index);
-            if (!index.populated) {
+            if (index.isEmpty) {
                 index.populate(this.entries);
             }
             return true;

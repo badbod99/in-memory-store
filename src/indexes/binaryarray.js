@@ -29,8 +29,61 @@ export class BinaryArray {
     }
 
     /**
+     * Returns the number of items in this BinaryArray
+     * @returns {number}
+     */
+    get length() {
+        return this.arr.length;
+    }
+
+    /**
+     * Returns all entries less than the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    lt(key) {
+        let i = this.insertPos(key);
+        let data = this.arr.slice(0, i);
+        return data.map(d => d.value);
+    }
+
+    /**
+     * Returns all entries less or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    lte(key) {
+        let i = this.insertPos(key);
+        let data = i >= 0 ? this.arr.slice(0, i + 1) : [];
+        return data.map(d => d.value);
+    }
+
+    /**
+     * Returns all entries greater than the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    gt(key) {
+        let i = this.insertPos(key);
+        let data = i < this.arr.length ? this.arr.slice(i + 1, this.arr.length) : [];
+        return data.map(d => d.value);
+    }
+
+    /**
+     * Returns all entries greater than or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    gte(key) {
+        let i = this.insertPos(key);
+        let data = i < this.arr.length ? this.arr.slice(i, this.arr.length) : [];
+        return data.map(d => d.value);
+    }
+
+    /**
      * Returns the index in this array of the specified key
-     * @param {number} key 
+     * @param {any} key 
+     * @returns {number}
      */
     indexOf(key) {
         let i = this.insertPos(key);
@@ -42,9 +95,9 @@ export class BinaryArray {
     }
 
     /**
-     * Returns the position at which a new item should be inserted into this array.
-     * That position may already contain an item, in which can this key already exists.
-     * @param {number} key key to find in the array
+     * The insert position where to insert an item into the underlying sorted array.     
+     * @param {any} key key to find in the array
+     * @returns {number} position at which a new item should be inserted into this array
      */
     insertPos(key) {
         let low = 0, high = this.arr.length, mid;

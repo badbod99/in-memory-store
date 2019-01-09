@@ -1,3 +1,4 @@
+import * as mem from '../common';
 import { BaseIndex } from './baseindex';
 
 /**
@@ -10,10 +11,21 @@ export class HashIndex extends BaseIndex {
      * @param  {string} name name of this index
      * @param  {keyCallback} keyFn function to call to get the index key of the items in this index
      * @param  {itemCallback} itemFn function to call to get the unique item key of the items in this index
+     * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
      */
-    constructor (name, itemFn, keyFn) {
+    constructor (name, itemFn, keyFn, comparer) {
+        this.comparer = comparer || mem.defaultComparer;
         this.index = new Map([]);
         super(name, itemFn, keyFn);
+    }
+
+    /**
+     * Returns whether or not this index is empty
+     * @abstract
+     * @return {boolean}
+     */
+    get isEmpty() {
+        return this.index.size === 0;
     }
 
     /**
@@ -22,6 +34,54 @@ export class HashIndex extends BaseIndex {
      */
     get keys() {
         return Array.from(this.index.keys());
+    }
+
+    /**
+     * Returns all entries less than the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    lt(key) {
+        let keys = this.keys.filter(k => {
+            return mem.lt(this.comparer, k, key);
+        });
+        return this.findMany(keys);
+    }
+
+    /**
+     * Returns all entries less or equal to the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    lte(key) {
+        let keys = this.keys.filter(k => {
+            return mem.lte(this.comparer, k, key);
+        });
+        return this.findMany(keys);
+    }
+
+    /**
+     * Returns all entries greater than the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    gt(key) {
+        let keys = this.keys.filter(k => {
+            return mem.gt(this.comparer, k, key);
+        });
+        return this.findMany(keys);
+    }
+
+    /**
+     * Returns all entries greater than or equal to the passed key according to the
+     * indexes comparer.
+     * @param {*} key 
+     */
+    gte(key) {
+        let keys = this.keys.filter(k => {
+            return mem.gte(this.comparer, k, key);
+        });
+        return this.findMany(keys);
     }
 
     /**

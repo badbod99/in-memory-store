@@ -13,6 +13,15 @@ export class RBIndex extends BaseIndex {
         this.index = new RBTree(this.comparer);
         super(name, itemFn, keyFn);
     }
+
+    /**
+     * Returns whether or not this index is empty
+     * @abstract
+     * @return {boolean}
+     */
+    get isEmpty() {
+        return this.index.size === 0;
+    }
     
     get keys() {
         let arr = [];

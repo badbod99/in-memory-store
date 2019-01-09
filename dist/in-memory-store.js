@@ -60,10 +60,43 @@
      * @param  {comparerCallback} comparer comparer to use
      * @param  {any} a 
      * @param  {any} b 
+     * @return {boolean} whether or not a <= b
+     */
+    function lte(comparer, a, b) {
+        return comparer(a, b) <= 0;
+    }
+
+    /**
+     * Returns whether or not a > b
+     * @param  {comparerCallback} comparer comparer to use
+     * @param  {any} a 
+     * @param  {any} b 
+     * @return {boolean} whether or not a => b
+     */
+    function gte(comparer, a, b) {
+        return comparer(a, b) >= 0;
+    }
+
+    /**
+     * Returns whether or not a < b
+     * @param  {comparerCallback} comparer comparer to use
+     * @param  {any} a 
+     * @param  {any} b 
      * @return {boolean} whether or not a < b
      */
     function lt(comparer, a, b) {
         return comparer(a, b) < 0;
+    }
+
+    /**
+     * Returns whether or not a > b
+     * @param  {comparerCallback} comparer comparer to use
+     * @param  {any} a 
+     * @param  {any} b 
+     * @return {boolean} whether or not a > b
+     */
+    function gt(comparer, a, b) {
+        return comparer(a, b) > 0;
     }
 
     /**
@@ -142,7 +175,7 @@
     var InMemoryStore = function InMemoryStore(keyFn) {
          this.indexes = new Map([]);
          this.entries = new Map([]);
-         this.keyFn = keyFn;
+         this.keyFn = keyFn;        
      };
 
     var prototypeAccessors = { isEmpty: { configurable: true },size: { configurable: true } };
@@ -164,6 +197,15 @@
      };
 
      /**
+      * Returns whether or not this store is empty
+      * @abstract
+      * @return {boolean}
+      */
+     prototypeAccessors.isEmpty.get = function () {
+         return this.size === 0;
+     };
+
+     /**
       * Returns all keys wihin the specified index
       * @return {Array<Key>}
       */
@@ -177,6 +219,10 @@
       */
      InMemoryStore.prototype.populate = function populate (items) {
             var this$1 = this;
+
+         if (!this.isEmpty) {
+             throw new Error(("Store must be empty to use populate. \n                Store currently has " + (this.size) + " items."));
+         }
 
          items = oneOrMany(items);
          this.indexes.forEach(function (index) { return index.populate(items); });
@@ -263,7 +309,7 @@
      InMemoryStore.prototype.ensureIndex = function ensureIndex (index) {
          if (!this.indexes.has(index.name)) {
              this.indexes.set(index.name, index);
-             if (!index.populated) {
+             if (index.isEmpty) {
                  index.populate(this.entries);
              }
              return true;
@@ -373,10 +419,18 @@
         this.name = name;
         this.itemFn = itemFn;
         this.keyFn = keyFn;
-        this._populated = false;
     };
 
-    var prototypeAccessors$1 = { keys: { configurable: true },populated: { configurable: true } };
+    var prototypeAccessors$1 = { isEmpty: { configurable: true },keys: { configurable: true } };
+
+    /**
+     * Returns whether or not this index is empty
+     * @abstract
+     * @return {boolean}
+     */
+    prototypeAccessors$1.isEmpty.get = function () {
+        throw new TypeError("Must implement isEmpty property");
+    };
 
     /**
      * Returns all keys
@@ -385,7 +439,7 @@
      */
     prototypeAccessors$1.keys.get = function () {
         throw new TypeError("Must implement keys property");
-    };
+    };    
 
     /**
      * Removes all items from the index
@@ -428,23 +482,18 @@
     };
 
     /**
-     * Returns whether of not this index has been populated
-     * @return {boolean}
-     */
-    prototypeAccessors$1.populated.get = function () {
-        return this._populated;
-    };
-
-    /**
      * Populates this index with new items and indexes as per itemFn and keyFn defined on index creation
      * @param  {Array<any>} items items to populate store with
      */
     BaseIndex.prototype.populate = function populate (items) {
             var this$1 = this;
 
+        if (!this.isEmpty) {
+            throw new Error(((typeof this) + " index must be empty in order to use populate"));
+        }
+
         items = oneOrMany(items);
         items.forEach(function (item) { return this$1.insert(item); });
-        this._populated = true;
     };
 
     /**
@@ -476,7 +525,8 @@
      * @extends {BaseIndex}
      */
     var HashIndex = /*@__PURE__*/(function (BaseIndex$$1) {
-        function HashIndex (name, itemFn, keyFn) {
+        function HashIndex (name, itemFn, keyFn, comparer) {
+            this.comparer = comparer || defaultComparer;
             this.index = new Map([]);
             BaseIndex$$1.call(this, name, itemFn, keyFn);
         }
@@ -485,7 +535,16 @@
         HashIndex.prototype = Object.create( BaseIndex$$1 && BaseIndex$$1.prototype );
         HashIndex.prototype.constructor = HashIndex;
 
-        var prototypeAccessors = { keys: { configurable: true } };
+        var prototypeAccessors = { isEmpty: { configurable: true },keys: { configurable: true } };
+
+        /**
+         * Returns whether or not this index is empty
+         * @abstract
+         * @return {boolean}
+         */
+        prototypeAccessors.isEmpty.get = function () {
+            return this.index.size === 0;
+        };
 
         /**
          * Returns all keys
@@ -493,6 +552,62 @@
          */
         prototypeAccessors.keys.get = function () {
             return Array.from(this.index.keys());
+        };
+
+        /**
+         * Returns all entries less than the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        HashIndex.prototype.lt = function lt$$1 (key) {
+            var this$1 = this;
+
+            var keys = this.keys.filter(function (k) {
+                return lt(this$1.comparer, k, key);
+            });
+            return this.findMany(keys);
+        };
+
+        /**
+         * Returns all entries less or equal to the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        HashIndex.prototype.lte = function lte$$1 (key) {
+            var this$1 = this;
+
+            var keys = this.keys.filter(function (k) {
+                return lte(this$1.comparer, k, key);
+            });
+            return this.findMany(keys);
+        };
+
+        /**
+         * Returns all entries greater than the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        HashIndex.prototype.gt = function gt$$1 (key) {
+            var this$1 = this;
+
+            var keys = this.keys.filter(function (k) {
+                return gt(this$1.comparer, k, key);
+            });
+            return this.findMany(keys);
+        };
+
+        /**
+         * Returns all entries greater than or equal to the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        HashIndex.prototype.gte = function gte$$1 (key) {
+            var this$1 = this;
+
+            var keys = this.keys.filter(function (k) {
+                return gte(this$1.comparer, k, key);
+            });
+            return this.findMany(keys);
         };
 
         /**
@@ -560,7 +675,7 @@
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors$2 = { keys: { configurable: true } };
+    var prototypeAccessors$2 = { keys: { configurable: true },length: { configurable: true } };
         
     /**
      * Removes all items from the index
@@ -578,8 +693,61 @@
     };
 
     /**
+     * Returns the number of items in this BinaryArray
+     * @returns {number}
+     */
+    prototypeAccessors$2.length.get = function () {
+        return this.arr.length;
+    };
+
+    /**
+     * Returns all entries less than the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    BinaryArray.prototype.lt = function lt$$1 (key) {
+        var i = this.insertPos(key);
+        var data = this.arr.slice(0, i);
+        return data.map(function (d) { return d.value; });
+    };
+
+    /**
+     * Returns all entries less or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    BinaryArray.prototype.lte = function lte$$1 (key) {
+        var i = this.insertPos(key);
+        var data = i >= 0 ? this.arr.slice(0, i + 1) : [];
+        return data.map(function (d) { return d.value; });
+    };
+
+    /**
+     * Returns all entries greater than the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    BinaryArray.prototype.gt = function gt$$1 (key) {
+        var i = this.insertPos(key);
+        var data = i < this.arr.length ? this.arr.slice(i + 1, this.arr.length) : [];
+        return data.map(function (d) { return d.value; });
+    };
+
+    /**
+     * Returns all entries greater than or equal to the passed key according to the
+     * indexes comparer.
+     * @param {any} key 
+     */
+    BinaryArray.prototype.gte = function gte$$1 (key) {
+        var i = this.insertPos(key);
+        var data = i < this.arr.length ? this.arr.slice(i, this.arr.length) : [];
+        return data.map(function (d) { return d.value; });
+    };
+
+    /**
      * Returns the index in this array of the specified key
-     * @param {number} key 
+     * @param {any} key 
+     * @returns {number}
      */
     BinaryArray.prototype.indexOf = function indexOf (key) {
         var i = this.insertPos(key);
@@ -591,9 +759,9 @@
     };
 
     /**
-     * Returns the position at which a new item should be inserted into this array.
-     * That position may already contain an item, in which can this key already exists.
-     * @param {number} key key to find in the array
+     * The insert position where to insert an item into the underlying sorted array.     
+     * @param {any} key key to find in the array
+     * @returns {number} position at which a new item should be inserted into this array
      */
     BinaryArray.prototype.insertPos = function insertPos (key) {
         var low = 0, high = this.arr.length, mid;
@@ -686,7 +854,16 @@
         BinaryIndex.prototype = Object.create( BaseIndex$$1 && BaseIndex$$1.prototype );
         BinaryIndex.prototype.constructor = BinaryIndex;
 
-        var prototypeAccessors = { keys: { configurable: true } };
+        var prototypeAccessors = { isEmpty: { configurable: true },keys: { configurable: true } };
+
+        /**
+         * Returns whether or not this index is empty
+         * @abstract
+         * @return {boolean}
+         */
+        prototypeAccessors.isEmpty.get = function () {
+            return this.index.length === 0;
+        };
 
         /**
          * Returns all keys
@@ -701,6 +878,42 @@
          */
         BinaryIndex.prototype.clear = function clear () {
             this.index = new BinaryArray(this.comparer);
+        };
+
+        /**
+         * Returns all entries less than the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        BinaryIndex.prototype.lt = function lt$$1 (key) {
+            return this.index.lt(key);
+        };
+
+        /**
+         * Returns all entries less or equal to the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        BinaryIndex.prototype.lte = function lte$$1 (key) {
+            return this.index.lte(key);
+        };
+
+        /**
+         * Returns all entries greater than the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        BinaryIndex.prototype.gt = function gt$$1 (key) {
+            return this.index.gt(key);
+        };
+
+        /**
+         * Returns all entries greater than or equal to the passed key according to the
+         * indexes comparer.
+         * @param {*} key 
+         */
+        BinaryIndex.prototype.gte = function gte$$1 (key) {
+            return this.index.gte(key);
         };
 
         /**
@@ -771,7 +984,16 @@
         AVLIndex.prototype = Object.create( BaseIndex$$1 && BaseIndex$$1.prototype );
         AVLIndex.prototype.constructor = AVLIndex;
 
-        var prototypeAccessors = { keys: { configurable: true } };
+        var prototypeAccessors = { isEmpty: { configurable: true },keys: { configurable: true } };
+
+        /**
+         * Returns whether or not this index is empty
+         * @abstract
+         * @return {boolean}
+         */
+        prototypeAccessors.isEmpty.get = function () {
+            return this.index.size === 0;
+        };
 
         /**
          * Returns all keys
@@ -786,6 +1008,78 @@
          */
         AVLIndex.prototype.clear = function clear () {
             this.index.clear();
+        };
+
+        /**
+         * Returns all entries less than the passed key according to the
+         * indexes comparer.
+         * @param {any} key 
+         */
+        AVLIndex.prototype.lt = function lt$$1 (key) {
+            var lastKey;
+            var data = [];
+            this.index.range(this.index.min, key, function (n) {
+                lastKey = n.key;
+                data.push(n.data);
+            });
+            if (data.length === 0) {
+                return [];
+            }
+            // Since Tree is unique, we only need to check last key to omit
+            if (eq(this.comparer, lastKey, key)) {
+                data.pop();
+            }
+            return data;
+        };
+
+        /**
+         * Returns all entries less or equal to the passed key according to the
+         * indexes comparer.
+         * @param {any} key 
+         */
+        AVLIndex.prototype.lte = function lte$$1 (key) {
+            var data = [];
+            this.index.range(this.index.min, key, function (n) {
+                data.push(n.data);
+            });
+            return data;
+        };
+
+        /**
+         * Returns all entries greater than or equal to the passed key according to the
+         * indexes comparer.
+         * @param {any} key 
+         */
+        AVLIndex.prototype.gt = function gt$$1 (key) {
+            var firstKey;
+            var data = [];
+            this.index.range(key, this.index.max, function (n) {
+                if (firstKey === undefined) {
+                    firstKey = n.key;
+                }
+                data.push(n.data);
+            });
+            if (data.length === 0) {
+                return [];
+            }
+            // Since Tree is unique, we only need to check first key to omit
+            if (eq(this.comparer, firstKey, key)) {
+                data.shift();
+            }
+            return data;
+        };
+
+        /**
+         * Returns all entries greater than or equal to the passed key according to the
+         * indexes comparer.
+         * @param {any} key 
+         */
+        AVLIndex.prototype.gte = function gte$$1 (key) {
+            var data = [];
+            this.index.range(key, this.index.max, function (n) {
+                data.push(n.data);
+            });
+            return data;
         };
 
         /**
