@@ -202,68 +202,6 @@
 
         
             
-<h4 class="name" id="isEmpty"><span class="type-signature"></span>isEmpty<span class="type-signature"></span></h4>
-
-
-
-
-<div class="description">
-    Returns whether the store is empty
-</div>
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line20">line 20</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-        
-            
 <h4 class="name" id="isEmpty"><span class="type-signature">(abstract) </span>isEmpty<span class="type-signature"></span></h4>
 
 
@@ -309,6 +247,68 @@
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line37">line 37</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="isEmpty"><span class="type-signature"></span>isEmpty<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Returns whether the store is empty
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line20">line 20</a>
     </li></ul></dd>
     
 
@@ -499,7 +499,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line193">line 193</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line241">line 241</a>
     </li></ul></dd>
     
 
@@ -634,7 +634,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line202">line 202</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line250">line 250</a>
     </li></ul></dd>
     
 
@@ -873,7 +873,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line139">line 139</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line187">line 187</a>
     </li></ul></dd>
     
 
@@ -1550,6 +1550,322 @@
     
 
     
+    <h4 class="name" id="gt"><span class="type-signature"></span>gt<span class="signature">(indexName, value)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns all entries greater than the passed value according to theindexes comparer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>indexName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">index to search</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line163">line 163</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="gte"><span class="type-signature"></span>gte<span class="signature">(indexName, value)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns all entries greater than or equal to the passed value according to theindexes comparer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>indexName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">index to search</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line175">line 175</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
     <h4 class="name" id="has"><span class="type-signature"></span>has<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
@@ -1696,6 +2012,322 @@
 </dl>
 
     
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="lt"><span class="type-signature"></span>lt<span class="signature">(indexName, value)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns all entries less than the passed value according to theindexes comparer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>indexName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">index to search</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line139">line 139</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="lte"><span class="type-signature"></span>lte<span class="signature">(indexName, value)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns all entries less or equal to the passed value according to theindexes comparer.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>indexName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">index to search</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line151">line 151</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2078,7 +2710,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line156">line 156</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line204">line 204</a>
     </li></ul></dd>
     
 
@@ -2235,7 +2867,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line178">line 178</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line226">line 226</a>
     </li></ul></dd>
     
 
@@ -2392,7 +3024,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line166">line 166</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line214">line 214</a>
     </li></ul></dd>
     
 
@@ -2549,7 +3181,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line210">line 210</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line258">line 258</a>
     </li></ul></dd>
     
 
@@ -2684,7 +3316,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line221">line 221</a>
+        <a href="in-memory-store.js.html">in-memory-store.js</a>, <a href="in-memory-store.js.html#line269">line 269</a>
     </li></ul></dd>
     
 
@@ -2734,7 +3366,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 09 2019 14:50:04 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 09 2019 16:41:53 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

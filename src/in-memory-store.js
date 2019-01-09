@@ -131,6 +131,54 @@ export class InMemoryStore {
     }
 
     /**
+     * Returns all entries less than the passed value according to the
+     * indexes comparer.
+     * @param  {string} indexName index to search
+     * @param {any} value 
+     */
+    lt(indexName, value) {
+        const data = this.indexes.has(indexName) ? 
+            this.indexes.get(indexName).lt(value) : [];
+        return mem.extract(this.entries, data);
+    }
+
+    /**
+     * Returns all entries less or equal to the passed value according to the
+     * indexes comparer.
+     * @param  {string} indexName index to search
+     * @param {any} value 
+     */
+    lte(indexName, key) {
+        const data = this.indexes.has(indexName) ? 
+            this.indexes.get(indexName).lte(value) : [];
+        return mem.extract(this.entries, data);
+    }
+
+    /**
+     * Returns all entries greater than the passed value according to the
+     * indexes comparer.
+     * @param  {string} indexName index to search
+     * @param {any} value 
+     */
+    gt(indexName, value) {
+        const data = this.indexes.has(indexName) ? 
+            this.indexes.get(indexName).gt(value) : [];
+        return mem.extract(this.entries, data);
+    }
+
+    /**
+     * Returns all entries greater than or equal to the passed value according to the
+     * indexes comparer.
+     * @param  {string} indexName index to search
+     * @param {any} value 
+     */
+    gte(indexName, value) {
+        const data = this.indexes.has(indexName) ? 
+            this.indexes.get(indexName).gte(value) : [];
+        return mem.extract(this.entries, data);
+    }
+
+    /**
      * Adds a new index onto this store if it does not already exist. Populates index with entries
      * if index not already populated.
      * @param  {BaseIndex} index index ensure exists and is populated

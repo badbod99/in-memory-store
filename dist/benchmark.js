@@ -312,6 +312,54 @@
      };
 
      /**
+      * Returns all entries less than the passed value according to the
+      * indexes comparer.
+      * @param  {string} indexName index to search
+      * @param {any} value 
+      */
+     InMemoryStore.prototype.lt = function lt$$1 (indexName, value) {
+         var data = this.indexes.has(indexName) ? 
+             this.indexes.get(indexName).lt(value) : [];
+         return extract(this.entries, data);
+     };
+
+     /**
+      * Returns all entries less or equal to the passed value according to the
+      * indexes comparer.
+      * @param  {string} indexName index to search
+      * @param {any} value 
+      */
+     InMemoryStore.prototype.lte = function lte$$1 (indexName, key) {
+         var data = this.indexes.has(indexName) ? 
+             this.indexes.get(indexName).lte(value) : [];
+         return extract(this.entries, data);
+     };
+
+     /**
+      * Returns all entries greater than the passed value according to the
+      * indexes comparer.
+      * @param  {string} indexName index to search
+      * @param {any} value 
+      */
+     InMemoryStore.prototype.gt = function gt$$1 (indexName, value) {
+         var data = this.indexes.has(indexName) ? 
+             this.indexes.get(indexName).gt(value) : [];
+         return extract(this.entries, data);
+     };
+
+     /**
+      * Returns all entries greater than or equal to the passed value according to the
+      * indexes comparer.
+      * @param  {string} indexName index to search
+      * @param {any} value 
+      */
+     InMemoryStore.prototype.gte = function gte$$1 (indexName, value) {
+         var data = this.indexes.has(indexName) ? 
+             this.indexes.get(indexName).gte(value) : [];
+         return extract(this.entries, data);
+     };
+
+     /**
       * Adds a new index onto this store if it does not already exist. Populates index with entries
       * if index not already populated.
       * @param  {BaseIndex} index index ensure exists and is populated
@@ -2182,7 +2230,7 @@
         /**
          * Returns all entries less than the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         HashIndex.prototype.lt = function lt$$1 (key) {
             var this$1 = this;
@@ -2196,7 +2244,7 @@
         /**
          * Returns all entries less or equal to the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         HashIndex.prototype.lte = function lte$$1 (key) {
             var this$1 = this;
@@ -2210,7 +2258,7 @@
         /**
          * Returns all entries greater than the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         HashIndex.prototype.gt = function gt$$1 (key) {
             var this$1 = this;
@@ -2224,7 +2272,7 @@
         /**
          * Returns all entries greater than or equal to the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         HashIndex.prototype.gte = function gte$$1 (key) {
             var this$1 = this;
@@ -2508,7 +2556,7 @@
         /**
          * Returns all entries less than the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         BinaryIndex.prototype.lt = function lt$$1 (key) {
             return this.index.lt(key);
@@ -2517,7 +2565,7 @@
         /**
          * Returns all entries less or equal to the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         BinaryIndex.prototype.lte = function lte$$1 (key) {
             return this.index.lte(key);
@@ -2526,7 +2574,7 @@
         /**
          * Returns all entries greater than the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         BinaryIndex.prototype.gt = function gt$$1 (key) {
             return this.index.gt(key);
@@ -2535,7 +2583,7 @@
         /**
          * Returns all entries greater than or equal to the passed key according to the
          * indexes comparer.
-         * @param {*} key 
+         * @param {any} key 
          */
         BinaryIndex.prototype.gte = function gte$$1 (key) {
             return this.index.gte(key);

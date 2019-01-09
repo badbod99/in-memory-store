@@ -39,7 +39,7 @@ export class HashIndex extends BaseIndex {
     /**
      * Returns all entries less than the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     lt(key) {
         let keys = this.keys.filter(k => {
@@ -51,7 +51,7 @@ export class HashIndex extends BaseIndex {
     /**
      * Returns all entries less or equal to the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     lte(key) {
         let keys = this.keys.filter(k => {
@@ -63,7 +63,7 @@ export class HashIndex extends BaseIndex {
     /**
      * Returns all entries greater than the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     gt(key) {
         let keys = this.keys.filter(k => {
@@ -75,7 +75,7 @@ export class HashIndex extends BaseIndex {
     /**
      * Returns all entries greater than or equal to the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     gte(key) {
         let keys = this.keys.filter(k => {

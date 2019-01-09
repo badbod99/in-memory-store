@@ -111,7 +111,7 @@ a more complex library and maintained seperately.
 Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 
 ## Test definition:
-1. Define object as `{id: X, rnd1: Y, rnd2: Z}` where X=1 to 10,000 Y=rnd(1 to 500) and Z=rnd(1 to 500). 
+1. Define object as `{id: X, rnd1: Y, rnd2: Z}` where X=1 to 10,000 Y=rnd(1 to 500) and Z=rnd(1 to 500).
 2. Create index (of each type) on Y (so items grouped by Y).
 3. Create 10,000 objects as above in each index
 4. Find each grouped Y (all 500 of them), 20 times over (10,000 find operations)
@@ -120,6 +120,8 @@ Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 7. Remove all items (1-10,000) from each index
 
 ** RBIndex omitted and library does not contain functions suitable for range searches.
+** Unfortunately AVL does not include lt/gte. It does provide range, but calls a function for
+each entry, so very slow.  AVL could potentially be entended to include native range return.
 
 ## Different index types tested
 * HashIndex - Backed by a javascript Map object. Insert and Read is  
@@ -131,25 +133,36 @@ results to be returned as sorted arrays.
 * AVLIndex - Index built on AVLIndex from [AVL](https://github.com/w8r/avl).
 
 ## Results
-```shell
 Insert (x10000)
-RBIndex x 788 ops/sec ±1.42% (92 runs sampled)
-AVLIndex x 1,363 ops/sec ±0.56% (96 runs sampled)
-BinaryIndex x 1,248 ops/sec ±0.25% (96 runs sampled)
-HashIndex x 2,470 ops/sec ±0.58% (96 runs sampled)
+RBIndex x 779 ops/sec ±1.62% (91 runs sampled)
+AVLIndex x 1,301 ops/sec ±0.82% (95 runs sampled)
+BinaryIndex x 1,197 ops/sec ±0.67% (93 runs sampled)
+HashIndex x 2,258 ops/sec ±0.65% (94 runs sampled)
 - Fastest is HashIndex
 
 Random read (500 finds x 20 times)
-RBIndex x 1,108 ops/sec ±0.87% (94 runs sampled)
-AVLIndex x 2,208 ops/sec ±0.97% (95 runs sampled)
-BinaryIndex x 2,171 ops/sec ±0.29% (95 runs sampled)
-HashIndex x 193,608 ops/sec ±0.38% (90 runs sampled)
+RBIndex x 1,127 ops/sec ±0.64% (96 runs sampled)
+AVLIndex x 2,195 ops/sec ±1.98% (91 runs sampled)
+BinaryIndex x 2,038 ops/sec ±0.43% (97 runs sampled)
+HashIndex x 196,731 ops/sec ±0.34% (97 runs sampled)
 - Fastest is HashIndex
 
+gt read (500 finds x 20 times)
+AVLIndex x 0.53 ops/sec ±0.38% (6 runs sampled)
+BinaryIndex x 103 ops/sec ±0.79% (76 runs sampled)
+HashIndex x 1.53 ops/sec ±0.51% (8 runs sampled)
+- Fastest is BinaryIndex
+
+lte read (500 finds x 20 times)
+AVLIndex x 1.05 ops/sec ±0.17% (7 runs sampled)
+BinaryIndex x 101 ops/sec ±3.05% (74 runs sampled)
+HashIndex x 1.53 ops/sec ±0.27% (8 runs sampled)
+- Fastest is BinaryIndex
+
 Remove (x10000)
-RBIndex x 19,515 ops/sec ±0.49% (95 runs sampled)
-AVLIndex x 15,754 ops/sec ±0.52% (96 runs sampled)
-BinaryIndex x 14,763 ops/sec ±0.42% (98 runs sampled)
-HashIndex x 10,850 ops/sec ±0.42% (95 runs sampled)
+RBIndex x 19,081 ops/sec ±0.59% (94 runs sampled)
+AVLIndex x 12,602 ops/sec ±0.33% (98 runs sampled)
+BinaryIndex x 10,293 ops/sec ±0.17% (99 runs sampled)
+HashIndex x 9,826 ops/sec ±1.38% (95 runs sampled)
 - Fastest is RBIndex
-```
+

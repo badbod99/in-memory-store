@@ -48,7 +48,7 @@ export class BinaryIndex extends BaseIndex {
     /**
      * Returns all entries less than the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     lt(key) {
         return this.index.lt(key);
@@ -57,7 +57,7 @@ export class BinaryIndex extends BaseIndex {
     /**
      * Returns all entries less or equal to the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     lte(key) {
         return this.index.lte(key);
@@ -66,7 +66,7 @@ export class BinaryIndex extends BaseIndex {
     /**
      * Returns all entries greater than the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     gt(key) {
         return this.index.gt(key);
@@ -75,7 +75,7 @@ export class BinaryIndex extends BaseIndex {
     /**
      * Returns all entries greater than or equal to the passed key according to the
      * indexes comparer.
-     * @param {*} key 
+     * @param {any} key 
      */
     gte(key) {
         return this.index.gte(key);
