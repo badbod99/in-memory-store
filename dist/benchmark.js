@@ -2403,6 +2403,7 @@
     BinaryArray.prototype.gt = function gt$$1 (key) {
         var i = this.insertPos(key);
         var data = i < this.arr.length ? this.arr.slice(i + 1, this.arr.length) : [];
+        return data;
         return data.map(function (d) { return d.value; });
     };
 
