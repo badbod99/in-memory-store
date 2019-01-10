@@ -49,7 +49,7 @@ export class AVLIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    lt(key) {
+    $lt(key) {
         let lastKey;
         let data = [];
         this.index.range(this.index.min, key, n => {
@@ -71,7 +71,7 @@ export class AVLIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    lte(key) {
+    $lte(key) {
         let data = [];
         this.index.range(this.index.min, key, n => {
             data.push(n.data);
@@ -84,7 +84,7 @@ export class AVLIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    gt(key) {
+    $gt(key) {
         let firstKey;
         let data = [];
         this.index.range(key, this.index.max, n => {
@@ -108,12 +108,30 @@ export class AVLIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    gte(key) {
+    $gte(key) {
         let data = [];
         this.index.range(key, this.index.max, n => {
             data.push(n.data);
         });
         return data;
+    }
+
+    /**
+     * Returns items matching passed index key
+     * @param  {any} key specified index key
+     * @return {Array<any>} values found
+     */
+    $eq(key) {
+        return find(key);
+    }
+
+    /**
+     * Returns items matching passed index keys
+     * @param  {Array<any>} key specified index keys
+     * @return {Array<any>} values found
+     */
+    $in(keys) {
+        return this.findMany(keys);
     }
 
     /**

@@ -39,6 +39,18 @@ export class InMemoryStore {
     }
 
     /**
+     * Gets an index from the store by name.
+     * @param {string} name name of the index to get
+     * @returns {BaseIndex} index found
+     */
+    index(name) {
+        if (!this.indexes.has(name)) {
+            throw new Error(`Index ${name} not found in store`);
+        };
+        return this.indexes.get(name);
+    }
+
+    /**
      * Returns all keys wihin the specified index
      * @return {Array<Key>}
      */
@@ -116,75 +128,6 @@ export class InMemoryStore {
         return mem.extract(this.entries, data);
     }
 
-    // Takes array of [indexName, [exactMatch, exactMatch]]
-    /**
-     * Searches many indexes each with many values and intersects the results
-     * @param  {Array<string, Array<any>>} valueSet [indexName, [exactMatch, exactMatch]]
-     * @return {Array<any>} values found
-     */
-    getFromSet(valueSet) {
-        const dataSets = valueSet.map((q) => {
-            return this.get(q[0], q[1]);
-        });
-        const data = mem.intersect(dataSets);
-        return mem.extract(this.entries, data);
-    }
-
-    /**
-     * Returns all entries less than the passed value according to the
-     * indexes comparer.
-     * @param  {string} indexName index to search
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-    $lt(indexName, value) {
-        return this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).lt(value) : [];
-    }
-
-    /**
-     * Returns items within specified index matching passed values
-     * @param  {string} indexName index to search
-     * @param  {any} values specified index value
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-	$eq(indexName, value) {
-        return this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).find(value) : [];
-    }
-
-    /**
-     * Returns all entries less or equal to the passed value according to the
-     * indexes comparer.
-     * @param  {string} indexName index to search
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-    $lte(indexName, value) {
-        return this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).lte(value) : [];
-    }
-
-    /**
-     * Returns all entries greater than the passed value according to the
-     * indexes comparer.
-     * @param  {string} indexName index to search
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-    $gt(indexName, value) {
-        return this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).gt(value) : [];
-    }
-
-    /**
-     * Returns all entries greater than or equal to the passed value according to the
-     * indexes comparer.
-     * @param  {string} indexName index to search
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-    $gte(indexName, value) {
-        return this.indexes.has(indexName) ? 
-            this.indexes.get(indexName).gte(value) : [];
-    }
-
     /**
      * Searches one or many indexes, each using specified operator for specified value.
      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
@@ -212,19 +155,27 @@ export class InMemoryStore {
      * @param {Array<any>} selector
      * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
      * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+     * OR (implicit $and)
+     * [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+     * OR (implicit $eq)
+     * {"indexName":"value", "indexName":"value"}
+     * OR (implicit $in)
+     * {"indexName":"value", "indexName":["value1", "value1"]}
      * @returns {Array<any>} items from the store found in all passed index searches
      */
     find(selector) {
         var joins = Object.keys(selector);
-        console.log(joins);
         let fns = joins.map(op => {
-            return this._getOperatorFn(op, selector[op]);
+            let opFn = this._getOperatorFn(op, selector[op]);
+            if (opFn) {
+                return opFn;
+            } else {
+                // Not an operator? Then it's a single query
+                opFn = this._getFilterFns(selector[op]);
+                return opFn[0];
+            }
         });
-        let dataSets = fns.map(fn => {
-            console.log(fn);
-            return fn()
-        });
-        console.log(JSON.stringify(dataSets));
+        let dataSets = fns.map(fn => fn());
         let data = mem.intersect(dataSets);
         return mem.extract(this.entries, data);
     }
@@ -235,18 +186,27 @@ export class InMemoryStore {
      * @returns {Array<any>} Array of functions to perform specified find operations.
      */
     _getFilterFns(filters) {
+        filters = mem.oneOrMany(filters);
         return filters.map(f => {
             // only one entry per filter
             let filter = Object.entries(f)[0];
             let indexName = filter[0];
             let action = filter[1];
+            
+            let val, op;
+            if (Array.isArray(action)) {
+                op = '$in';
+                val = action;
+            } else if (typeof action === 'object') {
+                // only one operation per entry
+                op = Object.keys(action)[0];
+                val = action[op];
+            } else {
+                op = '$eq';
+                val = action;
+            }
 
-            // only one operation per entry
-            let op = Object.keys(action)[0];
-            let val = action[op];
-
-            let fn = this._getFilterFn(op, indexName, val);
-            return this._getFilterFn(op, indexName, val);
+            return this._getFilterFn(op, this.index(indexName), val);
         });
     }
 
@@ -264,23 +224,28 @@ export class InMemoryStore {
      * @param {string} filterKey $lt/$gt/$gte/$lte or $eq
      * @returns {any} function coresponding to passed key
      */
-    _getFilterFn(filterKey, indexName, val) {
+    _getFilterFn(filterKey, index, val) {
         switch (filterKey) {
             case '$lt':
-                return () => this.$lt(indexName, val);
+                return () => index.$lt(val);
             case '$lte':
-                return () => this.$lte(indexName, val);
+                return () => index.$lte(val);
             case '$gt':
-                return () => this.$gt(indexName, val);
+                return () => index.$gt(val);
             case '$gte':
-                return () => this.$gte(indexName, val);
+                return () => index.$gte(val);
+            case '$in':
+                return () => index.$in(val);
             case '$eq':
-                return () => this.$eq(indexName, val);
+                return () => index.$eq(val);
             default:
-                return () => this.$eq(indexName, val);
+                if (Array.isArray(val)) {
+                    return () => index.$in(val);
+                } else {
+                    return () => index.$eq(val);
+                }
         }
     }
-
 
     /**
      * Adds a new index onto this store if it does not already exist. Populates index with entries

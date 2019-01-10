@@ -41,7 +41,7 @@ export class HashIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    lt(key) {
+    $lt(key) {
         let keys = this.keys.filter(k => {
             return mem.lt(this.comparer, k, key);
         });
@@ -53,7 +53,7 @@ export class HashIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    lte(key) {
+    $lte(key) {
         let keys = this.keys.filter(k => {
             return mem.lte(this.comparer, k, key);
         });
@@ -65,7 +65,7 @@ export class HashIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    gt(key) {
+    $gt(key) {
         let keys = this.keys.filter(k => {
             return mem.gt(this.comparer, k, key);
         });
@@ -77,10 +77,28 @@ export class HashIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    gte(key) {
+    $gte(key) {
         let keys = this.keys.filter(k => {
             return mem.gte(this.comparer, k, key);
         });
+        return this.findMany(keys);
+    }
+
+    /**
+     * Returns items matching passed index key
+     * @param  {any} key specified index key
+     * @return {Array<any>} values found
+     */
+    $eq(key) {
+        return this.index.get(key);
+    }
+
+    /**
+     * Returns items matching passed index keys
+     * @param  {Array<any>} key specified index keys
+     * @return {Array<any>} values found
+     */
+    $in(keys) {
         return this.findMany(keys);
     }
 

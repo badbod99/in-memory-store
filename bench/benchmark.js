@@ -45,15 +45,20 @@ let nvalues = new Array(C).fill(0).map((n, i) => {
 const storeBin = new BinaryIndex('test', r => r.id, r => r.ord1);
 let store = new InMemoryStore(r => r.id);
 store.ensureIndex(storeBin);
-store.add(nvalues);
+store.populate(nvalues);
+
 let arr = store.find(
   { 
     "$and": [{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}],
     "$or": [{"test":{"$eq":"9020"}}, {"test":{"$eq":"9019"}}]
   }
 );
-let lt = store.$and([{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}]);
-let lt2 = storeBin.findMany(["9020","9010"]);
+let lt = store.find(
+ [{"test":"9020"}, {"test":["9010","9020"]}]
+);
+let lt2 = store.find(
+  [{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}]
+);
 
 let slicedA = avalues.slice(0,10);
 console.log('--------------------- CORRECTNESS CHECK -----------------');
@@ -63,8 +68,8 @@ console.log(`${prefilledMemBin.findMany(slicedA).length} [${slicedA}] values fou
 console.log(`${prefilledMemHash.findMany(slicedA).length} [${slicedA}] values found in prefilledMemHash`);
 console.log('---------------------------------------------------------');
 console.log(`${JSON.stringify(arr.map(o => o.id))}`);
-console.log(`${JSON.stringify(lt)}`);
-console.log(`${JSON.stringify(lt2)}`);
+console.log(`${JSON.stringify(lt.map(o => o.id))}`);
+console.log(`${JSON.stringify(lt2.map(o => o.id))}`);
 console.log('---------------------------------------------------------');
 
 new Benchmark.Suite(`Insert (x${N})`, options)
@@ -109,39 +114,27 @@ new Benchmark.Suite(`Random read (${A} finds x ${N / A} times)`, options)
   })
   .run();
 
-new Benchmark.Suite(`gt read (${A} finds x ${N / A} times)`, options)
+new Benchmark.Suite(`gt read (${A} finds)`, options)
   .add('AVLIndex', () => {
-    for (let lp = N / A; lp; lp--) {
-      for (let i = A - 1; i; i--) prefilledAVL.gt(avalues[i]);
-    }
+    for (let i = A - 1; i; i--) prefilledAVL.$gt(avalues[i]);
   })
   .add('BinaryIndex', () => {
-    for (let lp = N / A; lp; lp--) {
-      for (let i = A - 1; i; i--) prefilledMemBin.gt(avalues[i]);
-    }
+    for (let i = A - 1; i; i--) prefilledMemBin.$gt(avalues[i]);
   })
   .add('HashIndex', () => {
-    for (let lp = N / A; lp; lp--) {
-      for (let i = A - 1; i; i--) prefilledMemHash.gt(avalues[i]);
-    }
+    for (let i = A - 1; i; i--) prefilledMemHash.$gt(avalues[i]);
   })
   .run();
 
-new Benchmark.Suite(`lte read (${A} finds x ${N / A} times)`, options)
+new Benchmark.Suite(`lte read (${A} finds)`, options)
   .add('AVLIndex', () => {
-    for (let lp = N / A; lp; lp--) {
-      for (let i = A - 1; i; i--) prefilledAVL.lte(avalues[i]);
-    }
+    for (let i = A - 1; i; i--) prefilledAVL.$lte(avalues[i]);
   })
   .add('BinaryIndex', () => {
-    for (let lp = N / A; lp; lp--) {
-      for (let i = A - 1; i; i--) prefilledMemBin.lte(avalues[i]);
-    }
+    for (let i = A - 1; i; i--) prefilledMemBin.$lte(avalues[i]);
   })
   .add('HashIndex', () => {
-    for (let lp = N / A; lp; lp--) {
-      for (let i = A - 1; i; i--) prefilledMemHash.lte(avalues[i]);
-    }
+    for (let i = A - 1; i; i--) prefilledMemHash.$lte(avalues[i]);
   })
   .run();
 

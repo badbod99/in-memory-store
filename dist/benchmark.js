@@ -217,6 +217,17 @@
      };
 
      /**
+      * Gets an index from the store by name.
+      * @param {string} name name of the index to get
+      * @returns {BaseIndex} index found
+      */
+     InMemoryStore.prototype.index = function index (name) {
+         if (!this.indexes.has(name)) {
+             throw new Error(("Index " + name + " not found in store"));
+         }     return this.indexes.get(name);
+     };
+
+     /**
       * Returns all keys wihin the specified index
       * @return {Array<Key>}
       */
@@ -295,77 +306,6 @@
          return extract(this.entries, data);
      };
 
-     // Takes array of [indexName, [exactMatch, exactMatch]]
-     /**
-      * Searches many indexes each with many values and intersects the results
-      * @param  {Array<string, Array<any>>} valueSet [indexName, [exactMatch, exactMatch]]
-      * @return {Array<any>} values found
-      */
-     InMemoryStore.prototype.getFromSet = function getFromSet (valueSet) {
-            var this$1 = this;
-
-         var dataSets = valueSet.map(function (q) {
-             return this$1.get(q[0], q[1]);
-         });
-         var data = intersect(dataSets);
-         return extract(this.entries, data);
-     };
-
-     /**
-      * Returns all entries less than the passed value according to the
-      * indexes comparer.
-      * @param  {string} indexName index to search
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-     InMemoryStore.prototype.$lt = function $lt (indexName, value) {
-         return this.indexes.has(indexName) ? 
-             this.indexes.get(indexName).lt(value) : [];
-     };
-
-     /**
-      * Returns items within specified index matching passed values
-      * @param  {string} indexName index to search
-      * @param  {any} values specified index value
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-    	InMemoryStore.prototype.$eq = function $eq (indexName, value) {
-         return this.indexes.has(indexName) ? 
-             this.indexes.get(indexName).find(value) : [];
-     };
-
-     /**
-      * Returns all entries less or equal to the passed value according to the
-      * indexes comparer.
-      * @param  {string} indexName index to search
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-     InMemoryStore.prototype.$lte = function $lte (indexName, value) {
-         return this.indexes.has(indexName) ? 
-             this.indexes.get(indexName).lte(value) : [];
-     };
-
-     /**
-      * Returns all entries greater than the passed value according to the
-      * indexes comparer.
-      * @param  {string} indexName index to search
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-     InMemoryStore.prototype.$gt = function $gt (indexName, value) {
-         return this.indexes.has(indexName) ? 
-             this.indexes.get(indexName).gt(value) : [];
-     };
-
-     /**
-      * Returns all entries greater than or equal to the passed value according to the
-      * indexes comparer.
-      * @param  {string} indexName index to search
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-     InMemoryStore.prototype.$gte = function $gte (indexName, value) {
-         return this.indexes.has(indexName) ? 
-             this.indexes.get(indexName).gte(value) : [];
-     };
-
      /**
       * Searches one or many indexes, each using specified operator for specified value.
       * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
@@ -393,21 +333,29 @@
       * @param {Array<any>} selector
       * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
       * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+      * OR (implicit $and)
+      * [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+      * OR (implicit $eq)
+      * {"indexName":"value", "indexName":"value"}
+      * OR (implicit $in)
+      * {"indexName":"value", "indexName":["value1", "value1"]}
       * @returns {Array<any>} items from the store found in all passed index searches
       */
      InMemoryStore.prototype.find = function find (selector) {
             var this$1 = this;
 
          var joins = Object.keys(selector);
-         console.log(joins);
          var fns = joins.map(function (op) {
-             return this$1._getOperatorFn(op, selector[op]);
+             var opFn = this$1._getOperatorFn(op, selector[op]);
+             if (opFn) {
+                 return opFn;
+             } else {
+                 // Not an operator? Then it's a single query
+                 opFn = this$1._getFilterFns(selector[op]);
+                 return opFn[0];
+             }
          });
-         var dataSets = fns.map(function (fn) {
-             console.log(fn);
-             return fn()
-         });
-         console.log(JSON.stringify(dataSets));
+         var dataSets = fns.map(function (fn) { return fn(); });
          var data = intersect(dataSets);
          return extract(this.entries, data);
      };
@@ -420,18 +368,27 @@
      InMemoryStore.prototype._getFilterFns = function _getFilterFns (filters) {
             var this$1 = this;
 
+         filters = oneOrMany(filters);
          return filters.map(function (f) {
              // only one entry per filter
              var filter = Object.entries(f)[0];
              var indexName = filter[0];
              var action = filter[1];
+                
+             var val, op;
+             if (Array.isArray(action)) {
+                 op = '$in';
+                 val = action;
+             } else if (typeof action === 'object') {
+                 // only one operation per entry
+                 op = Object.keys(action)[0];
+                 val = action[op];
+             } else {
+                 op = '$eq';
+                 val = action;
+             }
 
-             // only one operation per entry
-             var op = Object.keys(action)[0];
-             var val = action[op];
-
-             var fn = this$1._getFilterFn(op, indexName, val);
-             return this$1._getFilterFn(op, indexName, val);
+             return this$1._getFilterFn(op, this$1.index(indexName), val);
          });
      };
 
@@ -451,25 +408,28 @@
       * @param {string} filterKey $lt/$gt/$gte/$lte or $eq
       * @returns {any} function coresponding to passed key
       */
-     InMemoryStore.prototype._getFilterFn = function _getFilterFn (filterKey, indexName, val) {
-            var this$1 = this;
-
+     InMemoryStore.prototype._getFilterFn = function _getFilterFn (filterKey, index, val) {
          switch (filterKey) {
              case '$lt':
-                 return function () { return this$1.$lt(indexName, val); };
+                 return function () { return index.$lt(val); };
              case '$lte':
-                 return function () { return this$1.$lte(indexName, val); };
+                 return function () { return index.$lte(val); };
              case '$gt':
-                 return function () { return this$1.$gt(indexName, val); };
+                 return function () { return index.$gt(val); };
              case '$gte':
-                 return function () { return this$1.$gte(indexName, val); };
+                 return function () { return index.$gte(val); };
+             case '$in':
+                 return function () { return index.$in(val); };
              case '$eq':
-                 return function () { return this$1.$eq(indexName, val); };
+                 return function () { return index.$eq(val); };
              default:
-                 return function () { return this$1.$eq(indexName, val); };
+                 if (Array.isArray(val)) {
+                     return function () { return index.$in(val); };
+                 } else {
+                     return function () { return index.$eq(val); };
+                 }
          }
      };
-
 
      /**
       * Adds a new index onto this store if it does not already exist. Populates index with entries
@@ -1544,7 +1504,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        AVLIndex.prototype.lt = function lt$$1 (key) {
+        AVLIndex.prototype.$lt = function $lt (key) {
             var lastKey;
             var data = [];
             this.index.range(this.index.min, key, function (n) {
@@ -1566,7 +1526,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        AVLIndex.prototype.lte = function lte$$1 (key) {
+        AVLIndex.prototype.$lte = function $lte (key) {
             var data = [];
             this.index.range(this.index.min, key, function (n) {
                 data.push(n.data);
@@ -1579,7 +1539,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        AVLIndex.prototype.gt = function gt$$1 (key) {
+        AVLIndex.prototype.$gt = function $gt (key) {
             var firstKey;
             var data = [];
             this.index.range(key, this.index.max, function (n) {
@@ -1603,12 +1563,30 @@
          * indexes comparer.
          * @param {any} key 
          */
-        AVLIndex.prototype.gte = function gte$$1 (key) {
+        AVLIndex.prototype.$gte = function $gte (key) {
             var data = [];
             this.index.range(key, this.index.max, function (n) {
                 data.push(n.data);
             });
             return data;
+        };
+
+        /**
+         * Returns items matching passed index key
+         * @param  {any} key specified index key
+         * @return {Array<any>} values found
+         */
+        AVLIndex.prototype.$eq = function $eq (key) {
+            return find(key);
+        };
+
+        /**
+         * Returns items matching passed index keys
+         * @param  {Array<any>} key specified index keys
+         * @return {Array<any>} values found
+         */
+        AVLIndex.prototype.$in = function $in (keys) {
+            return this.findMany(keys);
         };
 
         /**
@@ -2345,7 +2323,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        HashIndex.prototype.lt = function lt$$1 (key) {
+        HashIndex.prototype.$lt = function $lt (key) {
             var this$1 = this;
 
             var keys = this.keys.filter(function (k) {
@@ -2359,7 +2337,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        HashIndex.prototype.lte = function lte$$1 (key) {
+        HashIndex.prototype.$lte = function $lte (key) {
             var this$1 = this;
 
             var keys = this.keys.filter(function (k) {
@@ -2373,7 +2351,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        HashIndex.prototype.gt = function gt$$1 (key) {
+        HashIndex.prototype.$gt = function $gt (key) {
             var this$1 = this;
 
             var keys = this.keys.filter(function (k) {
@@ -2387,12 +2365,30 @@
          * indexes comparer.
          * @param {any} key 
          */
-        HashIndex.prototype.gte = function gte$$1 (key) {
+        HashIndex.prototype.$gte = function $gte (key) {
             var this$1 = this;
 
             var keys = this.keys.filter(function (k) {
                 return gte(this$1.comparer, k, key);
             });
+            return this.findMany(keys);
+        };
+
+        /**
+         * Returns items matching passed index key
+         * @param  {any} key specified index key
+         * @return {Array<any>} values found
+         */
+        HashIndex.prototype.$eq = function $eq (key) {
+            return this.index.get(key);
+        };
+
+        /**
+         * Returns items matching passed index keys
+         * @param  {Array<any>} key specified index keys
+         * @return {Array<any>} values found
+         */
+        HashIndex.prototype.$in = function $in (keys) {
             return this.findMany(keys);
         };
 
@@ -2671,7 +2667,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        BinaryIndex.prototype.lt = function lt$$1 (key) {
+        BinaryIndex.prototype.$lt = function $lt (key) {
             var data = this.index.lt(key);
             return [].concat.apply([], data);
         };
@@ -2681,7 +2677,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        BinaryIndex.prototype.lte = function lte$$1 (key) {
+        BinaryIndex.prototype.$lte = function $lte (key) {
             var data = this.index.lte(key);
             return [].concat.apply([], data);
         };
@@ -2691,7 +2687,7 @@
          * indexes comparer.
          * @param {any} key 
          */
-        BinaryIndex.prototype.gt = function gt$$1 (key) {
+        BinaryIndex.prototype.$gt = function $gt (key) {
             var data = this.index.gt(key);
             return [].concat.apply([], data);
         };
@@ -2701,9 +2697,27 @@
          * indexes comparer.
          * @param {any} key 
          */
-        BinaryIndex.prototype.gte = function gte$$1 (key) {
+        BinaryIndex.prototype.$gte = function $gte (key) {
             var data = this.index.gte(key);
             return [].concat.apply([], data);
+        };
+
+        /**
+         * Returns items matching passed index key
+         * @param  {any} key specified index key
+         * @return {Array<any>} values found
+         */
+        BinaryIndex.prototype.$eq = function $eq (key) {
+            return this.index.get(key);
+        };
+
+        /**
+         * Returns items matching passed index keys
+         * @param  {Array<any>} key specified index keys
+         * @return {Array<any>} values found
+         */
+        BinaryIndex.prototype.$in = function $in (keys) {
+            return this.findMany(keys);
         };
 
         /**

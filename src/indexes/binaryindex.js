@@ -50,7 +50,7 @@ export class BinaryIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    lt(key) {
+    $lt(key) {
         let data = this.index.lt(key);
         return [].concat.apply([], data);
     }
@@ -60,7 +60,7 @@ export class BinaryIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    lte(key) {
+    $lte(key) {
         let data = this.index.lte(key);
         return [].concat.apply([], data);
     }
@@ -70,7 +70,7 @@ export class BinaryIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    gt(key) {
+    $gt(key) {
         let data = this.index.gt(key);
         return [].concat.apply([], data);
     }
@@ -80,9 +80,27 @@ export class BinaryIndex extends BaseIndex {
      * indexes comparer.
      * @param {any} key 
      */
-    gte(key) {
+    $gte(key) {
         let data = this.index.gte(key);
         return [].concat.apply([], data);
+    }
+
+    /**
+     * Returns items matching passed index key
+     * @param  {any} key specified index key
+     * @return {Array<any>} values found
+     */
+    $eq(key) {
+        return this.index.get(key);
+    }
+
+    /**
+     * Returns items matching passed index keys
+     * @param  {Array<any>} key specified index keys
+     * @return {Array<any>} values found
+     */
+    $in(keys) {
+        return this.findMany(keys);
     }
 
     /**

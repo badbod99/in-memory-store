@@ -69,7 +69,10 @@ let britishShorthair = store.getOne('breed', 'British Shorthair');
 // Get based on array of breeds
 let allSorts = store.get('breed', ['British Shorthair','Moggy']);
 // Get intersection of 2 indexes
-let oldMixed = store.getFromSet([['breed', ['British Shorthair','Moggy'], ['age',[5,6,7]]);
+let oldMixed = store.find([
+        {'breed': ['British Shorthair','Moggy']},
+        {'age': [5,6,7]}
+]);
 // Get join of 2 indexes
 let mixed = store.get('breed', ['British Shorthair','Moggy']);
 let old = store.get('age', [5,6,7]);
