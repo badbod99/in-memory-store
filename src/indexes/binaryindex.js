@@ -51,7 +51,8 @@ export class BinaryIndex extends BaseIndex {
      * @param {any} key 
      */
     lt(key) {
-        return this.index.lt(key);
+        let data = this.index.lt(key);
+        return [].concat.apply([], data);
     }
 
     /**
@@ -60,7 +61,8 @@ export class BinaryIndex extends BaseIndex {
      * @param {any} key 
      */
     lte(key) {
-        return this.index.lte(key);
+        let data = this.index.lte(key);
+        return [].concat.apply([], data);
     }
 
     /**
@@ -69,7 +71,8 @@ export class BinaryIndex extends BaseIndex {
      * @param {any} key 
      */
     gt(key) {
-        return this.index.gt(key);
+        let data = this.index.gt(key);
+        return [].concat.apply([], data);
     }
 
     /**
@@ -78,7 +81,8 @@ export class BinaryIndex extends BaseIndex {
      * @param {any} key 
      */
     gte(key) {
-        return this.index.gte(key);
+        let data = this.index.gte(key);
+        return [].concat.apply([], data);
     }
 
     /**

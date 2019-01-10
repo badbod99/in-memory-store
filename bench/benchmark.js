@@ -1,6 +1,6 @@
 // Benchmark script runs in node.js, hense the ES5 systax
 const Benchmark = require('benchmark');
-const { AVLIndex, BinaryIndex, HashIndex, RBIndex } = require('../dist/benchmark');
+const { InMemoryStore, AVLIndex, BinaryIndex, HashIndex, RBIndex } = require('../dist/benchmark');
 
 const A = 500;
 const N = 10000;
@@ -34,12 +34,37 @@ const options = {
   }
 };
 
+const C = 25;
+let nvalues = new Array(C).fill(0).map((n, i) => {
+  return {
+    id: i, // As we don't keep duplicates, need unique id, not random
+    ord1: 9000 + i
+  }
+});
+
+const storeBin = new BinaryIndex('test', r => r.id, r => r.ord1);
+let store = new InMemoryStore(r => r.id);
+store.ensureIndex(storeBin);
+store.add(nvalues);
+let arr = store.find(
+  { 
+    "$and": [{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}],
+    "$or": [{"test":{"$eq":"9020"}}, {"test":{"$eq":"9019"}}]
+  }
+);
+let lt = store.$and([{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}]);
+let lt2 = storeBin.findMany(["9020","9010"]);
+
 let slicedA = avalues.slice(0,10);
 console.log('--------------------- CORRECTNESS CHECK -----------------');
 console.log(`${prefilledAVL.findMany(slicedA).length} [${slicedA}] values found in AVLIndex`);
 console.log(`${prefilledRB.findMany(slicedA).length} [${slicedA}] values found in prefilledRB`);
 console.log(`${prefilledMemBin.findMany(slicedA).length} [${slicedA}] values found in prefilledMemBin`);
 console.log(`${prefilledMemHash.findMany(slicedA).length} [${slicedA}] values found in prefilledMemHash`);
+console.log('---------------------------------------------------------');
+console.log(`${JSON.stringify(arr.map(o => o.id))}`);
+console.log(`${JSON.stringify(lt)}`);
+console.log(`${JSON.stringify(lt2)}`);
 console.log('---------------------------------------------------------');
 
 new Benchmark.Suite(`Insert (x${N})`, options)

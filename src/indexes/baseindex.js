@@ -105,7 +105,9 @@ export class BaseIndex {
      * @param  {any} item item as it is now
      */
     update(item, olditem) {
-        this.remove(olditem);
+        if (olditem) {
+            this.remove(olditem);
+        }
         this.insert(item);
     }
 }

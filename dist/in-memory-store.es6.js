@@ -160,7 +160,7 @@
         var r = [];
         keys = oneOrMany(keys);
         map = map || new Map([]);
-        
+
         keys.forEach(function (key) {
             if (map.has(key)) {
                 r.push(map.get(key));
@@ -304,49 +304,161 @@
       * Returns all entries less than the passed value according to the
       * indexes comparer.
       * @param  {string} indexName index to search
-      * @param {any} value 
+      * @returns {Array<any>} keys found in all passed index searches
       */
-     InMemoryStore.prototype.lt = function lt$$1 (indexName, value) {
-         var data = this.indexes.has(indexName) ? 
+     InMemoryStore.prototype.$lt = function $lt (indexName, value) {
+         return this.indexes.has(indexName) ? 
              this.indexes.get(indexName).lt(value) : [];
-         return extract(this.entries, data);
+     };
+
+     /**
+      * Returns items within specified index matching passed values
+      * @param  {string} indexName index to search
+      * @param  {any} values specified index value
+      * @returns {Array<any>} keys found in all passed index searches
+      */
+    	InMemoryStore.prototype.$eq = function $eq (indexName, value) {
+         return this.indexes.has(indexName) ? 
+             this.indexes.get(indexName).find(value) : [];
      };
 
      /**
       * Returns all entries less or equal to the passed value according to the
       * indexes comparer.
       * @param  {string} indexName index to search
-      * @param {any} value 
+      * @returns {Array<any>} keys found in all passed index searches
       */
-     InMemoryStore.prototype.lte = function lte$$1 (indexName, key) {
-         var data = this.indexes.has(indexName) ? 
+     InMemoryStore.prototype.$lte = function $lte (indexName, value) {
+         return this.indexes.has(indexName) ? 
              this.indexes.get(indexName).lte(value) : [];
-         return extract(this.entries, data);
      };
 
      /**
       * Returns all entries greater than the passed value according to the
       * indexes comparer.
       * @param  {string} indexName index to search
-      * @param {any} value 
+      * @returns {Array<any>} keys found in all passed index searches
       */
-     InMemoryStore.prototype.gt = function gt$$1 (indexName, value) {
-         var data = this.indexes.has(indexName) ? 
+     InMemoryStore.prototype.$gt = function $gt (indexName, value) {
+         return this.indexes.has(indexName) ? 
              this.indexes.get(indexName).gt(value) : [];
-         return extract(this.entries, data);
      };
 
      /**
       * Returns all entries greater than or equal to the passed value according to the
       * indexes comparer.
       * @param  {string} indexName index to search
-      * @param {any} value 
+      * @returns {Array<any>} keys found in all passed index searches
       */
-     InMemoryStore.prototype.gte = function gte$$1 (indexName, value) {
-         var data = this.indexes.has(indexName) ? 
+     InMemoryStore.prototype.$gte = function $gte (indexName, value) {
+         return this.indexes.has(indexName) ? 
              this.indexes.get(indexName).gte(value) : [];
+     };
+
+     /**
+      * Searches one or many indexes, each using specified operator for specified value.
+      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+      * @returns {Array<any>} keys found in all passed index searches
+      */
+     InMemoryStore.prototype.$and = function $and (filters) {
+         var filterFns = this._getFilterFns(filters);
+         var dataSets = filterFns.map(function (fn) { return fn(); });
+         return intersect(dataSets);
+     };
+
+     /**
+      * Searches one or many indexes, each using specified operator for specified value.
+      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+      * @returns {Array<any>} keys found in all passed index searches
+      */
+     InMemoryStore.prototype.$or = function $or (filters) {
+         var filterFns = this._getFilterFns(filters);
+         var dataSets = filterFns.map(function (fn) { return fn(); });
+         return [].concat.apply([], dataSets);
+     };
+
+     /**
+      * Performs a find across many indexes based on limited find selector language.
+      * @param {Array<any>} selector
+      * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+      * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+      * @returns {Array<any>} items from the store found in all passed index searches
+      */
+     InMemoryStore.prototype.find = function find (selector) {
+            var this$1 = this;
+
+         var joins = Object.keys(selector);
+         console.log(joins);
+         var fns = joins.map(function (op) {
+             return this$1._getOperatorFn(op, selector[op]);
+         });
+         var dataSets = fns.map(function (fn) {
+             console.log(fn);
+             return fn()
+         });
+         console.log(JSON.stringify(dataSets));
+         var data = intersect(dataSets);
          return extract(this.entries, data);
      };
+
+     /**
+      * Get function array based on specified find criteria.
+      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+      * @returns {Array<any>} Array of functions to perform specified find operations.
+      */
+     InMemoryStore.prototype._getFilterFns = function _getFilterFns (filters) {
+            var this$1 = this;
+
+         return filters.map(function (f) {
+             // only one entry per filter
+             var filter = Object.entries(f)[0];
+             var indexName = filter[0];
+             var action = filter[1];
+
+             // only one operation per entry
+             var op = Object.keys(action)[0];
+             var val = action[op];
+
+             var fn = this$1._getFilterFn(op, indexName, val);
+             return this$1._getFilterFn(op, indexName, val);
+         });
+     };
+
+     InMemoryStore.prototype._getOperatorFn = function _getOperatorFn (operatorKey, filters) {
+            var this$1 = this;
+
+         switch(operatorKey) {
+             case "$and":
+                 return function () { return this$1.$and(filters); };
+             case "$or":
+                 return function () { return this$1.$or(filters); };
+         }
+     };
+
+     /**
+      * Gets a filter function based on the specified filter key..
+      * @param {string} filterKey $lt/$gt/$gte/$lte or $eq
+      * @returns {any} function coresponding to passed key
+      */
+     InMemoryStore.prototype._getFilterFn = function _getFilterFn (filterKey, indexName, val) {
+            var this$1 = this;
+
+         switch (filterKey) {
+             case '$lt':
+                 return function () { return this$1.$lt(indexName, val); };
+             case '$lte':
+                 return function () { return this$1.$lte(indexName, val); };
+             case '$gt':
+                 return function () { return this$1.$gt(indexName, val); };
+             case '$gte':
+                 return function () { return this$1.$gte(indexName, val); };
+             case '$eq':
+                 return function () { return this$1.$eq(indexName, val); };
+             default:
+                 return function () { return this$1.$eq(indexName, val); };
+         }
+     };
+
 
      /**
       * Adds a new index onto this store if it does not already exist. Populates index with entries
@@ -561,7 +673,9 @@
      * @param  {any} item item as it is now
      */
     BaseIndex.prototype.update = function update (item, olditem) {
-        this.remove(olditem);
+        if (olditem) {
+            this.remove(olditem);
+        }
         this.insert(item);
     };
 
@@ -778,7 +892,6 @@
     BinaryArray.prototype.gt = function gt$$1 (key) {
         var i = this.insertPos(key);
         var data = i < this.arr.length ? this.arr.slice(i + 1, this.arr.length) : [];
-        return data;
         return data.map(function (d) { return d.value; });
     };
 
@@ -935,7 +1048,8 @@
          * @param {any} key 
          */
         BinaryIndex.prototype.lt = function lt$$1 (key) {
-            return this.index.lt(key);
+            var data = this.index.lt(key);
+            return [].concat.apply([], data);
         };
 
         /**
@@ -944,7 +1058,8 @@
          * @param {any} key 
          */
         BinaryIndex.prototype.lte = function lte$$1 (key) {
-            return this.index.lte(key);
+            var data = this.index.lte(key);
+            return [].concat.apply([], data);
         };
 
         /**
@@ -953,7 +1068,8 @@
          * @param {any} key 
          */
         BinaryIndex.prototype.gt = function gt$$1 (key) {
-            return this.index.gt(key);
+            var data = this.index.gt(key);
+            return [].concat.apply([], data);
         };
 
         /**
@@ -962,7 +1078,8 @@
          * @param {any} key 
          */
         BinaryIndex.prototype.gte = function gte$$1 (key) {
-            return this.index.gte(key);
+            var data = this.index.gte(key);
+            return [].concat.apply([], data);
         };
 
         /**
