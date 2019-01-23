@@ -156,20 +156,17 @@ very fast.
 * BinaryIndex is an array backed binary search index.  Performance is not
 far off that of the Tree structures, but it allows simple, fast range
 results to be returned as sorted arrays.
-* RBIndex - Index built on Red Black Tree from [bintrees](https://github.com/vadimg/js_bintrees).
 * AVLIndex - Index built on AVLIndex from [AVL](https://github.com/w8r/avl).
 
 ## Results
 ```shell
 Insert (x10000)
-RBIndex x 740 ops/sec ±1.11% (90 runs sampled)
 AVLIndex x 1,258 ops/sec ±0.72% (90 runs sampled)
 BinaryIndex x 689 ops/sec ±2.95% (86 runs sampled)
 HashIndex x 2,025 ops/sec ±2.89% (88 runs sampled)
 - Fastest is HashIndex
 
 Random read (500 finds x 20 times)
-RBIndex x 1,013 ops/sec ±2.53% (80 runs sampled)
 AVLIndex x 2,223 ops/sec ±1.01% (93 runs sampled)
 BinaryIndex x 2,094 ops/sec ±1.23% (91 runs sampled)
 HashIndex x 175,833 ops/sec ±2.20% (91 runs sampled)
@@ -188,7 +185,6 @@ HashIndex x 24.28 ops/sec ±3.22% (44 runs sampled)
 - Fastest is BinaryIndex
 
 Remove (x10000)
-RBIndex x 15,446 ops/sec ±1.81% (90 runs sampled)
 AVLIndex x 11,354 ops/sec ±1.46% (86 runs sampled)
 BinaryIndex x 9,379 ops/sec ±0.79% (87 runs sampled)
 HashIndex x 7,641 ops/sec ±2.08% (80 runs sampled)

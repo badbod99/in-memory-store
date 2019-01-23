@@ -175,7 +175,7 @@
   }
 
   /**
-   * Flattens an array one level deep.
+   * Flattens an array one level deep only.
    * @param  {Array<any>} arr array of arrays to flatten
    * @return {Array<any>} flattened array
    */
@@ -1477,11 +1477,10 @@
      */
   BaseIndex.prototype.findMany = function findMany (keys) {
       var this$1 = this;
-      var ref;
 
     var manyKeys = oneOrMany(keys);
     var data = manyKeys.map(function (m) { return this$1.find(m); });
-    return (ref = []).concat.apply(ref, data);
+    return shallowFlat(data);
   };
 
   /**
