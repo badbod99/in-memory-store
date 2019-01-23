@@ -27,80 +27,85 @@
  * @return {Array<any>} array of passed item(s)
  */
 export function oneOrMany(items) {
-    if (!items) {
-        return [];
-    } else if (items instanceof Map) {
-        return Array.from(items.values());
-    } else if (!Array.isArray(items)) {
-        return [items];
-    } else {
-        return items;
-    }
+  if (!items) {
+    return [];
+  } if (items instanceof Map) {
+    return Array.from(items.values());
+  } if (!Array.isArray(items)) {
+    return [items];
+  }
+  return items;
 }
 
 /**
  * Returns whether or not a < b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a <= b
  */
 export function lte(comparer, a, b) {
-    return comparer(a, b) <= 0;
+  return comparer(a, b) <= 0;
 }
 
 /**
  * Returns whether or not a > b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a => b
  */
 export function gte(comparer, a, b) {
-    return comparer(a, b) >= 0;
+  return comparer(a, b) >= 0;
 }
 
 /**
  * Returns whether or not a < b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a < b
  */
 export function lt(comparer, a, b) {
-    return comparer(a, b) < 0;
+  return comparer(a, b) < 0;
 }
 
 /**
  * Returns whether or not a > b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a > b
  */
 export function gt(comparer, a, b) {
-    return comparer(a, b) > 0;
+  return comparer(a, b) > 0;
 }
 
 /**
  * Returns whether or not a === b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a === b
  */
 export function eq(comparer, a, b) {
-    return comparer(a, b) === 0;
+  return comparer(a, b) === 0;
 }
 
 /**
  * Default comparer equal to as used on Array.sort
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {number} result of comparison
  */
 export function defaultComparer(a, b) {
-    return a > b ? 1 : a < b ? -1 : 0;
+  if (a > b) {
+    return 1;
+  }
+  if (a < b) {
+    return -1;
+  }
+  return 0;
 }
 
 /**
@@ -111,9 +116,7 @@ export function defaultComparer(a, b) {
  * @return {comparerCallback} comparer wrapped in .key calls
  */
 export function keyWrapComparer(comparer) {
-    return function(a, b) {
-        return comparer(a.key, b.key);
-    };
+  return (a, b) => comparer(a.key, b.key);
 }
 
 /**
@@ -122,28 +125,30 @@ export function keyWrapComparer(comparer) {
  * @return {Array<any>} array of values where that value is in all array
  */
 export function intersect(arrays) {
-    const ordered = (arrays.length === 1
-        ? arrays : 
-        arrays.sort((a1,a2) => a1.length - a2.length));
-    const shortest = ordered[0],
-        set = new Set(), 
-        result = [];
+  const ordered = (arrays.length === 1
+    ? arrays
+    : arrays.sort((a1, a2) => a1.length - a2.length));
+  const shortest = ordered[0];
+  const set = new Set();
+  const result = [];
 
-    for (let i=0; i < shortest.length; i++) {
-        const item = shortest[i];
-        let every = true; // don't use ordered.every ... it is slow
-        for(let j=1;j<ordered.length;j++) {
-            if(ordered[j].includes(item)) continue;
-            every = false;
-            break;
-        }
-        // ignore if not in every other array, or if already captured
-        if(!every || set.has(item)) continue;
-        // otherwise, add to book keeping set and the result
-        set.add(item);
-        result[result.length] = item;
+  for (let i = 0; i < shortest.length; i += 1) {
+    const item = shortest[i];
+    let every = true; // don't use ordered.every ... it is slow
+    for (let j = 1; j < ordered.length; j += 1) {
+      if (!ordered[j].includes(item)) {
+        every = false;
+        break;
+      }
     }
-    return result;
+    // ignore if not in every other array, or if already captured
+    if (every || !set.has(item)) {
+      // otherwise, add to book keeping set and the result
+      set.add(item);
+      result[result.length] = item;
+    }
+  }
+  return result;
 }
 
 /**
@@ -153,14 +158,30 @@ export function intersect(arrays) {
  * @return {Array<any>} array of values extracted from the passed map
  */
 export function extract(map, keys) {
-    const r = [];
-    keys = oneOrMany(keys);
-    map = map || new Map([]);
+  const r = [];
+  const manyKeys = oneOrMany(keys);
+  const defMap = map || new Map([]);
 
-    keys.forEach((key) => {
-        if (map.has(key)) {
-            r.push(map.get(key));
-        }
-    });    
-    return r;
+  manyKeys.forEach((key) => {
+    if (map.has(key)) {
+      r.push(defMap.get(key));
+    }
+  });
+  return r;
+}
+
+/**
+ * Flattens an array one level deep only.
+ * @param  {Array<any>} arr array of arrays to flatten
+ * @return {Array<any>} flattened array
+ */
+export function shallowFlat(arr) {
+  const resultArr = [];
+  if (!arr) {
+    return resultArr;
+  }
+  for (let i = 0; i < arr.length; i += 1) {
+    resultArr.push(...arr[i]);
+  }
+  return resultArr;
 }

@@ -55,80 +55,85 @@
  * @return {Array&lt;any>} array of passed item(s)
  */
 export function oneOrMany(items) {
-    if (!items) {
-        return [];
-    } else if (items instanceof Map) {
-        return Array.from(items.values());
-    } else if (!Array.isArray(items)) {
-        return [items];
-    } else {
-        return items;
-    }
+  if (!items) {
+    return [];
+  } if (items instanceof Map) {
+    return Array.from(items.values());
+  } if (!Array.isArray(items)) {
+    return [items];
+  }
+  return items;
 }
 
 /**
  * Returns whether or not a &lt; b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a &lt;= b
  */
 export function lte(comparer, a, b) {
-    return comparer(a, b) &lt;= 0;
+  return comparer(a, b) &lt;= 0;
 }
 
 /**
  * Returns whether or not a > b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a => b
  */
 export function gte(comparer, a, b) {
-    return comparer(a, b) >= 0;
+  return comparer(a, b) >= 0;
 }
 
 /**
  * Returns whether or not a &lt; b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a &lt; b
  */
 export function lt(comparer, a, b) {
-    return comparer(a, b) &lt; 0;
+  return comparer(a, b) &lt; 0;
 }
 
 /**
  * Returns whether or not a > b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a > b
  */
 export function gt(comparer, a, b) {
-    return comparer(a, b) > 0;
+  return comparer(a, b) > 0;
 }
 
 /**
  * Returns whether or not a === b
  * @param  {comparerCallback} comparer comparer to use
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {boolean} whether or not a === b
  */
 export function eq(comparer, a, b) {
-    return comparer(a, b) === 0;
+  return comparer(a, b) === 0;
 }
 
 /**
  * Default comparer equal to as used on Array.sort
- * @param  {any} a 
- * @param  {any} b 
+ * @param  {any} a
+ * @param  {any} b
  * @return {number} result of comparison
  */
 export function defaultComparer(a, b) {
-    return a > b ? 1 : a &lt; b ? -1 : 0;
+  if (a > b) {
+    return 1;
+  }
+  if (a &lt; b) {
+    return -1;
+  }
+  return 0;
 }
 
 /**
@@ -139,9 +144,7 @@ export function defaultComparer(a, b) {
  * @return {comparerCallback} comparer wrapped in .key calls
  */
 export function keyWrapComparer(comparer) {
-    return function(a, b) {
-        return comparer(a.key, b.key);
-    };
+  return (a, b) => comparer(a.key, b.key);
 }
 
 /**
@@ -150,28 +153,30 @@ export function keyWrapComparer(comparer) {
  * @return {Array&lt;any>} array of values where that value is in all array
  */
 export function intersect(arrays) {
-    const ordered = (arrays.length === 1
-        ? arrays : 
-        arrays.sort((a1,a2) => a1.length - a2.length));
-    const shortest = ordered[0],
-        set = new Set(), 
-        result = [];
+  const ordered = (arrays.length === 1
+    ? arrays
+    : arrays.sort((a1, a2) => a1.length - a2.length));
+  const shortest = ordered[0];
+  const set = new Set();
+  const result = [];
 
-    for (let i=0; i &lt; shortest.length; i++) {
-        const item = shortest[i];
-        let every = true; // don't use ordered.every ... it is slow
-        for(let j=1;j&lt;ordered.length;j++) {
-            if(ordered[j].includes(item)) continue;
-            every = false;
-            break;
-        }
-        // ignore if not in every other array, or if already captured
-        if(!every || set.has(item)) continue;
-        // otherwise, add to book keeping set and the result
-        set.add(item);
-        result[result.length] = item;
+  for (let i = 0; i &lt; shortest.length; i += 1) {
+    const item = shortest[i];
+    let every = true; // don't use ordered.every ... it is slow
+    for (let j = 1; j &lt; ordered.length; j += 1) {
+      if (!ordered[j].includes(item)) {
+        every = false;
+        break;
+      }
     }
-    return result;
+    // ignore if not in every other array, or if already captured
+    if (every || !set.has(item)) {
+      // otherwise, add to book keeping set and the result
+      set.add(item);
+      result[result.length] = item;
+    }
+  }
+  return result;
 }
 
 /**
@@ -181,17 +186,34 @@ export function intersect(arrays) {
  * @return {Array&lt;any>} array of values extracted from the passed map
  */
 export function extract(map, keys) {
-    const r = [];
-    keys = oneOrMany(keys);
-    map = map || new Map([]);
+  const r = [];
+  const manyKeys = oneOrMany(keys);
+  const defMap = map || new Map([]);
 
-    keys.forEach((key) => {
-        if (map.has(key)) {
-            r.push(map.get(key));
-        }
-    });    
-    return r;
-}</code></pre>
+  manyKeys.forEach((key) => {
+    if (map.has(key)) {
+      r.push(defMap.get(key));
+    }
+  });
+  return r;
+}
+
+/**
+ * Flattens an array one level deep.
+ * @param  {Array&lt;any>} arr array of arrays to flatten
+ * @return {Array&lt;any>} flattened array
+ */
+export function shallowFlat(arr) {
+  const resultArr = [];
+  if (!arr) {
+    return resultArr;
+  }
+  for (let i = 0; i &lt; arr.length; i += 1) {
+    resultArr.push(...arr[i]);
+  }
+  return resultArr;
+}
+</code></pre>
         </article>
     </section>
 
@@ -201,13 +223,13 @@ export function extract(map, keys) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AVLIndex.html">AVLIndex</a></li><li><a href="BaseIndex.html">BaseIndex</a></li><li><a href="BinaryArray.html">BinaryArray</a></li><li><a href="BinaryIndex.html">BinaryIndex</a></li><li><a href="HashIndex.html">HashIndex</a></li><li><a href="InMemoryStore.html">InMemoryStore</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$and">$and</a></li><li><a href="global.html#$or">$or</a></li><li><a href="global.html#_combinatorFn">_combinatorFn</a></li><li><a href="global.html#_getFilterFns">_getFilterFns</a></li><li><a href="global.html#_opertatorFn">_opertatorFn</a></li><li><a href="global.html#_parseQuery">_parseQuery</a></li><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$and">$and</a></li><li><a href="global.html#$eq">$eq</a></li><li><a href="global.html#$gt">$gt</a></li><li><a href="global.html#$gte">$gte</a></li><li><a href="global.html#$in">$in</a></li><li><a href="global.html#$lt">$lt</a></li><li><a href="global.html#$lte">$lte</a></li><li><a href="global.html#$or">$or</a></li><li><a href="global.html#add">add</a></li><li><a href="global.html#addAt">addAt</a></li><li><a href="global.html#addOne">addOne</a></li><li><a href="global.html#clear">clear</a></li><li><a href="global.html#combinatorFn">combinatorFn</a></li><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#destroy">destroy</a></li><li><a href="global.html#ensureIndex">ensureIndex</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#findMany">findMany</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getAt">getAt</a></li><li><a href="global.html#getFilterFns">getFilterFns</a></li><li><a href="global.html#getIndexKeys">getIndexKeys</a></li><li><a href="global.html#getOne">getOne</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#index">index</a></li><li><a href="global.html#indexOf">indexOf</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#insertPos">insertPos</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#isEmpty">isEmpty</a></li><li><a href="global.html#keys">keys</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li><li><a href="global.html#opertatorFn">opertatorFn</a></li><li><a href="global.html#parseQuery">parseQuery</a></li><li><a href="global.html#populate">populate</a></li><li><a href="global.html#rebuild">rebuild</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#removeAt">removeAt</a></li><li><a href="global.html#removeKey">removeKey</a></li><li><a href="global.html#removeOne">removeOne</a></li><li><a href="global.html#replace">replace</a></li><li><a href="global.html#replaceAt">replaceAt</a></li><li><a href="global.html#shallowFlat">shallowFlat</a></li><li><a href="global.html#size">size</a></li><li><a href="global.html#update">update</a></li><li><a href="global.html#updateOne">updateOne</a></li><li><a href="global.html#values">values</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 13:04:41 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 15:54:23 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

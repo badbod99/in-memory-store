@@ -32,214 +32,221 @@
  * Binary key/value storage backed by native javascript array. Performs binary search on entries and
  * keeps items in sorted order based on comparer.
  */
-export class BinaryArray {
-    /**
-     * @param  {comparerCallback} [comparer] comparer to use when comparing one index value to another
+export default class BinaryArray {
+  /**
+     * @param  {comparerCallback} [comparer] comparer to use when comparing one
+     * index value to another
      */
-    constructor (comparer) {
-        this.arr = [];
-        this.comparer = comparer || mem.defaultComparer;
-    }
-    
-    /**
+  constructor(comparer) {
+    this.arr = [];
+    this.comparer = comparer || mem.defaultComparer;
+  }
+
+  /**
      * Removes all items from the index
      */
-    clear() {
-        this.arr = [];
-    }
+  clear() {
+    this.arr = [];
+  }
 
-    /**
+  /**
      * Returns an array of keys stored in this Key Value array
      * @returns {Array&lt;any>} all keys
      */
-    get keys() {
-        return this.arr.map(m => m.key);
-    }
+  get keys() {
+    return this.arr.map(m => m.key);
+  }
 
-    /**
+  /**
      * Returns an array of values stored in this Key Value array
      * @returns {Array&lt;any>} all values
      */
-    get values() {
-        return this.arr.map(m => m.value);
-    }
+  get values() {
+    return this.arr.map(m => m.value);
+  }
 
-    /**
+  /**
      * Returns the number of items in this BinaryArray
      * @returns {number}
      */
-    get length() {
-        return this.arr.length;
-    }
+  get length() {
+    return this.arr.length;
+  }
 
-    /**
+  /**
      * Returns all entries less than the passed key according to the
      * indexes comparer.
-     * @param {any} key 
+     * @param {any} key
      */
-    lt(key) {
-        let i = this.insertPos(key);
-        let data = this.arr.slice(0, i);
-        return data.map(d => d.value);
-    }
+  lt(key) {
+    const i = this.insertPos(key);
+    const data = this.arr.slice(0, i);
+    return data.map(d => d.value);
+  }
 
-    /**
+  /**
      * Returns all entries less or equal to the passed key according to the
      * indexes comparer.
-     * @param {any} key 
+     * @param {any} key
      */
-    lte(key) {
-        let i = this.insertPos(key);
-        let data = i >= 0 ? this.arr.slice(0, i + 1) : [];
-        return data.map(d => d.value);
-    }
+  lte(key) {
+    const i = this.insertPos(key);
+    const data = i >= 0 ? this.arr.slice(0, i + 1) : [];
+    return data.map(d => d.value);
+  }
 
-    /**
+  /**
      * Returns all entries greater than the passed key according to the
      * indexes comparer.
-     * @param {any} key 
+     * @param {any} key
      */
-    gt(key) {
-        let i = this.insertPos(key);
-        let data = i &lt; this.arr.length ? this.arr.slice(i + 1, this.arr.length) : [];
-        return data.map(d => d.value);
-    }
+  gt(key) {
+    const i = this.insertPos(key);
+    const data = i &lt; this.arr.length ? this.arr.slice(i + 1, this.arr.length) : [];
+    return data.map(d => d.value);
+  }
 
-    /**
+  /**
      * Returns all entries greater than or equal to the passed key according to the
      * indexes comparer.
-     * @param {any} key 
+     * @param {any} key
      */
-    gte(key) {
-        let i = this.insertPos(key);
-        let data = i &lt; this.arr.length ? this.arr.slice(i, this.arr.length) : [];
-        return data.map(d => d.value);
-    }
+  gte(key) {
+    const i = this.insertPos(key);
+    const data = i &lt; this.arr.length ? this.arr.slice(i, this.arr.length) : [];
+    return data.map(d => d.value);
+  }
 
-    /**
+  /**
      * Returns the index in this array of the specified key
-     * @param {any} key 
+     * @param {any} key
      * @returns {number}
      */
-    indexOf(key) {
-        let i = this.insertPos(key);
-        if (this.arr[i] &amp;&amp; mem.eq(this.comparer, this.arr[i].key, key)) {
-            return i;
-        } else {
-            return -1;
-        }
+  indexOf(key) {
+    const i = this.insertPos(key);
+    if (this.arr[i] &amp;&amp; mem.eq(this.comparer, this.arr[i].key, key)) {
+      return i;
     }
+    return -1;
+  }
 
-    /**
-     * The insert position where to insert an item into the underlying sorted array.     
+  /**
+     * The insert position where to insert an item into the underlying sorted array.
      * @param {any} key key to find in the array
      * @returns {number} position at which a new item should be inserted into this array
      */
-    insertPos(key) {
-        let low = 0, high = this.arr.length, mid;
-        while (low &lt; high) {
-            // faster version of Math.floor((low + high) / 2)
-            mid = (low + high) >>> 1; 
-            mem.lt(this.comparer, this.arr[mid].key, key) ? low = mid + 1 : high = mid
-        }
-        return low;
+  insertPos(key) {
+    let low = 0; let high = this.arr.length; let
+      mid;
+    while (low &lt; high) {
+      /* eslint no-bitwise: 0 */
+      mid = (low + high) >>> 1;
+      if (mem.lt(this.comparer, this.arr[mid].key, key)) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
     }
+    return low;
+  }
 
-    /**
+  /**
      * Returns items matching passed index key
      * @param  {any} key specified index key
      * @return {any} value found
      */
-    get(key) {
-        const i = this.indexOf(key);
-        if (i > -1) {
-            return this.arr[i].value;
-        }
+  get(key) {
+    const i = this.indexOf(key);
+    if (i > -1) {
+      return this.arr[i].value;
     }
+    return undefined;
+  }
 
-    /**
+  /**
      * Returns whether or not a given key exists.
      * @param  {any} key specified index key
      * @return {boolean} if key exists or not
      */
-    has(key) {
-        const i = this.indexOf(key);
-        return (i > -1);
-    }
+  has(key) {
+    const i = this.indexOf(key);
+    return (i > -1);
+  }
 
-    /**
+  /**
      * Removes an item by key
      * @param  {any} key key of item to remove
      */
-    remove(key) {
-        const i = this.indexOf(key);
-        if (i > -1) {
-            this.removeAt(i);
-        }
+  remove(key) {
+    const i = this.indexOf(key);
+    if (i > -1) {
+      this.removeAt(i);
     }
+  }
 
-    /**
+  /**
      * Adds an key/value with array
      * @param  {any} key key to add
      * @param  {any} value item related to the specified key
      */
-    add(key, value) {
-        const ix = this.insertPos(key);
-        this.addAt(ix, key, value);
-    }
+  add(key, value) {
+    const ix = this.insertPos(key);
+    this.addAt(ix, key, value);
+  }
 
-    /**
+  /**
      * Replaces an existing entry in the array with a new one.
      * @param {any} key key to add
      * @param {any} value item related to the specified key
      */
-    replace(key, value) {
-        const i = this.indexOf(key);
-        if (i > -1) {
-            this.replaceAt(i, key, value);
-        }
+  replace(key, value) {
+    const i = this.indexOf(key);
+    if (i > -1) {
+      this.replaceAt(i, key, value);
     }
+  }
 
-    /**
+  /**
      * Adds a key/value entry at a specified position in the array.
      * Will not replace any existing item in that postion, instead
      * inserting before it.
      * @param {number} pos index of where to add this entry
      * @param {any} key key to add
      */
-    addAt(pos, key, value) {
-        let item = { key: key, value: value };
-        this.arr.splice(pos, 0, item);
-    }
+  addAt(pos, key, value) {
+    const item = { key, value };
+    this.arr.splice(pos, 0, item);
+  }
 
-    /**
+  /**
      * Replaces an existing entry in the array at specified position with a new one.
      * @param {number} pos index of where to replace this entry
      * @param {any} key key to add
      * @param {any} value item related to the specified key
      */
-    replaceAt(pos, key, value) {
-        let item = { key: key, value: value };
-        this.arr.splice(pos, 1, item);
-    }
+  replaceAt(pos, key, value) {
+    const item = { key, value };
+    this.arr.splice(pos, 1, item);
+  }
 
-    /**
+  /**
      * Removes a key/value entry at a specified position
      * @param {number} pos index of the item to remove.
      */
-    removeAt(pos) {
-        this.arr.splice(pos, 1);
-    }
+  removeAt(pos) {
+    this.arr.splice(pos, 1);
+  }
 
-    /**
+  /**
      * Returns key matching passed index position
      * @param  {number} pos index of where to add this entry
      * @return {any} key found at this position
      */
-    getAt(pos) {
-        return this.arr[pos];
-    }
-}</code></pre>
+  getAt(pos) {
+    return this.arr[pos];
+  }
+}
+</code></pre>
         </article>
     </section>
 
@@ -249,13 +256,13 @@ export class BinaryArray {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AVLIndex.html">AVLIndex</a></li><li><a href="BaseIndex.html">BaseIndex</a></li><li><a href="BinaryArray.html">BinaryArray</a></li><li><a href="BinaryIndex.html">BinaryIndex</a></li><li><a href="HashIndex.html">HashIndex</a></li><li><a href="InMemoryStore.html">InMemoryStore</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$and">$and</a></li><li><a href="global.html#$or">$or</a></li><li><a href="global.html#_combinatorFn">_combinatorFn</a></li><li><a href="global.html#_getFilterFns">_getFilterFns</a></li><li><a href="global.html#_opertatorFn">_opertatorFn</a></li><li><a href="global.html#_parseQuery">_parseQuery</a></li><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$and">$and</a></li><li><a href="global.html#$eq">$eq</a></li><li><a href="global.html#$gt">$gt</a></li><li><a href="global.html#$gte">$gte</a></li><li><a href="global.html#$in">$in</a></li><li><a href="global.html#$lt">$lt</a></li><li><a href="global.html#$lte">$lte</a></li><li><a href="global.html#$or">$or</a></li><li><a href="global.html#add">add</a></li><li><a href="global.html#addAt">addAt</a></li><li><a href="global.html#addOne">addOne</a></li><li><a href="global.html#clear">clear</a></li><li><a href="global.html#combinatorFn">combinatorFn</a></li><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#destroy">destroy</a></li><li><a href="global.html#ensureIndex">ensureIndex</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#findMany">findMany</a></li><li><a href="global.html#get">get</a></li><li><a href="global.html#getAt">getAt</a></li><li><a href="global.html#getFilterFns">getFilterFns</a></li><li><a href="global.html#getIndexKeys">getIndexKeys</a></li><li><a href="global.html#getOne">getOne</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#has">has</a></li><li><a href="global.html#index">index</a></li><li><a href="global.html#indexOf">indexOf</a></li><li><a href="global.html#insert">insert</a></li><li><a href="global.html#insertPos">insertPos</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#isEmpty">isEmpty</a></li><li><a href="global.html#keys">keys</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li><li><a href="global.html#opertatorFn">opertatorFn</a></li><li><a href="global.html#parseQuery">parseQuery</a></li><li><a href="global.html#populate">populate</a></li><li><a href="global.html#rebuild">rebuild</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#removeAt">removeAt</a></li><li><a href="global.html#removeKey">removeKey</a></li><li><a href="global.html#removeOne">removeOne</a></li><li><a href="global.html#replace">replace</a></li><li><a href="global.html#replaceAt">replaceAt</a></li><li><a href="global.html#shallowFlat">shallowFlat</a></li><li><a href="global.html#size">size</a></li><li><a href="global.html#update">update</a></li><li><a href="global.html#updateOne">updateOne</a></li><li><a href="global.html#values">values</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 13:04:41 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 15:54:23 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

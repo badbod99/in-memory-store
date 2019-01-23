@@ -27,13 +27,19 @@
   ],
   "author": "Simon Lerpiniere",
   "license": "Apache-2.0",
-  "dependencies": {
+  "dependencies": {},
+  "optionalDependencies": {
     "avl": "^1.4.4"
   },
   "devDependencies": {
-    "avl": "^1.4.4",
     "benchmark": "^2.1.4",
     "bintrees": "^1.0.2",
+    "eslint": "^5.12.1",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.15.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.11.0",
     "http-server": "^0.11.1",
     "jsdoc": "^3.5.5",
     "rollup": "^0.65.2",
