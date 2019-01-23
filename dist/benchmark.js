@@ -183,13 +183,202 @@
     /**
      * Key value storage with support for grouping/returning items by index value
      */
+    var Find = function Find(indexes) {
+          this.indexes = indexes;
+      };
+
+      /**
+       * Searches one or many indexes, each using specified operator for specified value.
+       * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+       * @returns {Array<any>} keys found in all passed index searches
+       */
+      Find.prototype.$and = function $and (filters) {
+          var filterFns = this._getFilterFns(filters, this.indexes);
+          var dataSets = filterFns.map(function (fn) { return fn(); });
+          return intersect(dataSets);
+      };
+
+      /**
+       * Searches one or many indexes, each using specified operator for specified value.
+       * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+       * @returns {Array<any>} keys found in all passed index searches
+       */
+      Find.prototype.$or = function $or (filters) {
+          var filterFns = this._getFilterFns(filters, this.indexes);
+          var dataSets = filterFns.map(function (fn) { return fn(); });
+          return [].concat.apply([], dataSets);
+      };
+
+      /**
+       * Performs a find across many indexes based on limited find selector language.
+       * @param {Array<any>} selector
+       * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+       * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+       * @returns {Array<any>} items from the store found in all passed index searches
+       */
+      Find.prototype.find = function find (query) {
+            var this$1 = this;
+
+          var selector = this._parseQuery(query);
+          var joins = Object.keys(selector);
+          var fns = joins.map(function (op) { return this$1._combinatorFn(op, selector[op]); });
+          var dataSets = fns.map(function (fn) { return fn(); });
+          // All operator results are ultimately $and together
+          return intersect(dataSets);
+      };
+        
+      /**
+       * Gets the combinator function based on the specified combinator key.
+       * @param {*} key Either $and or $or
+       * @param {*} filters The filters to pass through to the combinator.
+       */
+      Find.prototype._combinatorFn = function _combinatorFn (key, filters) {
+            var this$1 = this;
+
+          switch(key) {
+              case "$and":
+                  return function () { return this$1.$and(filters); };
+              case "$or":
+                  return function () { return this$1.$or(filters); };
+          }
+      };
+
+      /**
+       * Gets a filter function based on the specified operator key..
+       * @param {string} operator $lt/$gt/$gte/$lte or $eq
+       * @returns {any} function coresponding to passed key
+       */
+      Find.prototype._opertatorFn = function _opertatorFn (key, index, val) {
+          switch (key) {
+              case '$lt':
+                  return function () { return index.$lt(val); };
+              case '$lte':
+                  return function () { return index.$lte(val); };
+              case '$gt':
+                  return function () { return index.$gt(val); };
+              case '$gte':
+                  return function () { return index.$gte(val); };
+              case '$in':
+                  return function () { return index.$in(val); };
+              case '$eq':
+                  return function () { return index.$eq(val); };
+          }
+      };
+      
+      /**
+       * Parses loose query language to strict with implicit operators and combinators
+       * made explicit.
+       * @param {*} query Query to parse in following supported formats...
+       * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+       * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+       * OR (implicit $and)
+       * [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+       * OR (implicit $eq)
+       * {"indexName":"value", "indexName":"value"}
+       * OR (implicit $in)
+       * {"indexName":"value", "indexName":["value1", "value1"]}
+       * @returns {object} Strict query format in format...
+       * { $and: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+       * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+       */
+      Find.prototype._parseQuery = function _parseQuery (query) {
+            var this$1 = this;
+
+          var selector = {};
+          if (Array.isArray(query)) {
+              selector['$and'] = [];
+              this._parseInnerSelector(query, selector['$and']);
+          } else if (typeof query === 'object') {
+              var keys = Object.keys(query);
+              keys.forEach(function (key) {
+                  selector[key] = [];
+                  this$1._parseInnerSelector(query[key], selector[key]);
+              });
+          } else {
+              throw new SyntaxError(("Query should be an object or an array " + (JSON.stringify(query))));
+          }
+          return selector;
+      };
+
+      Find.prototype._parseInnerSelector = function _parseInnerSelector (query, selectors) {
+          // Inner selector should be an array
+          if (!Array.isArray(query)) {
+              query = [query];
+          }
+
+          var converted = query.map(function (part) {
+              var selector = {};
+              if (typeof part !== 'object') {
+                  throw new SyntaxError(("Selector part should be an object " + (JSON.stringify(part))));
+              }
+
+              Object.keys(part).forEach(function (k) {
+                  // First part is always an index name (i.e. field name)
+                  selector[k] = {};
+
+                  // If it's an object, we've got an operator/key combination
+                  // otherwise it's just a value
+                  if (Array.isArray(part[k])) {
+                      selector[k]['$in'] = part[k];
+                  } else if (typeof part[k] === 'object') {
+                      var op = Object.keys(part[k])[0];
+                      selector[k][op] = part[k][op];
+                  } else {
+                      selector[k]['$eq'] = part[k];
+                  }
+              });
+              return selector;
+          });
+
+          selectors.push.apply(selectors, converted);
+      };
+
+      /**
+       * Get function array based on specified find criteria.
+       * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+       * @returns {Array<any>} Array of functions to perform specified find operations.
+       */
+      Find.prototype._getFilterFns = function _getFilterFns (filters, indexMap) {
+            var this$1 = this;
+
+          filters = oneOrMany(filters);
+          return filters.map(function (f) {
+              // only one entry per filter
+              var filter = Object.entries(f)[0];
+              var indexName = filter[0];
+              var action = filter[1];
+
+              if (typeof action !== 'object') {
+                  throw new TypeError(("Filter must contain a valid action object, passed filter " + filter));
+              }
+                
+              var op = Object.keys(action)[0];
+              var val = action[op];
+
+              if (!this$1.indexes.has(indexName)) {
+                  throw new TypeError(("Invalid index specified " + indexName));
+              }
+
+              return this$1._opertatorFn(op, this$1.indexes.get(indexName), val);
+          });
+      };
+
+    /**
+     * Key value storage with support for grouping/returning items by index value
+     */
     var InMemoryStore = function InMemoryStore(keyFn) {
          this.indexes = new Map([]);
          this.entries = new Map([]);
+         this.finder = new Find(this.indexes);
          this.keyFn = keyFn;        
      };
 
     var prototypeAccessors = { isEmpty: { configurable: true },size: { configurable: true } };
+
+     InMemoryStore.prototype.find = function find (query) {
+         var data = this.finder.find(query);
+         return extract(this.entries, data);
+     };
 
      /**
       * Returns whether the store is empty
@@ -304,131 +493,6 @@
          var data = this.indexes.has(indexName) ? 
              this.indexes.get(indexName).find(value) : [];
          return extract(this.entries, data);
-     };
-
-     /**
-      * Searches one or many indexes, each using specified operator for specified value.
-      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-     InMemoryStore.prototype.$and = function $and (filters) {
-         var filterFns = this._getFilterFns(filters);
-         var dataSets = filterFns.map(function (fn) { return fn(); });
-         return intersect(dataSets);
-     };
-
-     /**
-      * Searches one or many indexes, each using specified operator for specified value.
-      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-      * @returns {Array<any>} keys found in all passed index searches
-      */
-     InMemoryStore.prototype.$or = function $or (filters) {
-         var filterFns = this._getFilterFns(filters);
-         var dataSets = filterFns.map(function (fn) { return fn(); });
-         return [].concat.apply([], dataSets);
-     };
-
-     /**
-      * Performs a find across many indexes based on limited find selector language.
-      * @param {Array<any>} selector
-      * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
-      * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
-      * OR (implicit $and)
-      * [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-      * OR (implicit $eq)
-      * {"indexName":"value", "indexName":"value"}
-      * OR (implicit $in)
-      * {"indexName":"value", "indexName":["value1", "value1"]}
-      * @returns {Array<any>} items from the store found in all passed index searches
-      */
-     InMemoryStore.prototype.find = function find (selector) {
-            var this$1 = this;
-
-         var joins = Object.keys(selector);
-         var fns = joins.map(function (op) {
-             var opFn = this$1._getOperatorFn(op, selector[op]);
-             if (opFn) {
-                 return opFn;
-             } else {
-                 // Not an operator? Then it's a single query
-                 opFn = this$1._getFilterFns(selector[op]);
-                 return opFn[0];
-             }
-         });
-         var dataSets = fns.map(function (fn) { return fn(); });
-         var data = intersect(dataSets);
-         return extract(this.entries, data);
-     };
-
-     /**
-      * Get function array based on specified find criteria.
-      * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-      * @returns {Array<any>} Array of functions to perform specified find operations.
-      */
-     InMemoryStore.prototype._getFilterFns = function _getFilterFns (filters) {
-            var this$1 = this;
-
-         filters = oneOrMany(filters);
-         return filters.map(function (f) {
-             // only one entry per filter
-             var filter = Object.entries(f)[0];
-             var indexName = filter[0];
-             var action = filter[1];
-                
-             var val, op;
-             if (Array.isArray(action)) {
-                 op = '$in';
-                 val = action;
-             } else if (typeof action === 'object') {
-                 // only one operation per entry
-                 op = Object.keys(action)[0];
-                 val = action[op];
-             } else {
-                 op = '$eq';
-                 val = action;
-             }
-
-             return this$1._getFilterFn(op, this$1.index(indexName), val);
-         });
-     };
-
-     InMemoryStore.prototype._getOperatorFn = function _getOperatorFn (operatorKey, filters) {
-            var this$1 = this;
-
-         switch(operatorKey) {
-             case "$and":
-                 return function () { return this$1.$and(filters); };
-             case "$or":
-                 return function () { return this$1.$or(filters); };
-         }
-     };
-
-     /**
-      * Gets a filter function based on the specified filter key..
-      * @param {string} filterKey $lt/$gt/$gte/$lte or $eq
-      * @returns {any} function coresponding to passed key
-      */
-     InMemoryStore.prototype._getFilterFn = function _getFilterFn (filterKey, index, val) {
-         switch (filterKey) {
-             case '$lt':
-                 return function () { return index.$lt(val); };
-             case '$lte':
-                 return function () { return index.$lte(val); };
-             case '$gt':
-                 return function () { return index.$gt(val); };
-             case '$gte':
-                 return function () { return index.$gte(val); };
-             case '$in':
-                 return function () { return index.$in(val); };
-             case '$eq':
-                 return function () { return index.$eq(val); };
-             default:
-                 if (Array.isArray(val)) {
-                     return function () { return index.$in(val); };
-                 } else {
-                     return function () { return index.$eq(val); };
-                 }
-         }
      };
 
      /**
@@ -2457,7 +2521,7 @@
         this.comparer = comparer || defaultComparer;
     };
 
-    var prototypeAccessors$3 = { keys: { configurable: true },length: { configurable: true } };
+    var prototypeAccessors$3 = { keys: { configurable: true },values: { configurable: true },length: { configurable: true } };
         
     /**
      * Removes all items from the index
@@ -2467,11 +2531,19 @@
     };
 
     /**
-     * Returns an array of keys store in this Key Value array
+     * Returns an array of keys stored in this Key Value array
      * @returns {Array<any>} all keys
      */
     prototypeAccessors$3.keys.get = function () {
         return this.arr.map(function (m) { return m.key; });
+    };
+
+    /**
+     * Returns an array of values stored in this Key Value array
+     * @returns {Array<any>} all values
+     */
+    prototypeAccessors$3.values.get = function () {
+        return this.arr.map(function (m) { return m.value; });
     };
 
     /**
@@ -2558,13 +2630,23 @@
     /**
      * Returns items matching passed index key
      * @param  {any} key specified index key
-     * @return {Array<any>} values found
+     * @return {any} value found
      */
     BinaryArray.prototype.get = function get (key) {
         var i = this.indexOf(key);
         if (i > -1) {
             return this.arr[i].value;
         }
+    };
+
+    /**
+     * Returns whether or not a given key exists.
+     * @param  {any} key specified index key
+     * @return {boolean} if key exists or not
+     */
+    BinaryArray.prototype.has = function has (key) {
+        var i = this.indexOf(key);
+        return (i > -1);
     };
 
     /**
@@ -2589,16 +2671,38 @@
     };
 
     /**
+     * Replaces an existing entry in the array with a new one.
+     * @param {any} key key to add
+     * @param {any} value item related to the specified key
+     */
+    BinaryArray.prototype.replace = function replace (key, value) {
+        var i = this.indexOf(key);
+        if (i > -1) {
+            this.replaceAt(i, key, value);
+        }
+    };
+
+    /**
      * Adds a key/value entry at a specified position in the array.
      * Will not replace any existing item in that postion, instead
      * inserting before it.
      * @param {number} pos index of where to add this entry
      * @param {any} key key to add
-     * @param {any} value item related to the specified key
      */
     BinaryArray.prototype.addAt = function addAt (pos, key, value) {
         var item = { key: key, value: value };
         this.arr.splice(pos, 0, item);
+    };
+
+    /**
+     * Replaces an existing entry in the array at specified position with a new one.
+     * @param {number} pos index of where to replace this entry
+     * @param {any} key key to add
+     * @param {any} value item related to the specified key
+     */
+    BinaryArray.prototype.replaceAt = function replaceAt (pos, key, value) {
+        var item = { key: key, value: value };
+        this.arr.splice(pos, 1, item);
     };
 
     /**

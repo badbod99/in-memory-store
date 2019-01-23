@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: find.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: find.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as mem from './common';
+
+/**
+ * Key value storage with support for grouping/returning items by index value
+ */
+export default class Find {
+    /**
+     * @param {Map&lt;indexName, index>} indexes Map of indexes to query
+     */
+    constructor(indexes) {
+        this.indexes = indexes;
+    }
+
+    /**
+     * Searches one or many indexes, each using specified operator for specified value.
+     * @param {Array&lt;any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+     * @returns {Array&lt;any>} keys found in all passed index searches
+     */
+    $and(filters) {
+        let filterFns = this._getFilterFns(filters, this.indexes);
+        let dataSets = filterFns.map(fn => fn());
+        return mem.intersect(dataSets);
+    }
+
+    /**
+     * Searches one or many indexes, each using specified operator for specified value.
+     * @param {Array&lt;any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+     * @returns {Array&lt;any>} keys found in all passed index searches
+     */
+    $or(filters) {
+        let filterFns = this._getFilterFns(filters, this.indexes);
+        let dataSets = filterFns.map(fn => fn());
+        return [].concat.apply([], dataSets);
+    }
+
+    /**
+     * Performs a find across many indexes based on limited find selector language.
+     * @param {Array&lt;any>} selector
+     * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+     * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+     * @returns {Array&lt;any>} items from the store found in all passed index searches
+     */
+    find(query) {
+        let selector = this._parseQuery(query);
+        var joins = Object.keys(selector);
+        let fns = joins.map(op => this._combinatorFn(op, selector[op]));
+        let dataSets = fns.map(fn => fn());
+        // All operator results are ultimately $and together
+        return mem.intersect(dataSets);
+    }
+    
+    /**
+     * Gets the combinator function based on the specified combinator key.
+     * @param {*} key Either $and or $or
+     * @param {*} filters The filters to pass through to the combinator.
+     */
+    _combinatorFn(key, filters) {
+        switch(key) {
+            case "$and":
+                return () => this.$and(filters);
+            case "$or":
+                return () => this.$or(filters);
+        }
+    }
+
+    /**
+     * Gets a filter function based on the specified operator key..
+     * @param {string} operator $lt/$gt/$gte/$lte or $eq
+     * @returns {any} function coresponding to passed key
+     */
+    _opertatorFn(key, index, val) {
+        switch (key) {
+            case '$lt':
+                return () => index.$lt(val);
+            case '$lte':
+                return () => index.$lte(val);
+            case '$gt':
+                return () => index.$gt(val);
+            case '$gte':
+                return () => index.$gte(val);
+            case '$in':
+                return () => index.$in(val);
+            case '$eq':
+                return () => index.$eq(val);
+        }
+    }
+  
+    /**
+     * Parses loose query language to strict with implicit operators and combinators
+     * made explicit.
+     * @param {*} query Query to parse in following supported formats...
+     * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+     * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+     * OR (implicit $and)
+     * [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+     * OR (implicit $eq)
+     * {"indexName":"value", "indexName":"value"}
+     * OR (implicit $in)
+     * {"indexName":"value", "indexName":["value1", "value1"]}
+     * @returns {object} Strict query format in format...
+     * { $and: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+     * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+     */
+    _parseQuery(query) {
+        let selector = {};
+        if (Array.isArray(query)) {
+            selector['$and'] = [];
+            this._parseInnerSelector(query, selector['$and']);
+        } else if (typeof query === 'object') {
+            let keys = Object.keys(query);
+            keys.forEach(key => {
+                selector[key] = [];
+                this._parseInnerSelector(query[key], selector[key]);
+            });
+        } else {
+            throw new SyntaxError(`Query should be an object or an array ${JSON.stringify(query)}`);
+        }
+        return selector;
+    }
+
+    _parseInnerSelector(query, selectors) {
+        // Inner selector should be an array
+        if (!Array.isArray(query)) {
+            query = [query];
+        }
+
+        let converted = query.map(part => {
+            let selector = {};
+            if (typeof part !== 'object') {
+                throw new SyntaxError(`Selector part should be an object ${JSON.stringify(part)}`);
+            }
+
+            Object.keys(part).forEach(k => {
+                // First part is always an index name (i.e. field name)
+                selector[k] = {};
+
+                // If it's an object, we've got an operator/key combination
+                // otherwise it's just a value
+                if (Array.isArray(part[k])) {
+                    selector[k]['$in'] = part[k];
+                } else if (typeof part[k] === 'object') {
+                    let op = Object.keys(part[k])[0];
+                    selector[k][op] = part[k][op];
+                } else {
+                    selector[k]['$eq'] = part[k];
+                }
+            });
+            return selector;
+        });
+
+        selectors.push(...converted);
+    }
+
+    /**
+     * Get function array based on specified find criteria.
+     * @param {Array&lt;any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
+     * @returns {Array&lt;any>} Array of functions to perform specified find operations.
+     */
+    _getFilterFns(filters, indexMap) {
+        filters = mem.oneOrMany(filters);
+        return filters.map(f => {
+            // only one entry per filter
+            let filter = Object.entries(f)[0];
+            let indexName = filter[0];
+            let action = filter[1];
+
+            if (typeof action !== 'object') {
+                throw new TypeError(`Filter must contain a valid action object, passed filter ${filter}`);
+            }
+            
+            const op = Object.keys(action)[0];
+            const val = action[op];
+
+            if (!this.indexes.has(indexName)) {
+                throw new TypeError(`Invalid index specified ${indexName}`);
+            }
+
+            return this._opertatorFn(op, this.indexes.get(indexName), val);
+        });
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AVLIndex.html">AVLIndex</a></li><li><a href="BaseIndex.html">BaseIndex</a></li><li><a href="BinaryArray.html">BinaryArray</a></li><li><a href="BinaryIndex.html">BinaryIndex</a></li><li><a href="HashIndex.html">HashIndex</a></li><li><a href="InMemoryStore.html">InMemoryStore</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$and">$and</a></li><li><a href="global.html#$or">$or</a></li><li><a href="global.html#_combinatorFn">_combinatorFn</a></li><li><a href="global.html#_getFilterFns">_getFilterFns</a></li><li><a href="global.html#_opertatorFn">_opertatorFn</a></li><li><a href="global.html#_parseQuery">_parseQuery</a></li><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 12:12:40 GMT+0000 (Greenwich Mean Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

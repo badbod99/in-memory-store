@@ -21,11 +21,19 @@ export class BinaryArray {
     }
 
     /**
-     * Returns an array of keys store in this Key Value array
+     * Returns an array of keys stored in this Key Value array
      * @returns {Array<any>} all keys
      */
     get keys() {
         return this.arr.map(m => m.key);
+    }
+
+    /**
+     * Returns an array of values stored in this Key Value array
+     * @returns {Array<any>} all values
+     */
+    get values() {
+        return this.arr.map(m => m.value);
     }
 
     /**
@@ -112,13 +120,23 @@ export class BinaryArray {
     /**
      * Returns items matching passed index key
      * @param  {any} key specified index key
-     * @return {Array<any>} values found
+     * @return {any} value found
      */
     get(key) {
         const i = this.indexOf(key);
         if (i > -1) {
             return this.arr[i].value;
         }
+    }
+
+    /**
+     * Returns whether or not a given key exists.
+     * @param  {any} key specified index key
+     * @return {boolean} if key exists or not
+     */
+    has(key) {
+        const i = this.indexOf(key);
+        return (i > -1);
     }
 
     /**
@@ -139,8 +157,19 @@ export class BinaryArray {
      */
     add(key, value) {
         const ix = this.insertPos(key);
-        let item = { key: key, value: value };
         this.addAt(ix, key, value);
+    }
+
+    /**
+     * Replaces an existing entry in the array with a new one.
+     * @param {any} key key to add
+     * @param {any} value item related to the specified key
+     */
+    replace(key, value) {
+        const i = this.indexOf(key);
+        if (i > -1) {
+            this.replaceAt(i, key, value);
+        }
     }
 
     /**
@@ -149,11 +178,21 @@ export class BinaryArray {
      * inserting before it.
      * @param {number} pos index of where to add this entry
      * @param {any} key key to add
-     * @param {any} value item related to the specified key
      */
     addAt(pos, key, value) {
         let item = { key: key, value: value };
         this.arr.splice(pos, 0, item);
+    }
+
+    /**
+     * Replaces an existing entry in the array at specified position with a new one.
+     * @param {number} pos index of where to replace this entry
+     * @param {any} key key to add
+     * @param {any} value item related to the specified key
+     */
+    replaceAt(pos, key, value) {
+        let item = { key: key, value: value };
+        this.arr.splice(pos, 1, item);
     }
 
     /**

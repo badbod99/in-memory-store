@@ -50,7 +50,7 @@ store.populate(nvalues);
 let arr = store.find(
   { 
     "$and": [{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}],
-    "$or": [{"test":{"$eq":"9020"}}, {"test":{"$eq":"9019"}}]
+    "$or": [{"test":{"$eq":"9020"}}, {"test":{"$in":["9019", "9018"]}}]
   }
 );
 let lt = store.find(
@@ -72,6 +72,7 @@ console.log(`${JSON.stringify(lt.map(o => o.id))}`);
 console.log(`${JSON.stringify(lt2.map(o => o.id))}`);
 console.log('---------------------------------------------------------');
 
+/*
 new Benchmark.Suite(`Insert (x${N})`, options)
   .add('RBIndex', () => {
     let rb = new RBIndex('test', r => r.id, r => r.rnd1);
@@ -152,7 +153,7 @@ new Benchmark.Suite(`Remove (x${N})`, options)
     for (let i = N - 1; i; i--) prefilledMemHash.remove(rvalues[i]);
   })
   .run();
-
+*/
 
 /**
  * Shuffles array in place.

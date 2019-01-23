@@ -208,7 +208,7 @@
 
 
 <div class="description">
-    Returns an array of keys store in this Key Value array
+    Returns an array of keys stored in this Key Value array
 </div>
 
 
@@ -271,6 +271,68 @@
 
 <div class="description">
     Returns the number of items in this BinaryArray
+</div>
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line43">line 43</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+        
+            
+<h4 class="name" id="values"><span class="type-signature"></span>values<span class="type-signature"></span></h4>
+
+
+
+
+<div class="description">
+    Returns an array of values stored in this Key Value array
 </div>
 
 
@@ -460,7 +522,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line140">line 140</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line158">line 158</a>
     </li></ul></dd>
     
 
@@ -494,7 +556,7 @@
     
 
     
-    <h4 class="name" id="addAt"><span class="type-signature"></span>addAt<span class="signature">(pos, key, value)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="addAt"><span class="type-signature"></span>addAt<span class="signature">(pos, key)</span><span class="type-signature"></span></h4>
     
 
     
@@ -581,29 +643,6 @@
         </tr>
 
     
-
-        <tr>
-            
-                <td class="name"><code>value</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">any</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">item related to the specified key</td>
-        </tr>
-
-    
     </tbody>
 </table>
 
@@ -641,7 +680,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line154">line 154</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line182">line 182</a>
     </li></ul></dd>
     
 
@@ -761,7 +800,7 @@
     
 
     
-    <h4 class="name" id="get"><span class="type-signature"></span>get<span class="signature">(key)</span><span class="type-signature"> &rarr; {Array.&lt;any>}</span></h4>
+    <h4 class="name" id="get"><span class="type-signature"></span>get<span class="signature">(key)</span><span class="type-signature"> &rarr; {any}</span></h4>
     
 
     
@@ -862,7 +901,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line117">line 117</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line125">line 125</a>
     </li></ul></dd>
     
 
@@ -889,7 +928,7 @@
 
         
 <div class="param-desc">
-    values found
+    value found
 </div>
 
 
@@ -900,7 +939,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Array.&lt;any></span>
+<span class="param-type">any</span>
 
 
     </dd>
@@ -1019,7 +1058,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line172">line 172</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line211">line 211</a>
     </li></ul></dd>
     
 
@@ -1176,7 +1215,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line66">line 66</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line74">line 74</a>
     </li></ul></dd>
     
 
@@ -1311,7 +1350,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line77">line 77</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line85">line 85</a>
     </li></ul></dd>
     
 
@@ -1334,6 +1373,163 @@
 
 
 
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="has"><span class="type-signature"></span>has<span class="signature">(key)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Returns whether or not a given key exists.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">specified index key</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line137">line 137</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    if key exists or not
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -1446,7 +1642,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line88">line 88</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line96">line 96</a>
     </li></ul></dd>
     
 
@@ -1599,7 +1795,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line102">line 102</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -1756,7 +1952,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line44">line 44</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line52">line 52</a>
     </li></ul></dd>
     
 
@@ -1891,7 +2087,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line55">line 55</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line63">line 63</a>
     </li></ul></dd>
     
 
@@ -2026,7 +2222,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line128">line 128</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line146">line 146</a>
     </li></ul></dd>
     
 
@@ -2161,7 +2357,346 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line163">line 163</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line202">line 202</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="replace"><span class="type-signature"></span>replace<span class="signature">(key, value)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Replaces an existing entry in the array with a new one.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">key to add</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">item related to the specified key</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line168">line 168</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="replaceAt"><span class="type-signature"></span>replaceAt<span class="signature">(pos, key, value)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Replaces an existing entry in the array at specified position with a new one.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>pos</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">index of where to replace this entry</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>key</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">key to add</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">item related to the specified key</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line193">line 193</a>
     </li></ul></dd>
     
 
@@ -2205,13 +2740,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AVLIndex.html">AVLIndex</a></li><li><a href="BaseIndex.html">BaseIndex</a></li><li><a href="BinaryArray.html">BinaryArray</a></li><li><a href="BinaryIndex.html">BinaryIndex</a></li><li><a href="HashIndex.html">HashIndex</a></li><li><a href="InMemoryStore.html">InMemoryStore</a></li></ul><h3>Global</h3><ul><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AVLIndex.html">AVLIndex</a></li><li><a href="BaseIndex.html">BaseIndex</a></li><li><a href="BinaryArray.html">BinaryArray</a></li><li><a href="BinaryIndex.html">BinaryIndex</a></li><li><a href="HashIndex.html">HashIndex</a></li><li><a href="InMemoryStore.html">InMemoryStore</a></li><li><a href="module.exports.html">exports</a></li></ul><h3>Global</h3><ul><li><a href="global.html#$and">$and</a></li><li><a href="global.html#$or">$or</a></li><li><a href="global.html#_combinatorFn">_combinatorFn</a></li><li><a href="global.html#_getFilterFns">_getFilterFns</a></li><li><a href="global.html#_opertatorFn">_opertatorFn</a></li><li><a href="global.html#_parseQuery">_parseQuery</a></li><li><a href="global.html#defaultComparer">defaultComparer</a></li><li><a href="global.html#eq">eq</a></li><li><a href="global.html#extract">extract</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#gt">gt</a></li><li><a href="global.html#gte">gte</a></li><li><a href="global.html#intersect">intersect</a></li><li><a href="global.html#keyWrapComparer">keyWrapComparer</a></li><li><a href="global.html#lt">lt</a></li><li><a href="global.html#lte">lte</a></li><li><a href="global.html#oneOrMany">oneOrMany</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Thu Jan 10 2019 23:01:17 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 12:12:40 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

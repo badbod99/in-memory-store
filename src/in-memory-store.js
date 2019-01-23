@@ -1,4 +1,5 @@
 import * as mem from './common';
+import Find from './find';
 
 /**
  * Key value storage with support for grouping/returning items by index value
@@ -10,7 +11,13 @@ export class InMemoryStore {
     constructor(keyFn) {
         this.indexes = new Map([]);
         this.entries = new Map([]);
+        this.finder = new Find(this.indexes);
         this.keyFn = keyFn;        
+    }
+
+    find(query) {
+        let data = this.finder.find(query);
+        return mem.extract(this.entries, data);
     }
 
     /**
@@ -126,125 +133,6 @@ export class InMemoryStore {
         const data = this.indexes.has(indexName) ? 
             this.indexes.get(indexName).find(value) : [];
         return mem.extract(this.entries, data);
-    }
-
-    /**
-     * Searches one or many indexes, each using specified operator for specified value.
-     * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-    $and(filters) {
-        let filterFns = this._getFilterFns(filters);
-        let dataSets = filterFns.map(fn => fn());
-        return mem.intersect(dataSets);
-    }
-
-    /**
-     * Searches one or many indexes, each using specified operator for specified value.
-     * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-     * @returns {Array<any>} keys found in all passed index searches
-     */
-    $or(filters) {
-        let filterFns = this._getFilterFns(filters);
-        let dataSets = filterFns.map(fn => fn());
-        return [].concat.apply([], dataSets);
-    }
-
-    /**
-     * Performs a find across many indexes based on limited find selector language.
-     * @param {Array<any>} selector
-     * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
-     * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
-     * OR (implicit $and)
-     * [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-     * OR (implicit $eq)
-     * {"indexName":"value", "indexName":"value"}
-     * OR (implicit $in)
-     * {"indexName":"value", "indexName":["value1", "value1"]}
-     * @returns {Array<any>} items from the store found in all passed index searches
-     */
-    find(selector) {
-        var joins = Object.keys(selector);
-        let fns = joins.map(op => {
-            let opFn = this._getOperatorFn(op, selector[op]);
-            if (opFn) {
-                return opFn;
-            } else {
-                // Not an operator? Then it's a single query
-                opFn = this._getFilterFns(selector[op]);
-                return opFn[0];
-            }
-        });
-        let dataSets = fns.map(fn => fn());
-        let data = mem.intersect(dataSets);
-        return mem.extract(this.entries, data);
-    }
-
-    /**
-     * Get function array based on specified find criteria.
-     * @param {Array<any>} filters [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}]
-     * @returns {Array<any>} Array of functions to perform specified find operations.
-     */
-    _getFilterFns(filters) {
-        filters = mem.oneOrMany(filters);
-        return filters.map(f => {
-            // only one entry per filter
-            let filter = Object.entries(f)[0];
-            let indexName = filter[0];
-            let action = filter[1];
-            
-            let val, op;
-            if (Array.isArray(action)) {
-                op = '$in';
-                val = action;
-            } else if (typeof action === 'object') {
-                // only one operation per entry
-                op = Object.keys(action)[0];
-                val = action[op];
-            } else {
-                op = '$eq';
-                val = action;
-            }
-
-            return this._getFilterFn(op, this.index(indexName), val);
-        });
-    }
-
-    _getOperatorFn(operatorKey, filters) {
-        switch(operatorKey) {
-            case "$and":
-                return () => this.$and(filters);
-            case "$or":
-                return () => this.$or(filters);
-        }
-    }
-
-    /**
-     * Gets a filter function based on the specified filter key..
-     * @param {string} filterKey $lt/$gt/$gte/$lte or $eq
-     * @returns {any} function coresponding to passed key
-     */
-    _getFilterFn(filterKey, index, val) {
-        switch (filterKey) {
-            case '$lt':
-                return () => index.$lt(val);
-            case '$lte':
-                return () => index.$lte(val);
-            case '$gt':
-                return () => index.$gt(val);
-            case '$gte':
-                return () => index.$gte(val);
-            case '$in':
-                return () => index.$in(val);
-            case '$eq':
-                return () => index.$eq(val);
-            default:
-                if (Array.isArray(val)) {
-                    return () => index.$in(val);
-                } else {
-                    return () => index.$eq(val);
-                }
-        }
     }
 
     /**
