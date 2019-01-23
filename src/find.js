@@ -38,7 +38,7 @@ export default class Find {
      * @param {Array<any>} selector
      * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
      * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
-     * @returns {Array<any>} items from the store found in all passed index searches
+     * @returns {Array<any>} keys from found in all passed index searches
      */
     find(query) {
         let selector = this._parseQuery(query);
@@ -103,15 +103,20 @@ export default class Find {
      */
     _parseQuery(query) {
         let selector = {};
-        if (Array.isArray(query)) {
-            selector['$and'] = [];
-            this._parseInnerSelector(query, selector['$and']);
-        } else if (typeof query === 'object') {
+        if (typeof query === 'object') {
             let keys = Object.keys(query);
-            keys.forEach(key => {
-                selector[key] = [];
-                this._parseInnerSelector(query[key], selector[key]);
-            });
+
+            if (Array.isArray(query) || !Array.isArray(query[keys[0]])) {
+                // We've got a single item or array of items
+                selector['$and'] = [];
+                this._parseInnerSelector(query, selector['$and']);
+            } else {
+                // We've got a combinator
+                keys.forEach(key => {
+                    selector[key] = [];
+                    this._parseInnerSelector(query[key], selector[key]);
+                });
+            }
         } else {
             throw new SyntaxError(`Query should be an object or an array ${JSON.stringify(query)}`);
         }

@@ -53,9 +53,16 @@ let arr = store.find(
     "$or": [{"test":{"$eq":"9020"}}, {"test":{"$in":["9019", "9018"]}}]
   }
 );
+/*
 let lt = store.find(
  [{"test":"9020"}, {"test":["9010","9020"]}]
 );
+*/
+
+let lt = store.find(
+  {"test":"9015"}
+ );
+
 let lt2 = store.find(
   [{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}]
 );

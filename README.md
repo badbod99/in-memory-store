@@ -68,20 +68,26 @@ store.ensureIndex(index);
 let britishShorthair = store.getOne('breed', 'British Shorthair');
 // Get based on array of breeds
 let allSorts = store.get('breed', ['British Shorthair','Moggy']);
-// Get intersection of 2 indexes
-let oldMixed = store.find([
-        {'breed': ['British Shorthair','Moggy']},
-        {'age': [5,6,7]}
-]);
 // Get join of 2 indexes
 let mixed = store.get('breed', ['British Shorthair','Moggy']);
 let old = store.get('age', [5,6,7]);
 let oldOrMixed = [...old, ...mixed];
 
+// You can also use the find function to execute CouchDB style Mango queries
+// Only $and, $or are currently supported combinators.
+let oldMixed = store.find([
+        {'breed': ['British Shorthair','Moggy']},
+        {'age': [5,6,7]}
+]);
+
+let oldOrBreed = store.find(
+        $or: [{'breed': ['British Shorthair','Moggy']},
+                {'age': [5,6,7]}]
+]);
 // Get all kittens age more than 2 months
-let allSorts = store.gt('age', 2);
+let allSorts = store.find({'age': {'$gt': 2}});
 // Get all kittens with age less than or equal to 3
-let allSorts = store.lte('age', 3);
+let allSorts = store.find({'age': {'$lte': 2}});
 
 // Rebuild the store with new items keeping the same indexes and keyFn
 store.rebuild(items);

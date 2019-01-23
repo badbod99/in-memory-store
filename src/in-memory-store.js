@@ -15,11 +15,6 @@ export class InMemoryStore {
         this.keyFn = keyFn;        
     }
 
-    find(query) {
-        let data = this.finder.find(query);
-        return mem.extract(this.entries, data);
-    }
-
     /**
      * Returns whether the store is empty
      * @return {boolean}
@@ -109,6 +104,18 @@ export class InMemoryStore {
      */
     has(item) {
         return this.entries.has(this.keyFn(item));
+    }
+
+    /**
+     * Performs a find across many indexes based on limited find selector language.
+     * @param {Array<any>} selector
+     * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+     * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+     * @returns {Array<any>} items from the store found in all passed index searches
+     */
+    find(query) {
+        let data = this.finder.find(query);
+        return mem.extract(this.entries, data);
     }
 
     /**

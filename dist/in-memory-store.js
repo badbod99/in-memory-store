@@ -203,7 +203,7 @@
        * @param {Array<any>} selector
        * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
        * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
-       * @returns {Array<any>} items from the store found in all passed index searches
+       * @returns {Array<any>} keys from found in all passed index searches
        */
       Find.prototype.find = function find (query) {
             var this$1 = this;
@@ -274,15 +274,22 @@
             var this$1 = this;
 
           var selector = {};
-          if (Array.isArray(query)) {
-              selector['$and'] = [];
-              this._parseInnerSelector(query, selector['$and']);
-          } else if (typeof query === 'object') {
+          if (typeof query === 'object') {
               var keys = Object.keys(query);
-              keys.forEach(function (key) {
-                  selector[key] = [];
-                  this$1._parseInnerSelector(query[key], selector[key]);
-              });
+
+              if (Array.isArray(query) || !Array.isArray(query[keys[0]])) {
+                  // We've got a single item or array of items
+                  selector['$and'] = [];
+                  this._parseInnerSelector(query, selector['$and']);
+              } else {
+                  // We've got a combinator
+                  keys.forEach(function (key) {
+                      selector[key] = [];
+                      this$1._parseInnerSelector(query[key], selector[key]);
+                  });
+              }
+
+                
           } else {
               throw new SyntaxError(("Query should be an object or an array " + (JSON.stringify(query))));
           }
@@ -363,11 +370,6 @@
      };
 
     var prototypeAccessors = { isEmpty: { configurable: true },size: { configurable: true } };
-
-     InMemoryStore.prototype.find = function find (query) {
-         var data = this.finder.find(query);
-         return extract(this.entries, data);
-     };
 
      /**
       * Returns whether the store is empty
@@ -458,6 +460,18 @@
       */
      InMemoryStore.prototype.has = function has (item) {
          return this.entries.has(this.keyFn(item));
+     };
+
+     /**
+      * Performs a find across many indexes based on limited find selector language.
+      * @param {Array<any>} selector
+      * { $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}],
+      * $or: [{"indexName":{"operator":"value"}}, {"indexName":{"operator":"value"}}] }
+      * @returns {Array<any>} items from the store found in all passed index searches
+      */
+     InMemoryStore.prototype.find = function find (query) {
+         var data = this.finder.find(query);
+         return extract(this.entries, data);
      };
 
      /**
