@@ -1,5 +1,5 @@
 # JavaScript In Memory Store
-JavaScript memory store for key/value with indexed lookups based on hash.
+JavaScript memory store for key/value with indexed lookups based on hash and binary search.
 
 # Install 
 First, install with npm.
