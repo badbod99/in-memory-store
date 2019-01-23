@@ -23,7 +23,6 @@ const banner = `\
 const name = 'in-memory-store';
 
 export default [{
-  external: ['avl'],
   input: 'src/index.js',
   output: {
     format: 'umd',
@@ -31,13 +30,9 @@ export default [{
     name,
     banner,
     sourcemap: true,
-    globals: {
-      avl: 'AVLTree',
-    },
   },
   plugins: [buble()],
 }, {
-  external: ['avl'],
   input: 'src/index.js',
   output: {
     format: 'umd',
@@ -45,11 +40,8 @@ export default [{
     name,
     banner,
     sourcemap: true,
-    globals: {
-      avl: 'AVLTree',
-    },
   },
-  plugins: [buble()]
+  plugins: [buble()],
 }, {
   input: 'bench/index.js',
   output: {
@@ -65,7 +57,6 @@ export default [{
       include: 'node_modules/**',
     })],
 }, {
-  external: ['avl'],
   input: 'example/index.js',
   output: {
     format: 'umd',
@@ -73,9 +64,6 @@ export default [{
     name,
     banner,
     sourcemap: true,
-    globals: {
-      avl: 'AVLTree',
-    },
   },
   plugins: [buble()],
 }];

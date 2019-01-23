@@ -1,7 +1,7 @@
 /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
 import AVLTree from 'avl';
-import * as mem from '../common';
-import BaseIndex from './baseindex';
+import * as mem from '../src/common';
+import BaseIndex from '../src/indexes/baseindex';
 
 /**
  * Index based on AVL Tree object for key/value storage. Groups items by index value,

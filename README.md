@@ -127,13 +127,6 @@ npm run example
 ```
 Then open a web browser to http://localhost:8080
 
-## Using AVLIndex instead of BinaryIndex
-HashIndex, BinaryIndex and AVLIndex are packaged with in-memory-store. The [AVL](https://github.com/w8r/avl) 
-dependency is external. Include AVL globally with a CDN or using Webpack/Browserify/Rollup in your project
-to use.
-
-AVL provides similar read, poor range search, but much faster insert performance for large datasets. It's based on an AVL Tree and has to perform in order traversal for range searches.
-
 # Performance
 Performance testing is included with [Benchmark](https://benchmarkjs.com/).
 

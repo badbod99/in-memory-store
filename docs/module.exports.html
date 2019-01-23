@@ -28,198 +28,6 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
-        
-            <div class="class-description">Binary key/value storage backed by native javascript array. Performs binary search on entries and
-keeps items in sorted order based on comparer.</div>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-    
-    <h2>Constructor</h2>
-    
-
-    
-    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>comparer</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#comparerCallback">comparerCallback</a></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">comparer to use when comparing one
-index value to another</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line7">line 7</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</article>
-
-</section>
-
-
-
-
-
-
-
-<section>
-
-<header>
-    
         <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(name, itemFn, keyFn, comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
         
             <div class="class-description">Index based on BinaryArray for key/value storage. Groups items by index value,
@@ -517,9 +325,9 @@ one index value to another</td>
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(name, keyFn, itemFn)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(indexes)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description">Base index for use with in-memory-store</div>
+            <div class="class-description">Key value storage with support for grouping/returning items by index value</div>
         
     
 </header>
@@ -534,7 +342,7 @@ one index value to another</td>
     
 
     
-    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(name, keyFn, itemFn)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(indexes)</span><span class="type-signature"></span></h4>
     
 
     
@@ -574,13 +382,13 @@ one index value to another</td>
 
         <tr>
             
-                <td class="name"><code>name</code></td>
+                <td class="name"><code>indexes</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">Map.&lt;indexName, <a href="global.html#index">index</a>></span>
 
 
             
@@ -590,54 +398,7 @@ one index value to another</td>
 
             
 
-            <td class="description last">name of this index</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>keyFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#keyCallback">keyCallback</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">function to call to get the index key of the items in this index</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>itemFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#itemCallback">itemCallback</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">function to call to get the unique item key of the
-items in this index</td>
+            <td class="description last">Map of indexes to query</td>
         </tr>
 
     
@@ -678,7 +439,7 @@ items in this index</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_baseindex.js.html">indexes/baseindex.js</a>, <a href="indexes_baseindex.js.html#line7">line 7</a>
+        <a href="find.js.html">find.js</a>, <a href="find.js.html#line6">line 6</a>
     </li></ul></dd>
     
 
@@ -932,10 +693,9 @@ items in this index</td>
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(name, itemFn, keyFn, comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(name, keyFn, itemFn)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description">Index based on AVL Tree object for key/value storage. Groups items by index value,
-stores items within index value as array using linear search.</div>
+            <div class="class-description">Base index for use with in-memory-store</div>
         
     
 </header>
@@ -950,7 +710,7 @@ stores items within index value as array using linear search.</div>
     
 
     
-    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(name, itemFn, keyFn, comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(name, keyFn, itemFn)</span><span class="type-signature"></span></h4>
     
 
     
@@ -978,8 +738,6 @@ stores items within index value as array using linear search.</div>
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -1005,50 +763,10 @@ stores items within index value as array using linear search.</div>
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
             <td class="description last">name of this index</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>itemFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#itemCallback">itemCallback</a></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">function to call to get the unique item
-key of the items in this index</td>
         </tr>
 
     
@@ -1068,53 +786,34 @@ key of the items in this index</td>
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last">function to call to get the index key
-of the items in this index</td>
+            <td class="description last">function to call to get the index key of the items in this index</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>comparer</code></td>
+                <td class="name"><code>itemFn</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="global.html#comparerCallback">comparerCallback</a></span>
+<span class="param-type"><a href="global.html#itemCallback">itemCallback</a></span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last">comparer to use when comparing
-one index value to another</td>
+            <td class="description last">function to call to get the unique item key of the
+items in this index</td>
         </tr>
 
     
@@ -1155,7 +854,7 @@ one index value to another</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexes_avlindex.js.html">indexes/avlindex.js</a>, <a href="indexes_avlindex.js.html#line11">line 11</a>
+        <a href="indexes_baseindex.js.html">indexes/baseindex.js</a>, <a href="indexes_baseindex.js.html#line7">line 7</a>
     </li></ul></dd>
     
 
@@ -1185,17 +884,6 @@ one index value to another</td>
 
     
     </div>
-
-    
-        <h3 class="subsection-title">Extends</h3>
-
-        
-
-
-    <ul>
-        <li>BaseIndex</li>
-    </ul>
-
 
     
 
@@ -1528,9 +1216,10 @@ index value to another</td>
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(indexes)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>exports<span class="signature">(comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h2>
         
-            <div class="class-description">Key value storage with support for grouping/returning items by index value</div>
+            <div class="class-description">Binary key/value storage backed by native javascript array. Performs binary search on entries and
+keeps items in sorted order based on comparer.</div>
         
     
 </header>
@@ -1545,7 +1234,7 @@ index value to another</td>
     
 
     
-    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(indexes)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="exports"><span class="type-signature"></span>new exports<span class="signature">(comparer<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -1573,6 +1262,8 @@ index value to another</td>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -1585,23 +1276,34 @@ index value to another</td>
 
         <tr>
             
-                <td class="name"><code>indexes</code></td>
+                <td class="name"><code>comparer</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Map.&lt;indexName, <a href="global.html#index">index</a>></span>
+<span class="param-type"><a href="global.html#comparerCallback">comparerCallback</a></span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last">Map of indexes to query</td>
+            <td class="description last">comparer to use when comparing one
+index value to another</td>
         </tr>
 
     
@@ -1642,7 +1344,7 @@ index value to another</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="find.js.html">find.js</a>, <a href="find.js.html#line6">line 6</a>
+        <a href="indexes_binaryarray.js.html">indexes/binaryarray.js</a>, <a href="indexes_binaryarray.js.html#line7">line 7</a>
     </li></ul></dd>
     
 
@@ -1708,7 +1410,7 @@ index value to another</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 16:28:09 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 16:31:52 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>
