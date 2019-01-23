@@ -288,8 +288,6 @@
                       this$1._parseInnerSelector(query[key], selector[key]);
                   });
               }
-
-                
           } else {
               throw new SyntaxError(("Query should be an object or an array " + (JSON.stringify(query))));
           }

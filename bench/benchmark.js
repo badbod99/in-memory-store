@@ -53,15 +53,10 @@ let arr = store.find(
     "$or": [{"test":{"$eq":"9020"}}, {"test":{"$in":["9019", "9018"]}}]
   }
 );
-/*
+
 let lt = store.find(
  [{"test":"9020"}, {"test":["9010","9020"]}]
 );
-*/
-
-let lt = store.find(
-  {"test":"9015"}
- );
 
 let lt2 = store.find(
   [{"test":{"$lte":"9020"}}, {"test":{"$gte":"9010"}}]
@@ -73,13 +68,13 @@ console.log(`${prefilledAVL.findMany(slicedA).length} [${slicedA}] values found 
 console.log(`${prefilledRB.findMany(slicedA).length} [${slicedA}] values found in prefilledRB`);
 console.log(`${prefilledMemBin.findMany(slicedA).length} [${slicedA}] values found in prefilledMemBin`);
 console.log(`${prefilledMemHash.findMany(slicedA).length} [${slicedA}] values found in prefilledMemHash`);
-console.log('---------------------------------------------------------');
+console.log('--------------------- FIND CHECK -----------------');
 console.log(`${JSON.stringify(arr.map(o => o.id))}`);
 console.log(`${JSON.stringify(lt.map(o => o.id))}`);
 console.log(`${JSON.stringify(lt2.map(o => o.id))}`);
 console.log('---------------------------------------------------------');
 
-/*
+
 new Benchmark.Suite(`Insert (x${N})`, options)
   .add('RBIndex', () => {
     let rb = new RBIndex('test', r => r.id, r => r.rnd1);
@@ -160,7 +155,6 @@ new Benchmark.Suite(`Remove (x${N})`, options)
     for (let i = N - 1; i; i--) prefilledMemHash.remove(rvalues[i]);
   })
   .run();
-*/
 
 /**
  * Shuffles array in place.

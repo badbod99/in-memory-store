@@ -50,7 +50,7 @@
 <pre class="prettyprint source lang-javascript"><code>const { InMemoryStore } = require('../dist/in-memory-store');</code></pre><p>or can also directly reference the compiled version from 'dist/in-memory-tree.js'.</p>
 <h1>Usage</h1><p>InMemoryStore constructor takes 3 parameters <code>keyFn[, items]</code>. </p>
 <p><code>keyFn</code>: each item in the store requires a unique key, specific the function to get it from the item.</p>
-<p>Example usage...</p>
+<p>Creating and populating a store...</p>
 <pre class="prettyprint source lang-javascript"><code>// Create an empty store
 let store = new InMemoryStore(obj => obj.key);
 // and populate it
@@ -61,9 +61,8 @@ store.populate(items);
 store.addOne(item);
 // or add multiple items later
 let items = [item1, item2, item3];
-store.add(items);
-
-// remove an item from store
+store.add(items);</code></pre><p>Removing and updating items ...</p>
+<pre class="prettyprint source lang-javascript"><code>// remove an item from store
 store.removeOne(item);
 // remove by item key
 store.removeKey(&quot;my_item_key&quot;);
@@ -75,22 +74,16 @@ store.remove(items);
 store.updateOne(item);
 // update many items
 let items = [item1, item2, item3];
-store.update(items);
-
-// Build a binary index (binary indexes are sorted at all times)
-store.buildBinaryIndex('breed', kitten => kitten.breed);
-// Keys are case senstive, so normalise if needed
-store.buildBinaryIndex('breed', kitten => kitten.breed.toLowerCase());
-// Note: You only need to build an index once, update/add/remove all update index automatically
-
-// Build a binary index (binary indexes are sorted at all times)
+store.update(items);</code></pre><p>Building indexes ...</p>
+<pre class="prettyprint source lang-javascript"><code>// Build a binary index (binary indexes are sorted at all times)
 let index = new BinaryIndex(&quot;firstLetter&quot;, obj => obj.key, kitten => kitten.breed);
 // Build a hash index (hash indexes are very fast, but can't do range searches)
 let index = new HashIndex(&quot;firstLetter&quot;, kitten => kitten.breed);
 // Keys are case senstive, so normalise if needed
 let index = new BinaryIndex(&quot;firstLetter&quot;, obj => obj.key, kitten => kitten.breed.toLowerCase());
 // Add an index to the store (populates it with items in the store if not already populated)
-store.ensureIndex(index);
+store.ensureIndex(index);</code></pre><p>Querying the store ...</p>
+<pre class="prettyprint source lang-javascript"><code>// Most simple way to query the store is using the get and getOne functions
 
 // Get all entries with specified breed
 let britishShorthair = store.getOne('breed', 'British Shorthair');
@@ -99,25 +92,36 @@ let allSorts = store.get('breed', ['British Shorthair','Moggy']);
 // Get join of 2 indexes
 let mixed = store.get('breed', ['British Shorthair','Moggy']);
 let old = store.get('age', [5,6,7]);
-let oldOrMixed = [...old, ...mixed];
-
-// You can also use the find function to execute CouchDB style Mango queries
+let oldOrMixed = [...old, ...mixed];</code></pre><p>Complex searches using find() ...</p>
+<pre class="prettyprint source lang-javascript"><code>// You can also use the find function to execute CouchDB style Mango queries
 // Only $and, $or are currently supported combinators.
+
+// Using implicit $and with implicit $in
 let oldMixed = store.find([
         {'breed': ['British Shorthair','Moggy']},
         {'age': [5,6,7]}
 ]);
-
+// Using $or with implicit $in
 let oldOrBreed = store.find(
-        $or: [{'breed': ['British Shorthair','Moggy']},
-                {'age': [5,6,7]}]
+        $or: [
+                {'breed': ['British Shorthair','Moggy']},
+                {'age': [5,6,7]}
+        ]
 ]);
+// Using $or with explicit $in and $eq
+let oldOrBreed = store.find(
+        $or: [
+                {'breed': {'$eq': 'British Shorthair'}},
+                {'age': {'$in': [5,6,7]}}
+        ]
+]);
+// Get all kittens that are 3 months old (most simple form)
+let allSorts = store.find({'age': 3});
 // Get all kittens age more than 2 months
 let allSorts = store.find({'age': {'$gt': 2}});
 // Get all kittens with age less than or equal to 3
-let allSorts = store.find({'age': {'$lte': 2}});
-
-// Rebuild the store with new items keeping the same indexes and keyFn
+let allSorts = store.find({'age': {'$lte': 2}});</code></pre><p>Rebuilding and cleaning up a store ...</p>
+<pre class="prettyprint source lang-javascript"><code>// Rebuild the store with new items keeping the same indexes and keyFn
 store.rebuild(items);
 
 // Destroy the store completely (removes all indexes and keyFn)
@@ -154,44 +158,39 @@ results to be returned as sorted arrays.</li>
 <li>RBIndex - Index built on Red Black Tree from <a href="https://github.com/vadimg/js_bintrees">bintrees</a>.</li>
 <li>AVLIndex - Index built on AVLIndex from <a href="https://github.com/w8r/avl">AVL</a>.</li>
 </ul>
-<h2>Results</h2><p>Insert (x10000)
+<pre class="prettyprint source lang-shell"><code>## Results
+Insert (x10000)
 RBIndex x 779 ops/sec ±1.62% (91 runs sampled)
 AVLIndex x 1,301 ops/sec ±0.82% (95 runs sampled)
 BinaryIndex x 1,197 ops/sec ±0.67% (93 runs sampled)
-HashIndex x 2,258 ops/sec ±0.65% (94 runs sampled)</p>
-<ul>
-<li>Fastest is HashIndex</li>
-</ul>
-<p>Random read (500 finds x 20 times)
+HashIndex x 2,258 ops/sec ±0.65% (94 runs sampled)
+- Fastest is HashIndex
+
+Random read (500 finds x 20 times)
 RBIndex x 1,127 ops/sec ±0.64% (96 runs sampled)
 AVLIndex x 2,195 ops/sec ±1.98% (91 runs sampled)
 BinaryIndex x 2,038 ops/sec ±0.43% (97 runs sampled)
-HashIndex x 196,731 ops/sec ±0.34% (97 runs sampled)</p>
-<ul>
-<li>Fastest is HashIndex</li>
-</ul>
-<p>gt read (500 finds x 20 times)
+HashIndex x 196,731 ops/sec ±0.34% (97 runs sampled)
+- Fastest is HashIndex
+
+gt read (500 finds x 20 times)
 AVLIndex x 0.53 ops/sec ±0.38% (6 runs sampled)
 BinaryIndex x 103 ops/sec ±0.79% (76 runs sampled)
-HashIndex x 1.53 ops/sec ±0.51% (8 runs sampled)</p>
-<ul>
-<li>Fastest is BinaryIndex</li>
-</ul>
-<p>lte read (500 finds x 20 times)
+HashIndex x 1.53 ops/sec ±0.51% (8 runs sampled)
+- Fastest is BinaryIndex
+
+lte read (500 finds x 20 times)
 AVLIndex x 1.05 ops/sec ±0.17% (7 runs sampled)
 BinaryIndex x 101 ops/sec ±3.05% (74 runs sampled)
-HashIndex x 1.53 ops/sec ±0.27% (8 runs sampled)</p>
-<ul>
-<li>Fastest is BinaryIndex</li>
-</ul>
-<p>Remove (x10000)
+HashIndex x 1.53 ops/sec ±0.27% (8 runs sampled)
+- Fastest is BinaryIndex
+
+Remove (x10000)
 RBIndex x 19,081 ops/sec ±0.59% (94 runs sampled)
 AVLIndex x 12,602 ops/sec ±0.33% (98 runs sampled)
 BinaryIndex x 10,293 ops/sec ±0.17% (99 runs sampled)
-HashIndex x 9,826 ops/sec ±1.38% (95 runs sampled)</p>
-<ul>
-<li>Fastest is RBIndex</li>
-</ul></article>
+HashIndex x 9,826 ops/sec ±1.38% (95 runs sampled)
+- Fastest is RBIndex</code></pre></article>
     </section>
 
 
@@ -208,7 +207,7 @@ HashIndex x 9,826 ops/sec ±1.38% (95 runs sampled)</p>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 12:52:13 GMT+0000 (Greenwich Mean Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Wed Jan 23 2019 13:04:41 GMT+0000 (Greenwich Mean Time)
 </footer>
 
 <script> prettyPrint(); </script>

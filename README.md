@@ -21,7 +21,7 @@ InMemoryStore constructor takes 3 parameters `keyFn[, items]`.
 
 `keyFn`: each item in the store requires a unique key, specific the function to get it from the item.
 
-Example usage...
+Creating and populating a store...
 ```javascript
 // Create an empty store
 let store = new InMemoryStore(obj => obj.key);
@@ -34,7 +34,10 @@ store.addOne(item);
 // or add multiple items later
 let items = [item1, item2, item3];
 store.add(items);
+```
 
+Removing and updating items ...
+```javascript
 // remove an item from store
 store.removeOne(item);
 // remove by item key
@@ -48,13 +51,10 @@ store.updateOne(item);
 // update many items
 let items = [item1, item2, item3];
 store.update(items);
+```
 
-// Build a binary index (binary indexes are sorted at all times)
-store.buildBinaryIndex('breed', kitten => kitten.breed);
-// Keys are case senstive, so normalise if needed
-store.buildBinaryIndex('breed', kitten => kitten.breed.toLowerCase());
-// Note: You only need to build an index once, update/add/remove all update index automatically
-
+Building indexes ...
+```javascript
 // Build a binary index (binary indexes are sorted at all times)
 let index = new BinaryIndex("firstLetter", obj => obj.key, kitten => kitten.breed);
 // Build a hash index (hash indexes are very fast, but can't do range searches)
@@ -63,6 +63,11 @@ let index = new HashIndex("firstLetter", kitten => kitten.breed);
 let index = new BinaryIndex("firstLetter", obj => obj.key, kitten => kitten.breed.toLowerCase());
 // Add an index to the store (populates it with items in the store if not already populated)
 store.ensureIndex(index);
+```
+
+Querying the store ...
+```javascript
+// Most simple way to query the store is using the get and getOne functions
 
 // Get all entries with specified breed
 let britishShorthair = store.getOne('breed', 'British Shorthair');
@@ -72,23 +77,42 @@ let allSorts = store.get('breed', ['British Shorthair','Moggy']);
 let mixed = store.get('breed', ['British Shorthair','Moggy']);
 let old = store.get('age', [5,6,7]);
 let oldOrMixed = [...old, ...mixed];
+```
 
+Complex searches using find() ...
+```javascript
 // You can also use the find function to execute CouchDB style Mango queries
 // Only $and, $or are currently supported combinators.
+
+// Using implicit $and with implicit $in
 let oldMixed = store.find([
         {'breed': ['British Shorthair','Moggy']},
         {'age': [5,6,7]}
 ]);
-
+// Using $or with implicit $in
 let oldOrBreed = store.find(
-        $or: [{'breed': ['British Shorthair','Moggy']},
-                {'age': [5,6,7]}]
+        $or: [
+                {'breed': ['British Shorthair','Moggy']},
+                {'age': [5,6,7]}
+        ]
 ]);
+// Using $or with explicit $in and $eq
+let oldOrBreed = store.find(
+        $or: [
+                {'breed': {'$eq': 'British Shorthair'}},
+                {'age': {'$in': [5,6,7]}}
+        ]
+]);
+// Get all kittens that are 3 months old (most simple form)
+let allSorts = store.find({'age': 3});
 // Get all kittens age more than 2 months
 let allSorts = store.find({'age': {'$gt': 2}});
 // Get all kittens with age less than or equal to 3
 let allSorts = store.find({'age': {'$lte': 2}});
+```
 
+Rebuilding and cleaning up a store ...
+```javascript
 // Rebuild the store with new items keeping the same indexes and keyFn
 store.rebuild(items);
 
@@ -142,36 +166,37 @@ results to be returned as sorted arrays.
 * AVLIndex - Index built on AVLIndex from [AVL](https://github.com/w8r/avl).
 
 ## Results
+```shell
 Insert (x10000)
-RBIndex x 779 ops/sec ±1.62% (91 runs sampled)
-AVLIndex x 1,301 ops/sec ±0.82% (95 runs sampled)
-BinaryIndex x 1,197 ops/sec ±0.67% (93 runs sampled)
-HashIndex x 2,258 ops/sec ±0.65% (94 runs sampled)
+RBIndex x 740 ops/sec ±1.11% (90 runs sampled)
+AVLIndex x 1,258 ops/sec ±0.72% (90 runs sampled)
+BinaryIndex x 689 ops/sec ±2.95% (86 runs sampled)
+HashIndex x 2,025 ops/sec ±2.89% (88 runs sampled)
 - Fastest is HashIndex
 
 Random read (500 finds x 20 times)
-RBIndex x 1,127 ops/sec ±0.64% (96 runs sampled)
-AVLIndex x 2,195 ops/sec ±1.98% (91 runs sampled)
-BinaryIndex x 2,038 ops/sec ±0.43% (97 runs sampled)
-HashIndex x 196,731 ops/sec ±0.34% (97 runs sampled)
+RBIndex x 1,013 ops/sec ±2.53% (80 runs sampled)
+AVLIndex x 2,223 ops/sec ±1.01% (93 runs sampled)
+BinaryIndex x 2,094 ops/sec ±1.23% (91 runs sampled)
+HashIndex x 175,833 ops/sec ±2.20% (91 runs sampled)
 - Fastest is HashIndex
 
-gt read (500 finds x 20 times)
-AVLIndex x 0.53 ops/sec ±0.38% (6 runs sampled)
-BinaryIndex x 103 ops/sec ±0.79% (76 runs sampled)
-HashIndex x 1.53 ops/sec ±0.51% (8 runs sampled)
+gt read (500 finds)
+AVLIndex x 9.74 ops/sec ±2.92% (28 runs sampled)
+BinaryIndex x 87.02 ops/sec ±3.25% (74 runs sampled)
+HashIndex x 25.50 ops/sec ±1.37% (46 runs sampled)
 - Fastest is BinaryIndex
 
-lte read (500 finds x 20 times)
-AVLIndex x 1.05 ops/sec ±0.17% (7 runs sampled)
-BinaryIndex x 101 ops/sec ±3.05% (74 runs sampled)
-HashIndex x 1.53 ops/sec ±0.27% (8 runs sampled)
+lte read (500 finds)
+AVLIndex x 18.77 ops/sec ±1.36% (37 runs sampled)
+BinaryIndex x 87.51 ops/sec ±1.75% (74 runs sampled)
+HashIndex x 24.28 ops/sec ±3.22% (44 runs sampled)
 - Fastest is BinaryIndex
 
 Remove (x10000)
-RBIndex x 19,081 ops/sec ±0.59% (94 runs sampled)
-AVLIndex x 12,602 ops/sec ±0.33% (98 runs sampled)
-BinaryIndex x 10,293 ops/sec ±0.17% (99 runs sampled)
-HashIndex x 9,826 ops/sec ±1.38% (95 runs sampled)
+RBIndex x 15,446 ops/sec ±1.81% (90 runs sampled)
+AVLIndex x 11,354 ops/sec ±1.46% (86 runs sampled)
+BinaryIndex x 9,379 ops/sec ±0.79% (87 runs sampled)
+HashIndex x 7,641 ops/sec ±2.08% (80 runs sampled)
 - Fastest is RBIndex
-
+```
