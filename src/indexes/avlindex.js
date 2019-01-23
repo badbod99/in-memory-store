@@ -1,4 +1,4 @@
-/* eslint import/no-extraneous-dependencies: ["error", {"optionalDependencies": true}] */
+/* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
 import AVLTree from 'avl';
 import * as mem from '../common';
 import BaseIndex from './baseindex';

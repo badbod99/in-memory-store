@@ -1,5 +1,5 @@
 /**
- * in-memory-store v1.0.5
+ * in-memory-store v1.0.6
  * JavaScript memory store for key/value with indexed lookups based on hash and binary search.
  *
  * @author Simon Lerpiniere
@@ -1540,7 +1540,7 @@
 
   Object.defineProperties( BaseIndex.prototype, prototypeAccessors$2 );
 
-  /* eslint import/no-extraneous-dependencies: ["error", {"optionalDependencies": true}] */
+  /* eslint import/no-extraneous-dependencies: ["error", {"devDependencies": true}] */
 
   /**
    * Index based on AVL Tree object for key/value storage. Groups items by index value,
