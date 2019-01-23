@@ -84,8 +84,7 @@ console.log('--------------------- FIND CHECK -----------------');
 console.log(`${JSON.stringify(arr.map(o => o.id))}`);
 console.log(`${JSON.stringify(lt.map(o => o.id))}`);
 console.log(`${JSON.stringify(lt2.map(o => o.id))}`);
-console.log('---------------------------------------------------------');
-
+console.log('--------------------- INDEX PERFORMANCE COMPARISON -----------------');
 new Benchmark.Suite(`Insert (x${N})`, options)
   .add('AVLIndex', () => {
     const avl = new AVLIndex('test', r => r.id, r => r.rnd1);
@@ -154,3 +153,4 @@ new Benchmark.Suite(`Remove (x${N})`, options)
     for (let i = N - 1; i; i -= 1) prefilledMemHash.remove(rvalues[i]);
   })
   .run();
+console.log('---------------------------------------------------------');
