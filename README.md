@@ -17,7 +17,7 @@ const { InMemoryStore } = require('../dist/in-memory-store');
 or can also directly reference the compiled version from 'dist/in-memory-tree.js'.
 
 # Usage
-InMemoryStore constructor takes 3 parameters `keyFn[, items]`. 
+InMemoryStore constructor takes 1 parameter `keyFn`. 
 
 `keyFn`: each item in the store requires a unique key, specify the function to get it from the item.
 
