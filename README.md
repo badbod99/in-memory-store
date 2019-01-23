@@ -19,9 +19,9 @@ or can also directly reference the compiled version from 'dist/in-memory-tree.js
 # Usage
 InMemoryStore constructor takes 3 parameters `keyFn[, items]`. 
 
-`keyFn`: each item in the store requires a unique key, specific the function to get it from the item.
+`keyFn`: each item in the store requires a unique key, specify the function to get it from the item.
 
-Creating and populating a store...
+Creating and populating a store ...
 ```javascript
 // Create an empty store
 let store = new InMemoryStore(obj => obj.key);
@@ -79,11 +79,8 @@ let old = store.get('age', [5,6,7]);
 let oldOrMixed = [...old, ...mixed];
 ```
 
-Complex searches using find() ...
+You can also use the `find()` function to execute CouchDB style [Mango queries](https://docs.couchdb.org/en/2.2.0/api/database/find.html). Only $and, $or are currently supported combinators.  `$lt, $gt, $gte, $lte, $eq, $in` operators are all supported.
 ```javascript
-// You can also use the find function to execute CouchDB style Mango queries
-// Only $and, $or are currently supported combinators.
-
 // Using implicit $and with implicit $in
 let oldMixed = store.find([
         {'breed': ['British Shorthair','Moggy']},
