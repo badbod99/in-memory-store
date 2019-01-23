@@ -53,7 +53,7 @@ let items = [item1, item2, item3];
 store.update(items);
 ```
 
-Building indexes ...
+All store queries require an index. You can use either a BinaryIndex or HashIndex.  BinaryIndex keeps data sorted at all times and provide fast range searches (e.g. $lt, $gt).  HashIndex is significantly faster to query for single items. 
 ```javascript
 // Build a binary index (binary indexes are sorted at all times)
 let index = new BinaryIndex("firstLetter", obj => obj.key, kitten => kitten.breed);
@@ -65,10 +65,8 @@ let index = new BinaryIndex("firstLetter", obj => obj.key, kitten => kitten.bree
 store.ensureIndex(index);
 ```
 
-Querying the store ...
+Most simple way to query the store is using the get and getOne functions.
 ```javascript
-// Most simple way to query the store is using the get and getOne functions
-
 // Get all entries with specified breed
 let britishShorthair = store.getOne('breed', 'British Shorthair');
 // Get based on array of breeds
@@ -134,8 +132,7 @@ HashIndex, BinaryIndex and AVLIndex are packaged with in-memory-store. The [AVL]
 dependency is external. Include AVL globally with a CDN or using Webpack/Browserify/Rollup in your project
 to use.
 
-AVL provides similar read performance, but much faster insert performance for large datasets. It is however
-a more complex library and maintained seperately.
+AVL provides similar read, poor range search, but much faster insert performance for large datasets. It's based on an AVL Tree and has to perform in order traversal for range searches.
 
 # Performance
 Performance testing is included with [Benchmark](https://benchmarkjs.com/).
